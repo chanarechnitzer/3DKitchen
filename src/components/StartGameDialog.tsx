@@ -11,18 +11,17 @@ const StartGameDialog: React.FC<StartGameDialogProps> = ({ onClose, onSubmit }) 
   const [length, setLength] = useState<string>('5');
   const [error, setError] = useState<string>('');
 
+  const validateDimensions = (value: number): boolean => {
+    return !isNaN(value) && value >= 1 && value <= 20;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     const widthNum = parseFloat(width);
     const lengthNum = parseFloat(length);
     
-    if (isNaN(widthNum) || isNaN(lengthNum)) {
-      setError('יש להזין מספרים בלבד');
-      return;
-    }
-    
-    if (widthNum < 1 || widthNum > 20 || lengthNum < 1 || lengthNum > 20) {
+    if (!validateDimensions(widthNum) || !validateDimensions(lengthNum)) {
       setError('המידות חייבות להיות בין 1 ל-20 מטר');
       return;
     }
@@ -33,7 +32,7 @@ const StartGameDialog: React.FC<StartGameDialogProps> = ({ onClose, onSubmit }) 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
       <div 
-        className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl"
+        className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">
@@ -89,7 +88,7 @@ const StartGameDialog: React.FC<StartGameDialogProps> = ({ onClose, onSubmit }) 
           </div>
           
           {error && (
-            <p className="text-danger text-sm">{error}</p>
+            <p className="text-danger text-sm font-medium">{error}</p>
           )}
           
           <div className="flex gap-3 justify-end pt-2">

@@ -14,18 +14,16 @@ const KitchenDesigner: React.FC = () => {
   
   const [isLoading, setIsLoading] = useState(true);
 
-  // Set title based on game state
   useEffect(() => {
     document.title = gameCompleted 
       ? 'יפה מאוד! סיימת את אתגר המשולש הזהב!' 
       : 'משחק המשולש הזהב למטבח';
   }, [gameCompleted]);
 
-  // Simulate loading when dimensions change
   useEffect(() => {
     if (kitchenDimensions.width > 0 && kitchenDimensions.length > 0) {
       setIsLoading(true);
-      const timer = setTimeout(() => setIsLoading(false), 1500);
+      const timer = setTimeout(() => setIsLoading(false), 1000);
       return () => clearTimeout(timer);
     }
   }, [kitchenDimensions.width, kitchenDimensions.length]);
@@ -33,7 +31,7 @@ const KitchenDesigner: React.FC = () => {
   if (kitchenDimensions.width === 0 || kitchenDimensions.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-lg">יש להזין את מידות המטבח כדי להתחיל</p>
+        <p className="text-lg text-gray-600">יש להזין את מידות המטבח כדי להתחיל</p>
       </div>
     );
   }
