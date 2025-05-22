@@ -15,10 +15,12 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
     const markers = [];
     for (let i = 0; i <= size; i++) {
       const position = (i - size / 2);
+      
+      // Add number markers
       markers.push(
         <Text
           key={`marker-${i}`}
-          position={isWidth ? [position, 0.05, -halfLength + 0.1] : [-halfWidth + 0.1, 0.05, position]}
+          position={isWidth ? [position, 0.05, -halfLength + 0.2] : [-halfWidth + 0.2, 0.05, position]}
           rotation={[-Math.PI / 2, 0, isWidth ? 0 : Math.PI / 2]}
           color="black"
           fontSize={0.15}
@@ -29,25 +31,30 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
         </Text>
       );
 
-      // Add marker lines
+      // Add tick marks between numbers
       if (i < size) {
-        markers.push(
-          <mesh
-            key={`line-${i}`}
-            position={isWidth ? [position + 0.5, 0.01, -halfLength + 0.1] : [-halfWidth + 0.1, 0.01, position + 0.5]}
-            rotation={[-Math.PI / 2, 0, isWidth ? 0 : Math.PI / 2]}
-          >
-            <planeGeometry args={[0.05, 0.2]} />
-            <meshStandardMaterial color="#4b5563" />
-          </mesh>
-        );
+        for (let j = 1; j < 10; j++) {
+          const subPosition = position + j / 10;
+          const lineHeight = j === 5 ? 0.15 : 0.1; // Longer line for half meters
+          
+          markers.push(
+            <mesh
+              key={`tick-${i}-${j}`}
+              position={isWidth ? [subPosition, 0.01, -halfLength + 0.2] : [-halfWidth + 0.2, 0.01, subPosition]}
+              rotation={[-Math.PI / 2, 0, isWidth ? 0 : Math.PI / 2]}
+            >
+              <planeGeometry args={[0.01, lineHeight]} />
+              <meshStandardMaterial color="#4b5563" />
+            </mesh>
+          );
+        }
       }
     }
     return markers;
   };
   
   return (
-    <group>
+    <group className="room-fly-in">
       {/* Floor */}
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
@@ -55,14 +62,23 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
         receiveShadow
       >
         <planeGeometry args={[width, length]} />
-        <meshStandardMaterial color="#e5e7eb" />
+        <meshStandardMaterial color="#f3f4f6" />
         
         {/* Grid lines */}
-        <gridHelper args={[width, Math.ceil(width), '#9ca3af', '#9ca3af']} />
-        <gridHelper args={[length, Math.ceil(length), '#9ca3af', '#9ca3af']} rotation={[0, Math.PI / 2, 0]} />
+        <gridHelper args={[width, Math.ceil(width), '#d1d5db', '#d1d5db']} />
+        <gridHelper args={[length, Math.ceil(length), '#d1d5db', '#d1d5db']} rotation={[0, Math.PI / 2, 0]} />
       </mesh>
       
-      {/* Walls */}
+      {/* Ceiling */}
+      <mesh 
+        rotation={[Math.PI / 2, 0, 0]} 
+        position={[0, 3, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[width, length]} />
+        <meshStandardMaterial color="#f8fafc" />
+      </mesh>
+      
       {/* Back wall */}
       <mesh 
         position={[0, 1.5, -halfLength]} 
@@ -111,7 +127,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
         >
           <planeGeometry args={[length / 3, 1.5]} />
           <meshStandardMaterial 
-            color="#93c5fd" 
+            color="#bfdbfe" 
             transparent 
             opacity={0.7} 
           />
@@ -122,7 +138,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
           position={[0, 0, 0]}
           rotation={[0, Math.PI / 2, 0]}
         >
-          <boxGeometry args={[length / 3 + 0.1, 1.5 + 0.1, 0.05]} />
+          <boxGeometry args={[length / 3 + 0.1, 1.6, 0.05]} />
           <meshStandardMaterial color="#1e293b" />
         </mesh>
       </group>
@@ -170,7 +186,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
       
       {/* Main dimension labels */}
       <Text
-        position={[0, 0.05, -halfLength + 0.3]}
+        position={[0, 0.05, -halfLength + 0.4]}
         rotation={[-Math.PI / 2, 0, 0]}
         color="black"
         fontSize={0.25}
@@ -181,7 +197,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
       </Text>
       
       <Text
-        position={[-halfWidth + 0.3, 0.05, 0]}
+        position={[-halfWidth + 0.4, 0.05, 0]}
         rotation={[-Math.PI / 2, 0, Math.PI / 2]}
         color="black"
         fontSize={0.25}
