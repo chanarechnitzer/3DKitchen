@@ -13,6 +13,7 @@ const KitchenDesigner: React.FC = () => {
   } = useKitchen();
   
   const [isLoading, setIsLoading] = useState(true);
+  const [showInitialMessage, setShowInitialMessage] = useState(true);
 
   useEffect(() => {
     document.title = gameCompleted 
@@ -22,13 +23,14 @@ const KitchenDesigner: React.FC = () => {
 
   useEffect(() => {
     if (kitchenDimensions.width > 0 && kitchenDimensions.length > 0) {
+      setShowInitialMessage(false);
       setIsLoading(true);
       const timer = setTimeout(() => setIsLoading(false), 1000);
       return () => clearTimeout(timer);
     }
   }, [kitchenDimensions.width, kitchenDimensions.length]);
 
-  if (kitchenDimensions.width === 0 || kitchenDimensions.length === 0) {
+  if (showInitialMessage) {
     return (
       <div className="flex justify-center items-center h-64">
         <p className="text-lg text-gray-600">יש להזין את מידות המטבח כדי להתחיל</p>
