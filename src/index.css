@@ -75,3 +75,18 @@ html, body {
 .confetti {
   @apply fixed inset-0 pointer-events-none z-50;
 }
+
+@keyframes fly-in {
+  from {
+    transform: translate3d(0, -100%, -100px);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+.room-fly-in {
+  animation: fly-in 1s ease-out forwards;
+}

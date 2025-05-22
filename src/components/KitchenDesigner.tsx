@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import KitchenScene from './KitchenScene';
 import KitchenControls from './KitchenControls';
 import TriangleStatus from './TriangleStatus';
@@ -11,6 +11,8 @@ const KitchenDesigner: React.FC = () => {
     triangleValidation,
     kitchenDimensions
   } = useKitchen();
+  
+  const [isLoading, setIsLoading] = useState(true);
 
   // Set title based on game state
   useEffect(() => {
@@ -19,10 +21,28 @@ const KitchenDesigner: React.FC = () => {
       : 'משחק המשולש הזהב למטבח';
   }, [gameCompleted]);
 
+  // Simulate loading when dimensions change
+  useEffect(() => {
+    if (kitchenDimensions.width > 0 && kitchenDimensions.length > 0) {
+      setIsLoading(true);
+      const timer = setTimeout(() => setIsLoading(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [kitchenDimensions.width, kitchenDimensions.length]);
+
   if (kitchenDimensions.width === 0 || kitchenDimensions.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
         <p className="text-lg">יש להזין את מידות המטבח כדי להתחיל</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[600px] space-y-4">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-xl font-medium text-gray-700">יוצר את המטבח שלך...</p>
       </div>
     );
   }
