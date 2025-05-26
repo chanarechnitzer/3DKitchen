@@ -22,7 +22,11 @@ const KitchenDesigner: React.FC = () => {
   }, [gameCompleted]);
 
   useEffect(() => {
-    if (kitchenDimensions.width > 0 && kitchenDimensions.length > 0) {
+    // Reset states when dimensions change
+    if (kitchenDimensions.width === 0 || kitchenDimensions.length === 0) {
+      setShowInitialMessage(true);
+      setIsLoading(false);
+    } else {
       setShowInitialMessage(false);
       setIsLoading(true);
       const timer = setTimeout(() => setIsLoading(false), 1000);
