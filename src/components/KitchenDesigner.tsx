@@ -22,19 +22,34 @@ const KitchenDesigner: React.FC = () => {
   }, [gameCompleted]);
 
   useEffect(() => {
-    // בדיקה האם יש מידות תקינות
-    const hasDimensions = kitchenDimensions.width > 0 && kitchenDimensions.length > 0;
+    // וידוא שהערכים הם מספרים תקינים
+    const width = Number(kitchenDimensions.width);
+    const length = Number(kitchenDimensions.length);
     
-    // עדכון מצב ההודעה הראשונית
-    setShowInitialMessage(!hasDimensions);
+    // בדיקת תקינות מקיפה
+    const isValidDimensions = 
+      !isNaN(width) && 
+      !isNaN(length) && 
+      width > 0 && 
+      length > 0 && 
+      width <= 20 && 
+      length <= 20;
+
+    console.log('Dimensions validation:', {
+      width,
+      length,
+      isValid: isValidDimensions,
+      rawWidth: kitchenDimensions.width,
+      rawLength: kitchenDimensions.length
+    });
+
+    setShowInitialMessage(!isValidDimensions);
     
-    if (hasDimensions) {
-      // התחלת טעינה רק אם יש מידות תקינות
+    if (isValidDimensions) {
       setIsLoading(true);
       const timer = setTimeout(() => setIsLoading(false), 1000);
       return () => clearTimeout(timer);
     } else {
-      // אם אין מידות, אין צורך בטעינה
       setIsLoading(false);
     }
   }, [kitchenDimensions.width, kitchenDimensions.length]);
