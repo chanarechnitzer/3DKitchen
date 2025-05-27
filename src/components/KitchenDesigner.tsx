@@ -22,51 +22,27 @@ const KitchenDesigner: React.FC = () => {
   }, [gameCompleted]);
 
   useEffect(() => {
-    // וידוא שהערכים הם מספרים תקינים
+    // בדיקת תקינות המידות
     const width = Number(kitchenDimensions.width);
     const length = Number(kitchenDimensions.length);
     
-    // בדיקת תקינות מקיפה
     const isValidDimensions = 
       !isNaN(width) && 
       !isNaN(length) && 
       width > 0 && 
-      length > 0 && 
-      width <= 20 && 
-      length <= 20;
+      length > 0;
 
-    console.log('Dimensions validation:', {
-      width,
-      length,
-      isValid: isValidDimensions,
-      rawWidth: kitchenDimensions.width,
-      rawLength: kitchenDimensions.length
-    });
-
-    setShowInitialMessage(!isValidDimensions);
-    
+    // אם יש מידות תקינות, נסתיר את ההודעה ונציג את החדר
     if (isValidDimensions) {
-      setIsLoading(true);
-      const timer = setTimeout(() => setIsLoading(false), 1000);
-      return () => clearTimeout(timer);
-    } else {
+      setShowInitialMessage(false);
       setIsLoading(false);
     }
-  }, [kitchenDimensions.width, kitchenDimensions.length]);
+  }, [kitchenDimensions]);
 
   if (showInitialMessage) {
     return (
       <div className="flex justify-center items-center h-64">
         <p className="text-lg text-gray-600">יש להזין את מידות המטבח כדי להתחיל</p>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[600px] space-y-4">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-xl font-medium text-gray-700">יוצר את המטבח שלך...</p>
       </div>
     );
   }
