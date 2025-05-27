@@ -22,7 +22,6 @@ const KitchenScene: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
 
-  // Update distances when dragging an object
   useEffect(() => {
     if (selectedItem && placedItems.length > 0) {
       const newDistances: { [key: string]: number } = {};
@@ -40,7 +39,6 @@ const KitchenScene: React.FC = () => {
     }
   }, [position, selectedItem, placedItems]);
 
-  // Disable controls while dragging
   useEffect(() => {
     if (controlsRef.current) {
       controlsRef.current.enabled = !isDragging;
@@ -66,15 +64,22 @@ const KitchenScene: React.FC = () => {
     const mouseX = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
     const mouseZ = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
     
-    // Adjust position based on kitchen dimensions
     const maxX = kitchenDimensions.width / 2;
     const maxZ = kitchenDimensions.length / 2;
     
-    // Clamp position to kitchen dimensions
     const newX = Math.min(Math.max(-maxX, mouseX * maxX), maxX);
     const newZ = Math.min(Math.max(-maxZ, mouseZ * maxZ), maxZ);
     
     setPosition({ x: newX, z: newZ });
+
+    // Update cursor style
+    document.body.style.cursor = 'none';
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      document.body.style.cursor = 'auto';
+    }
   };
 
   const handleTouchMove = (event: React.TouchEvent) => {
@@ -88,11 +93,9 @@ const KitchenScene: React.FC = () => {
     const touchX = ((touch.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
     const touchZ = -((touch.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
     
-    // Adjust position based on kitchen dimensions
     const maxX = kitchenDimensions.width / 2;
     const maxZ = kitchenDimensions.length / 2;
     
-    // Clamp position to kitchen dimensions
     const newX = Math.min(Math.max(-maxX, touchX * maxX), maxX);
     const newZ = Math.min(Math.max(-maxZ, touchZ * maxZ), maxZ);
     
@@ -103,6 +106,7 @@ const KitchenScene: React.FC = () => {
     <div 
       className="w-full h-full relative"
       onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       onTouchMove={handleTouchMove}
       onTouchEnd={handlePlaceItem}
       onClick={selectedItem ? handlePlaceItem : undefined}
@@ -121,13 +125,11 @@ const KitchenScene: React.FC = () => {
           shadow-mapSize-height={1024}
         />
         
-        {/* Kitchen room */}
         <KitchenRoom 
           width={kitchenDimensions.width} 
           length={kitchenDimensions.length} 
         />
         
-        {/* Placed items */}
         {placedItems.map(item => (
           <DraggableObject
             key={item.id}
@@ -138,7 +140,6 @@ const KitchenScene: React.FC = () => {
           />
         ))}
         
-        {/* Currently selected item */}
         {selectedItem && (
           <DraggableObject
             position={[position.x, 0, position.z]}
@@ -148,7 +149,6 @@ const KitchenScene: React.FC = () => {
           />
         )}
         
-        {/* Distance labels */}
         {selectedItem && Object.entries(distances).map(([itemId, distance]) => {
           const item = placedItems.find(i => i.id === itemId);
           if (!item) return null;
@@ -171,7 +171,6 @@ const KitchenScene: React.FC = () => {
           );
         })}
         
-        {/* Triangle lines */}
         {triangleValidation && (
           <TriangleLines 
             placedItems={placedItems} 
@@ -179,7 +178,6 @@ const KitchenScene: React.FC = () => {
           />
         )}
         
-        {/* Controls */}
         <OrbitControls
           ref={controlsRef}
           enablePan={true}
@@ -190,7 +188,6 @@ const KitchenScene: React.FC = () => {
         />
       </Canvas>
       
-      {/* Help text */}
       {selectedItem && (
         <div className="absolute bottom-4 left-4 right-4 bg-white bg-opacity-80 p-2 rounded text-center">
           לחץ במקום המבוקש כדי למקם את {selectedItem.name}

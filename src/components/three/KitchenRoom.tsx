@@ -10,49 +10,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
   const halfWidth = width / 2;
   const halfLength = length / 2;
   
-  // Generate meter markers
-  const generateMarkers = (size: number, isWidth: boolean) => {
-    const markers = [];
-    for (let i = 0; i <= size; i++) {
-      const position = (i - size / 2);
-      
-      // Add number markers
-      markers.push(
-        <Text
-          key={`marker-${i}`}
-          position={isWidth ? [position, 0.05, -halfLength + 0.2] : [-halfWidth + 0.2, 0.05, position]}
-          rotation={[-Math.PI / 2, 0, isWidth ? 0 : Math.PI / 2]}
-          color="black"
-          fontSize={0.15}
-          anchorX="center"
-          anchorY="middle"
-        >
-          {i}
-        </Text>
-      );
-
-      // Add tick marks between numbers
-      if (i < size) {
-        for (let j = 1; j < 10; j++) {
-          const subPosition = position + j / 10;
-          const lineHeight = j === 5 ? 0.15 : 0.1; // Longer line for half meters
-          
-          markers.push(
-            <mesh
-              key={`tick-${i}-${j}`}
-              position={isWidth ? [subPosition, 0.01, -halfLength + 0.2] : [-halfWidth + 0.2, 0.01, subPosition]}
-              rotation={[-Math.PI / 2, 0, isWidth ? 0 : Math.PI / 2]}
-            >
-              <planeGeometry args={[0.01, lineHeight]} />
-              <meshStandardMaterial color="#4b5563" />
-            </mesh>
-          );
-        }
-      }
-    }
-    return markers;
-  };
-  
   return (
     <group className="room-fly-in">
       {/* Floor */}
@@ -63,10 +20,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
       >
         <planeGeometry args={[width, length]} />
         <meshStandardMaterial color="#f3f4f6" />
-        
-        {/* Grid lines */}
-        <gridHelper args={[width, Math.ceil(width), '#d1d5db', '#d1d5db']} />
-        <gridHelper args={[length, Math.ceil(length), '#d1d5db', '#d1d5db']} rotation={[0, Math.PI / 2, 0]} />
       </mesh>
       
       {/* Ceiling */}
@@ -179,10 +132,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
           <meshStandardMaterial color="#1e293b" />
         </mesh>
       </group>
-      
-      {/* Measurement markers */}
-      {generateMarkers(width, true)}
-      {generateMarkers(length, false)}
       
       {/* Main dimension labels */}
       <Text
