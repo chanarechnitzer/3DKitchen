@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { useKitchen } from '../store/KitchenContext';
 
 interface StartGameDialogProps {
   onClose: () => void;
@@ -10,6 +11,7 @@ const StartGameDialog: React.FC<StartGameDialogProps> = ({ onClose, onSubmit }) 
   const [width, setWidth] = useState<string>('4');
   const [length, setLength] = useState<string>('5');
   const [error, setError] = useState<string>('');
+  const { setKitchenDimensions } = useKitchen();
 
   const validateDimensions = (value: number): boolean => {
     return !isNaN(value) && value >= 1 && value <= 20;
@@ -26,6 +28,10 @@ const StartGameDialog: React.FC<StartGameDialogProps> = ({ onClose, onSubmit }) 
       return;
     }
     
+    // Set dimensions in context first
+    setKitchenDimensions({ width: widthNum, length: lengthNum });
+    
+    // Then call onSubmit
     onSubmit(widthNum, lengthNum);
   };
 
