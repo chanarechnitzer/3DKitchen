@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import KitchenScene from './KitchenScene';
 import KitchenControls from './KitchenControls';
 import TriangleStatus from './TriangleStatus';
@@ -12,27 +12,11 @@ const KitchenDesigner: React.FC = () => {
     kitchenDimensions
   } = useKitchen();
   
-  const [showInitialMessage, setShowInitialMessage] = useState(true);
-
   useEffect(() => {
     document.title = gameCompleted 
       ? 'יפה מאוד! סיימת את אתגר המשולש הזהב!' 
       : 'משחק המשולש הזהב למטבח';
   }, [gameCompleted]);
-
-  useEffect(() => {
-    if (kitchenDimensions.width > 0 && kitchenDimensions.length > 0) {
-      setShowInitialMessage(false);
-    }
-  }, [kitchenDimensions]);
-
-  if (showInitialMessage) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-lg text-gray-600">יש להזין את מידות המטבח כדי להתחיל</p>
-      </div>
-    );
-  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
