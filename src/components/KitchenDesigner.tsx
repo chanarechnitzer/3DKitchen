@@ -12,7 +12,6 @@ const KitchenDesigner: React.FC = () => {
     kitchenDimensions
   } = useKitchen();
   
-  const [isLoading, setIsLoading] = useState(true);
   const [showInitialMessage, setShowInitialMessage] = useState(true);
 
   useEffect(() => {
@@ -22,20 +21,8 @@ const KitchenDesigner: React.FC = () => {
   }, [gameCompleted]);
 
   useEffect(() => {
-    // בדיקת תקינות המידות
-    const width = Number(kitchenDimensions.width);
-    const length = Number(kitchenDimensions.length);
-    
-    const isValidDimensions = 
-      !isNaN(width) && 
-      !isNaN(length) && 
-      width > 0 && 
-      length > 0;
-
-    // אם יש מידות תקינות, נסתיר את ההודעה ונציג את החדר
-    if (isValidDimensions) {
+    if (kitchenDimensions.width > 0 && kitchenDimensions.length > 0) {
       setShowInitialMessage(false);
-      setIsLoading(false);
     }
   }, [kitchenDimensions]);
 
