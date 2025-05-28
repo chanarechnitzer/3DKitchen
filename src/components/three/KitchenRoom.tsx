@@ -12,7 +12,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
   
   return (
     <group className="room-fly-in">
-      {/* Floor */}
+      {/* Floor with grid */}
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, 0, 0]}
@@ -20,6 +20,15 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
       >
         <planeGeometry args={[width, length]} />
         <meshStandardMaterial color="#f3f4f6" />
+        <gridHelper 
+          args={[width, Math.ceil(width) * 2, '#d1d5db', '#d1d5db']} 
+          position={[0, 0.001, 0]}
+        />
+        <gridHelper 
+          args={[length, Math.ceil(length) * 2, '#d1d5db', '#d1d5db']} 
+          position={[0, 0.001, 0]} 
+          rotation={[0, Math.PI / 2, 0]} 
+        />
       </mesh>
       
       {/* Ceiling */}
@@ -92,6 +101,47 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
           rotation={[0, Math.PI / 2, 0]}
         >
           <boxGeometry args={[length / 3 + 0.1, 1.6, 0.05]} />
+          <meshStandardMaterial color="#1e293b" />
+        </mesh>
+      </group>
+      
+      {/* Back wall with window */}
+      <group position={[0, 1.5, -halfLength]}>
+        {/* Upper wall section */}
+        <mesh 
+          position={[0, 0.75, 0]}
+          receiveShadow
+        >
+          <boxGeometry args={[width, 1.5, 0.1]} />
+          <meshStandardMaterial color="#f8fafc" />
+        </mesh>
+        
+        {/* Lower wall section */}
+        <mesh 
+          position={[0, -0.75, 0]}
+          receiveShadow
+        >
+          <boxGeometry args={[width, 1.5, 0.1]} />
+          <meshStandardMaterial color="#f8fafc" />
+        </mesh>
+        
+        {/* Window */}
+        <mesh
+          position={[0, 0, 0]}
+        >
+          <planeGeometry args={[width / 3, 1.5]} />
+          <meshStandardMaterial 
+            color="#bfdbfe" 
+            transparent 
+            opacity={0.7} 
+          />
+        </mesh>
+        
+        {/* Window frame */}
+        <mesh
+          position={[0, 0, 0]}
+        >
+          <boxGeometry args={[width / 3 + 0.1, 1.6, 0.05]} />
           <meshStandardMaterial color="#1e293b" />
         </mesh>
       </group>

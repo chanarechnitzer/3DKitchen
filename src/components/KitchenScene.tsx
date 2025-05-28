@@ -19,6 +19,7 @@ const KitchenScene: React.FC = () => {
   const [position, setPosition] = useState({ x: 0, z: 0 });
   const [distances, setDistances] = useState<{ [key: string]: number }>({});
   const [isDragging, setIsDragging] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
 
@@ -53,6 +54,7 @@ const KitchenScene: React.FC = () => {
       );
       setSelectedItem(null);
       setIsDragging(false);
+      document.body.style.cursor = 'auto';
     }
   };
 
@@ -71,9 +73,7 @@ const KitchenScene: React.FC = () => {
     const newZ = Math.min(Math.max(-maxZ, mouseZ * maxZ), maxZ);
     
     setPosition({ x: newX, z: newZ });
-
-    // Update cursor style
-    document.body.style.cursor = 'none';
+    setCursorPosition({ x: event.clientX, y: event.clientY });
   };
 
   const handleMouseLeave = () => {
@@ -100,6 +100,7 @@ const KitchenScene: React.FC = () => {
     const newZ = Math.min(Math.max(-maxZ, touchZ * maxZ), maxZ);
     
     setPosition({ x: newX, z: newZ });
+    setCursorPosition({ x: touch.clientX, y: touch.clientY });
   };
 
   return (
@@ -189,9 +190,24 @@ const KitchenScene: React.FC = () => {
       </Canvas>
       
       {selectedItem && (
-        <div className="absolute bottom-4 left-4 right-4 bg-white bg-opacity-80 p-2 rounded text-center">
-          לחץ במקום המבוקש כדי למקם את {selectedItem.name}
-        </div>
+        <>
+          <div 
+            className="absolute pointer-events-none"
+            style={{
+              left: cursorPosition.x,
+              top: cursorPosition.y,
+              transform: 'translate(-50%, -50%)',
+              width: '20px',
+              height: '20px',
+              border: '2px solid #e3a92b',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(227, 169, 43, 0.2)',
+            }}
+          />
+          <div className="absolute bottom-4 left-4 right-4 bg-white bg-opacity-80 p-2 rounded text-center">
+            לחץ במקום המבוקש כדי למקם את {selectedItem.name}
+          </div>
+        </>
       )}
     </div>
   );
