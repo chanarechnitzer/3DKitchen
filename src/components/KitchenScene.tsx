@@ -64,7 +64,7 @@ const KitchenScene: React.FC = () => {
     setIsDragging(true);
     const canvasRect = canvasRef.current.getBoundingClientRect();
     const mouseX = ((event.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    const mouseZ = -((event.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+    const mouseZ = ((event.clientY - canvasRect.top) / canvasRect.height) * 2 - 1;
     
     const maxX = kitchenDimensions.width / 2;
     const maxZ = kitchenDimensions.length / 2;
@@ -91,7 +91,7 @@ const KitchenScene: React.FC = () => {
     const touch = event.touches[0];
     const canvasRect = canvasRef.current.getBoundingClientRect();
     const touchX = ((touch.clientX - canvasRect.left) / canvasRect.width) * 2 - 1;
-    const touchZ = -((touch.clientY - canvasRect.top) / canvasRect.height) * 2 + 1;
+    const touchZ = ((touch.clientY - canvasRect.top) / canvasRect.height) * 2 - 1;
     
     const maxX = kitchenDimensions.width / 2;
     const maxZ = kitchenDimensions.length / 2;
