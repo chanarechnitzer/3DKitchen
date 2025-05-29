@@ -8,7 +8,7 @@ interface TriangleStatusProps {
 }
 
 const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete }) => {
-  const { isValid, sides } = validation;
+  const { isValid, sides, violations } = validation;
   
   const formatDistance = (distance: number) => {
     return distance.toFixed(2);
@@ -30,21 +30,16 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
       );
     }
 
-    const invalidSides = [];
-    if (!isValidSide(sides.sinkToStove)) invalidSides.push('כיור - כיריים');
-    if (!isValidSide(sides.sinkToRefrigerator)) invalidSides.push('כיור - מקרר');
-    if (!isValidSide(sides.stoveToRefrigerator)) invalidSides.push('כיריים - מקרר');
-
-    if (invalidSides.length > 0) {
+    if (violations && violations.length > 0) {
       return (
         <div className="bg-danger/10 border border-danger rounded p-3 mb-4">
           <p className="flex items-center gap-2 text-danger font-medium">
             <X size={18} className="text-danger" />
-            המרחקים הבאים אינם תקינים:
+            נמצאו הפרות של כללי המשולש:
           </p>
           <ul className="list-disc list-inside mt-2 text-sm text-danger">
-            {invalidSides.map((side) => (
-              <li key={side}>{side}</li>
+            {violations.map((violation, index) => (
+              <li key={index}>{violation}</li>
             ))}
           </ul>
         </div>

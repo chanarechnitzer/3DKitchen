@@ -13,32 +13,28 @@ const KitchenScene: React.FC = () => {
     selectedItem,
     setSelectedItem,
     placeItem,
-    triangleValidation
+    triangleValidation,
+    getDragValidation
   } = useKitchen();
   
   const [position, setPosition] = useState({ x: 0, z: 0 });
-  const [distances, setDistances] = useState<{ [key: string]: number }>({});
+  const [dragValidation, setDragValidation] = useState<{ isValid: boolean; distances: { [key: string]: number } }>({ isValid: true, distances: {} });
   const [isDragging, setIsDragging] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
 
   useEffect(() => {
-    if (selectedItem && placedItems.length > 0) {
-      const newDistances: { [key: string]: number } = {};
-      
-      placedItems.forEach(item => {
-        const dx = position.x - item.position.x;
-        const dz = position.z - item.position.z;
-        const distance = Math.sqrt(dx * dx + dz * dz);
-        newDistances[item.id] = distance;
-      });
-      
-      setDistances(newDistances);
+    if (selectedItem) {
+      const validation = getDragValidation(
+        new THREE.Vector3(position.x, 0, position.z),
+        selectedItem.type
+      );
+      setDragValidation(validation);
     } else {
-      setDistances({});
+      setDragValidation({ isValid: true, distances: {} });
     }
-  }, [position, selectedItem, placedItems]);
+  }, [position, selectedItem, getDragValidation]);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -150,27 +146,19 @@ const KitchenScene: React.FC = () => {
           />
         )}
         
-        {selectedItem && Object.entries(distances).map(([itemId, distance]) => {
-          const item = placedItems.find(i => i.id === itemId);
-          if (!item) return null;
-          
-          const midX = (position.x + item.position.x) / 2;
-          const midZ = (position.z + item.position.z) / 2;
-          
-          return (
-            <Text
-              key={`distance-${itemId}`}
-              position={[midX, 0.5, midZ]}
-              color="black"
-              fontSize={0.15}
-              anchorX="center"
-              anchorY="middle"
-              rotation={[Math.PI / -2, 0, 0]}
-            >
-              {`${distance.toFixed(2)} מ'`}
-            </Text>
-          );
-        })}
+        {selectedItem && Object.entries(dragValidation.distances).map(([key, distance]) => (
+          <Text
+            key={`distance-${key}`}
+            position={[position.x, 0.5, position.z]}
+            color={distance > 1.2 && distance < 5 ? '#22c55e' : '#ef4444'}
+            fontSize={0.15}
+            anchorX="center"
+            anchorY="middle"
+            rotation={[Math.PI / -2, 0, 0]}
+          >
+            {`${key}: ${distance.toFixed(2)} מ'`}
+          </Text>
+        ))}
         
         {triangleValidation && (
           <TriangleLines 
@@ -199,9 +187,9 @@ const KitchenScene: React.FC = () => {
               transform: 'translate(-50%, -50%)',
               width: '20px',
               height: '20px',
-              border: '2px solid #e3a92b',
+              border: `2px solid ${dragValidation.isValid ? '#22c55e' : '#ef4444'}`,
               borderRadius: '50%',
-              backgroundColor: 'rgba(227, 169, 43, 0.2)',
+              backgroundColor: dragValidation.isValid ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             }}
           />
           <div className="absolute bottom-4 left-4 right-4 bg-white bg-opacity-80 p-2 rounded text-center">

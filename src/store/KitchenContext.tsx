@@ -32,6 +32,7 @@ export interface TriangleValidation {
     sinkToRefrigerator: number;
     stoveToRefrigerator: number;
   };
+  violations: string[];
 }
 
 // Context interface
@@ -47,6 +48,7 @@ interface KitchenContextType {
   triangleValidation: TriangleValidation | null;
   validateTriangle: () => void;
   gameCompleted: boolean;
+  getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
 }
 
 // Default context value
@@ -62,15 +64,19 @@ const defaultContext: KitchenContextType = {
   triangleValidation: null,
   validateTriangle: () => {},
   gameCompleted: false,
+  getDragValidation: () => ({ isValid: false, distances: {} }),
 };
 
 // Create context
 const KitchenContext = createContext<KitchenContextType>(defaultContext);
 
+// Generate unique ID
+const generateId = (type: string) => `${type}-${Math.random().toString(36).substr(2, 9)}`;
+
 // Initial kitchen items
 const initialKitchenItems: KitchenItem[] = [
   {
-    id: 'sink',
+    id: generateId('sink'),
     type: KitchenItemType.SINK,
     position: new Vector3(0, 0, 0),
     placed: false,
@@ -78,7 +84,15 @@ const initialKitchenItems: KitchenItem[] = [
     dimensions: { width: 0.6, depth: 0.6, height: 0.85 },
   },
   {
-    id: 'stove',
+    id: generateId('sink'),
+    type: KitchenItemType.SINK,
+    position: new Vector3(0, 0, 0),
+    placed: false,
+    name: 'כיור נוסף',
+    dimensions: { width: 0.6, depth: 0.6, height: 0.85 },
+  },
+  {
+    id: generateId('stove'),
     type: KitchenItemType.STOVE,
     position: new Vector3(0, 0, 0),
     placed: false,
@@ -86,7 +100,7 @@ const initialKitchenItems: KitchenItem[] = [
     dimensions: { width: 0.6, depth: 0.6, height: 0.9 },
   },
   {
-    id: 'oven',
+    id: generateId('oven'),
     type: KitchenItemType.OVEN,
     position: new Vector3(0, 0, 0),
     placed: false,
@@ -94,21 +108,21 @@ const initialKitchenItems: KitchenItem[] = [
     dimensions: { width: 0.6, depth: 0.6, height: 0.6 },
   },
   {
-    id: 'refrigerator',
+    id: generateId('refrigerator'),
     type: KitchenItemType.REFRIGERATOR,
     position: new Vector3(0, 0, 0),
     placed: false,
     name: 'מקרר',
     dimensions: { width: 0.8, depth: 0.7, height: 1.8 },
   },
-  {
-    id: 'countertop',
+  ...Array(20).fill(null).map(() => ({
+    id: generateId('countertop'),
     type: KitchenItemType.COUNTERTOP,
     position: new Vector3(0, 0, 0),
     placed: false,
     name: 'משטח עם מגירות',
     dimensions: { width: 0.6, depth: 0.6, height: 0.85 },
-  },
+  })),
 ];
 
 // Provider component
@@ -119,6 +133,77 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [selectedItem, setSelectedItem] = useState<KitchenItem | null>(null);
   const [triangleValidation, setTriangleValidation] = useState<TriangleValidation | null>(null);
   const [gameCompleted, setGameCompleted] = useState(false);
+
+  // Calculate distance between two positions
+  const calculateDistance = (pos1: Vector3, pos2: Vector3): number => {
+    return pos1.distanceTo(pos2);
+  };
+
+  // Validate distances for triangle
+  const validateDistances = (distances: { [key: string]: number }) => {
+    const violations: string[] = [];
+    
+    Object.entries(distances).forEach(([key, distance]) => {
+      if (distance < 1.2) {
+        violations.push(`המרחק ${key} קצר מדי (${distance.toFixed(2)} מ')`);
+      } else if (distance > 5) {
+        violations.push(`המרחק ${key} ארוך מדי (${distance.toFixed(2)} מ')`);
+      }
+    });
+    
+    return violations;
+  };
+
+  // Get validation during drag
+  const getDragValidation = (position: Vector3, type: KitchenItemType) => {
+    const distances: { [key: string]: number } = {};
+    let isValid = true;
+
+    const sinks = placedItems.filter(item => item.type === KitchenItemType.SINK);
+    const stoves = placedItems.filter(item => item.type === KitchenItemType.STOVE);
+    const refrigerators = placedItems.filter(item => item.type === KitchenItemType.REFRIGERATOR);
+
+    if (type === KitchenItemType.SINK) {
+      if (stoves.length > 0) {
+        const distance = calculateDistance(position, stoves[0].position);
+        distances['כיור-כיריים'] = distance;
+        isValid = isValid && distance > 1.2 && distance < 5;
+      }
+      if (refrigerators.length > 0) {
+        const distance = calculateDistance(position, refrigerators[0].position);
+        distances['כיור-מקרר'] = distance;
+        isValid = isValid && distance > 1.2 && distance < 5;
+      }
+    } else if (type === KitchenItemType.STOVE) {
+      if (sinks.length > 0) {
+        sinks.forEach((sink, index) => {
+          const distance = calculateDistance(position, sink.position);
+          distances[`כיריים-כיור${index > 0 ? ' ' + (index + 1) : ''}`] = distance;
+          isValid = isValid && distance > 1.2 && distance < 5;
+        });
+      }
+      if (refrigerators.length > 0) {
+        const distance = calculateDistance(position, refrigerators[0].position);
+        distances['כיריים-מקרר'] = distance;
+        isValid = isValid && distance > 1.2 && distance < 5;
+      }
+    } else if (type === KitchenItemType.REFRIGERATOR) {
+      if (sinks.length > 0) {
+        sinks.forEach((sink, index) => {
+          const distance = calculateDistance(position, sink.position);
+          distances[`מקרר-כיור${index > 0 ? ' ' + (index + 1) : ''}`] = distance;
+          isValid = isValid && distance > 1.2 && distance < 5;
+        });
+      }
+      if (stoves.length > 0) {
+        const distance = calculateDistance(position, stoves[0].position);
+        distances['מקרר-כיריים'] = distance;
+        isValid = isValid && distance > 1.2 && distance < 5;
+      }
+    }
+
+    return { isValid, distances };
+  };
 
   // Place an item in the kitchen
   const placeItem = (itemId: string, position: Vector3) => {
@@ -151,34 +236,37 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Calculate distance between two positions
-  const calculateDistance = (pos1: Vector3, pos2: Vector3): number => {
-    return pos1.distanceTo(pos2);
-  };
-
   // Validate the kitchen triangle
   const validateTriangle = () => {
-    const sink = placedItems.find(item => item.type === KitchenItemType.SINK);
+    const sinks = placedItems.filter(item => item.type === KitchenItemType.SINK);
     const stove = placedItems.find(item => item.type === KitchenItemType.STOVE);
     const refrigerator = placedItems.find(item => item.type === KitchenItemType.REFRIGERATOR);
     
-    if (sink && stove && refrigerator) {
-      const sinkToStove = calculateDistance(sink.position, stove.position);
-      const sinkToRefrigerator = calculateDistance(sink.position, refrigerator.position);
-      const stoveToRefrigerator = calculateDistance(stove.position, refrigerator.position);
+    if (sinks.length > 0 && stove && refrigerator) {
+      const distances: { [key: string]: number } = {};
       
-      const isValid = 
-        sinkToStove > 1.2 && sinkToStove < 5 &&
-        sinkToRefrigerator > 1.2 && sinkToRefrigerator < 5 &&
-        stoveToRefrigerator > 1.2 && stoveToRefrigerator < 5;
+      sinks.forEach((sink, index) => {
+        const sinkToStove = calculateDistance(sink.position, stove.position);
+        const sinkToRefrigerator = calculateDistance(sink.position, refrigerator.position);
+        
+        distances[`כיור${index > 0 ? ' ' + (index + 1) : ''} - כיריים`] = sinkToStove;
+        distances[`כיור${index > 0 ? ' ' + (index + 1) : ''} - מקרר`] = sinkToRefrigerator;
+      });
+      
+      const stoveToRefrigerator = calculateDistance(stove.position, refrigerator.position);
+      distances['כיריים - מקרר'] = stoveToRefrigerator;
+      
+      const violations = validateDistances(distances);
+      const isValid = violations.length === 0;
       
       const validation = {
         isValid,
         sides: {
-          sinkToStove,
-          sinkToRefrigerator,
+          sinkToStove: distances['כיור - כיריים'],
+          sinkToRefrigerator: distances['כיור - מקרר'],
           stoveToRefrigerator,
         },
+        violations,
       };
       
       setTriangleValidation(validation);
@@ -201,6 +289,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     triangleValidation,
     validateTriangle,
     gameCompleted,
+    getDragValidation,
   };
 
   return (
