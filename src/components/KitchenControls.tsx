@@ -10,10 +10,25 @@ const KitchenControls: React.FC = () => {
     removeItem
   } = useKitchen();
 
-  const handleSelectItem = (itemId: string) => {
-    const item = availableItems.find(item => item.id === itemId);
-    if (item) {
-      setSelectedItem(item);
+  // Group items by type
+  const groupedItems = availableItems.reduce((acc, item) => {
+    if (!acc[item.type]) {
+      acc[item.type] = {
+        name: item.name,
+        type: item.type,
+        count: 0,
+        dimensions: item.dimensions,
+        items: []
+      };
+    }
+    acc[item.type].count++;
+    acc[item.type].items.push(item);
+    return acc;
+  }, {} as Record<string, { name: string; type: KitchenItemType; count: number; dimensions: any; items: typeof availableItems }>);
+
+  const handleSelectItem = (type: KitchenItemType) => {
+    if (groupedItems[type]?.items.length > 0) {
+      setSelectedItem(groupedItems[type].items[0]);
     }
   };
 
@@ -38,20 +53,31 @@ const KitchenControls: React.FC = () => {
     <div className="bg-white rounded-lg shadow-md p-4">
       <h2 className="text-xl font-bold mb-4 text-primary-dark">רכיבי מטבח</h2>
       
-      {availableItems.length === 0 && (
+      {Object.keys(groupedItems).length === 0 && (
         <p className="text-gray-500 mb-4">כל הרכיבים מוקמו במטבח</p>
       )}
       
       <div className="space-y-3">
-        {availableItems.map(item => (
+        {Object.values(groupedItems).map(group => (
           <div 
-            key={item.id}
-            className="kitchen-item flex items-center justify-between"
-            onClick={() => handleSelectItem(item.id)}
+            key={group.type}
+            className={`kitchen-item flex items-center justify-between ${
+              group.count === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            onClick={() => group.count > 0 && handleSelectItem(group.type)}
+            title={group.count === 0 ? 'אין יחידות נותרות' : undefined}
           >
-            <span className="text-2xl">{getItemIcon(item.type)}</span>
-            <span className="font-medium">{item.name}</span>
-            <MoveHorizontal className="text-gray-400" size={18} />
+            <span className="text-2xl">{getItemIcon(group.type)}</span>
+            <div className="flex flex-col items-end">
+              <span className="font-medium">{group.name}</span>
+              <span className="text-sm text-gray-500">
+                {group.count} יחידות נותרו
+              </span>
+            </div>
+            <MoveHorizontal 
+              className={`text-gray-400 ${group.count === 0 ? 'opacity-50' : ''}`} 
+              size={18} 
+            />
           </div>
         ))}
       </div>

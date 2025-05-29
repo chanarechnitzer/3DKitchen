@@ -3,6 +3,7 @@ import KitchenScene from './KitchenScene';
 import KitchenControls from './KitchenControls';
 import TriangleStatus from './TriangleStatus';
 import Confetti from './Confetti';
+import ErrorBoundary from './ErrorBoundary';
 import { useKitchen } from '../store/KitchenContext';
 
 const KitchenDesigner: React.FC = () => {
@@ -22,7 +23,9 @@ const KitchenDesigner: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div className="lg:col-span-3 bg-white rounded-lg shadow-md overflow-hidden">
         <div className="h-[500px] md:h-[600px] relative">
-          <KitchenScene />
+          <ErrorBoundary>
+            <KitchenScene />
+          </ErrorBoundary>
         </div>
       </div>
       
