@@ -20,7 +20,7 @@ const Rules: React.FC<RulesProps> = ({ onMinimize }) => {
       </div>
       
       <div className="text-lg space-y-4">
-        <p>המשולש הזהב הוא כלל תכנון בסיסי במטבחים המחבר בין שלושה אזורים מרכזיים:</p>
+        <p>משולש הזהב הוא כלל תכנון בסיסי במטבחים המחבר בין שלושה אזורים מרכזיים:</p>
         
         <div className="flex flex-col gap-4 my-6 pr-4">
           <div className="flex items-center gap-3">
