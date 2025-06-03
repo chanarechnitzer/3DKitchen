@@ -9,7 +9,7 @@ interface TriangleStatusProps {
 }
 
 const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete }) => {
-  const { isValid, sides, violations } = validation;
+  const { isValid, sides, violations, isComplete: triangleComplete } = validation;
   
   const formatDistance = (distance: number) => {
     return distance.toFixed(2);
@@ -26,7 +26,7 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
           <div className="bg-success/10 border border-success rounded p-3 mb-4">
             <p className="flex items-center gap-2 text-success font-medium">
               <Check size={18} className="text-success" />
-              כל הכבוד! המשולש תקין
+              כל הכבוד! המשולש הזהב מושלם!
             </p>
             <ul className="mt-2 space-y-2 text-sm">
               <li className="flex items-center gap-2">
@@ -48,12 +48,12 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
       );
     }
 
-    if (violations && violations.length > 0) {
+    if (triangleComplete && !isValid && violations && violations.length > 0) {
       return (
         <div className="bg-danger/10 border border-danger rounded p-3 mb-4">
           <p className="flex items-center gap-2 text-danger font-medium">
             <X size={18} className="text-danger" />
-            נמצאו הפרות של כללי המשולש:
+            המשולש הזהב לא תקין:
           </p>
           <ul className="list-disc list-inside mt-2 text-sm text-danger">
             {violations.map((violation, index) => (
@@ -62,6 +62,17 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
           </ul>
           <p className="mt-3 text-sm text-gray-600">
             גרור את הרכיבים למיקום חדש כדי לתקן את המרחקים
+          </p>
+        </div>
+      );
+    }
+
+    if (triangleComplete && !isValid) {
+      return (
+        <div className="bg-warning/10 border border-warning rounded p-3 mb-4">
+          <p className="flex items-center gap-2 text-warning font-medium">
+            <AlertCircle size={18} className="text-warning" />
+            כמעט שם! בדוק את המרחקים בין הרכיבים
           </p>
         </div>
       );

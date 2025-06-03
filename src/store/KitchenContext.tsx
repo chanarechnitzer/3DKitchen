@@ -33,6 +33,7 @@ export interface TriangleValidation {
     stoveToRefrigerator: number;
   };
   violations: string[];
+  isComplete: boolean;
 }
 
 // Context interface
@@ -115,7 +116,7 @@ const initialKitchenItems: KitchenItem[] = [
     name: 'מקרר',
     dimensions: { width: 0.8, depth: 0.7, height: 1.8 },
   },
-  ...Array(20).fill(null).map(() => ({
+  ...Array(10).fill(null).map(() => ({
     id: generateId('countertop'),
     type: KitchenItemType.COUNTERTOP,
     position: new Vector3(0, 0, 0),
@@ -212,6 +213,14 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (itemIndex !== -1) {
       const item = { ...availableItems[itemIndex], position, placed: true };
       
+      // Check if trying to place more than 10 cabinets
+      if (item.type === KitchenItemType.COUNTERTOP) {
+        const placedCabinets = placedItems.filter(i => i.type === KitchenItemType.COUNTERTOP).length;
+        if (placedCabinets >= 10) {
+          return; // Don't place if limit reached
+        }
+      }
+      
       setAvailableItems(prev => prev.filter(item => item.id !== itemId));
       setPlacedItems(prev => [...prev, item]);
       
@@ -242,7 +251,9 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     const stove = placedItems.find(item => item.type === KitchenItemType.STOVE);
     const refrigerator = placedItems.find(item => item.type === KitchenItemType.REFRIGERATOR);
     
-    if (sinks.length > 0 && stove && refrigerator) {
+    const isComplete = sinks.length > 0 && stove !== undefined && refrigerator !== undefined;
+    
+    if (isComplete) {
       const distances: { [key: string]: number } = {};
       
       sinks.forEach((sink, index) => {
@@ -267,6 +278,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
           stoveToRefrigerator,
         },
         violations,
+        isComplete
       };
       
       setTriangleValidation(validation);
