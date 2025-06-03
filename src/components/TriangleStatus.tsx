@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, X } from 'lucide-react';
 import { TriangleValidation } from '../store/KitchenContext';
+import Confetti from './Confetti';
 
 interface TriangleStatusProps {
   validation: TriangleValidation;
@@ -21,12 +22,29 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
   const getValidationMessage = () => {
     if (isComplete) {
       return (
-        <div className="bg-success/10 border border-success rounded p-3 mb-4">
-          <p className="flex items-center gap-2 text-success font-medium">
-            <Check size={18} className="text-success" />
-            כל הכבוד! המשולש תקין
-          </p>
-        </div>
+        <>
+          <div className="bg-success/10 border border-success rounded p-3 mb-4">
+            <p className="flex items-center gap-2 text-success font-medium">
+              <Check size={18} className="text-success" />
+              כל הכבוד! המשולש תקין
+            </p>
+            <ul className="mt-2 space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <Check size={14} className="text-success" />
+                כל המרחקים גדולים מ-1.2 מטר
+              </li>
+              <li className="flex items-center gap-2">
+                <Check size={14} className="text-success" />
+                כל המרחקים קטנים מ-5 מטר
+              </li>
+              <li className="flex items-center gap-2">
+                <Check size={14} className="text-success" />
+                כל רכיבי המשולש הזהב במקומם
+              </li>
+            </ul>
+          </div>
+          <Confetti />
+        </>
       );
     }
 
@@ -42,6 +60,9 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
               <li key={index}>{violation}</li>
             ))}
           </ul>
+          <p className="mt-3 text-sm text-gray-600">
+            גרור את הרכיבים למיקום חדש כדי לתקן את המרחקים
+          </p>
         </div>
       );
     }
