@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, AlertCircle } from 'lucide-react';
 import { TriangleValidation } from '../store/KitchenContext';
 import Confetti from './Confetti';
 
@@ -26,7 +26,7 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
           <div className="bg-success/10 border border-success rounded p-3 mb-4">
             <p className="flex items-center gap-2 text-success font-medium">
               <Check size={18} className="text-success" />
-              כל הכבוד! המשולש הזהב מושלם!
+              ✨ מצוין! המטבח שלך מושלם ועומד בכלל המשולש הזהב!
             </p>
             <ul className="mt-2 space-y-2 text-sm">
               <li className="flex items-center gap-2">
@@ -53,7 +53,7 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
         <div className="bg-danger/10 border border-danger rounded p-3 mb-4">
           <p className="flex items-center gap-2 text-danger font-medium">
             <X size={18} className="text-danger" />
-            המשולש הזהב לא תקין:
+            ⚠️ המשולש הזהב לא תקין:
           </p>
           <ul className="list-disc list-inside mt-2 text-sm text-danger">
             {violations.map((violation, index) => (
