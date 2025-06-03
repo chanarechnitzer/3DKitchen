@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
+import * as THREE from 'three';
 import KitchenRoom from './three/KitchenRoom';
 import DraggableObject from './three/DraggableObject';
 import TriangleLines from './three/TriangleLines';
