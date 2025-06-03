@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import KitchenRoom from './three/KitchenRoom';
 import DraggableObject from './three/DraggableObject';
 import TriangleLines from './three/TriangleLines';
+import DistanceLines from './three/DistanceLines';
 import { useKitchen } from '../store/KitchenContext';
 
 const KitchenScene: React.FC = () => {
@@ -139,27 +140,20 @@ const KitchenScene: React.FC = () => {
         ))}
         
         {selectedItem && (
-          <DraggableObject
-            position={[position.x, 0, position.z]}
-            type={selectedItem.type}
-            isPlaced={false}
-            dimensions={selectedItem.dimensions}
-          />
+          <>
+            <DraggableObject
+              position={[position.x, 0, position.z]}
+              type={selectedItem.type}
+              isPlaced={false}
+              dimensions={selectedItem.dimensions}
+            />
+            <DistanceLines
+              position={new THREE.Vector3(position.x, 0, position.z)}
+              placedItems={placedItems}
+              type={selectedItem.type}
+            />
+          </>
         )}
-        
-        {selectedItem && Object.entries(dragValidation.distances).map(([key, distance]) => (
-          <Text
-            key={`distance-${key}`}
-            position={[position.x, 0.5, position.z]}
-            color={distance > 1.2 && distance < 5 ? '#22c55e' : '#ef4444'}
-            fontSize={0.15}
-            anchorX="center"
-            anchorY="middle"
-            rotation={[Math.PI / -2, 0, 0]}
-          >
-            {`${key}: ${distance.toFixed(2)} מ'`}
-          </Text>
-        ))}
         
         {triangleValidation && (
           <TriangleLines 
@@ -193,8 +187,25 @@ const KitchenScene: React.FC = () => {
               backgroundColor: dragValidation.isValid ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             }}
           />
-          <div className="absolute bottom-4 left-4 right-4 bg-white bg-opacity-80 p-2 rounded text-center">
-            לחץ במקום המבוקש כדי למקם את {selectedItem.name}
+          <div className="fixed bottom-4 left-4 right-4 bg-white rounded-lg shadow-md p-4 text-center space-y-2">
+            <p className="font-medium">
+              לחץ במקום המבוקש כדי למקם את {selectedItem.name}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(dragValidation.distances).map(([key, distance]) => (
+                <div 
+                  key={key}
+                  className={`p-2 rounded ${
+                    distance > 1.2 && distance < 5 
+                      ? 'bg-success/10 text-success' 
+                      : 'bg-danger/10 text-danger'
+                  }`}
+                >
+                  <p className="text-sm">{key}</p>
+                  <p className="font-bold">{distance.toFixed(2)} מ'</p>
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )}
