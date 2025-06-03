@@ -10,6 +10,12 @@ export enum KitchenItemType {
   COUNTERTOP = 'countertop',
 }
 
+export enum WindowPlacement {
+  RIGHT = 'right',
+  LEFT = 'left',
+  OPPOSITE = 'opposite',
+}
+
 // Kitchen item interface
 export interface KitchenItem {
   id: string;
@@ -40,6 +46,8 @@ export interface TriangleValidation {
 interface KitchenContextType {
   kitchenDimensions: { width: number; length: number };
   setKitchenDimensions: (dimensions: { width: number; length: number }) => void;
+  windowPlacement: WindowPlacement;
+  setWindowPlacement: (placement: WindowPlacement) => void;
   availableItems: KitchenItem[];
   placedItems: KitchenItem[];
   selectedItem: KitchenItem | null;
@@ -56,6 +64,8 @@ interface KitchenContextType {
 const defaultContext: KitchenContextType = {
   kitchenDimensions: { width: 0, length: 0 },
   setKitchenDimensions: () => {},
+  windowPlacement: WindowPlacement.OPPOSITE,
+  setWindowPlacement: () => {},
   availableItems: [],
   placedItems: [],
   selectedItem: null,
@@ -129,6 +139,7 @@ const initialKitchenItems: KitchenItem[] = [
 // Provider component
 export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [kitchenDimensions, setKitchenDimensions] = useState({ width: 0, length: 0 });
+  const [windowPlacement, setWindowPlacement] = useState<WindowPlacement>(WindowPlacement.OPPOSITE);
   const [availableItems, setAvailableItems] = useState<KitchenItem[]>(initialKitchenItems);
   const [placedItems, setPlacedItems] = useState<KitchenItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<KitchenItem | null>(null);
@@ -292,6 +303,8 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
   const value = {
     kitchenDimensions,
     setKitchenDimensions,
+    windowPlacement,
+    setWindowPlacement,
     availableItems,
     placedItems,
     selectedItem,

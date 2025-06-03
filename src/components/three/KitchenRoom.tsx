@@ -1,12 +1,14 @@
 import React from 'react';
 import { Text } from '@react-three/drei';
+import { WindowPlacement } from '../../store/KitchenContext';
 
 interface KitchenRoomProps {
   width: number;
   length: number;
+  windowPlacement: WindowPlacement;
 }
 
-const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
+const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacement }) => {
   const halfWidth = width / 2;
   const halfLength = length / 2;
 
@@ -61,6 +63,44 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
     return markers;
   };
 
+  // Render window based on placement
+  const renderWindow = () => {
+    const windowWidth = width / 3;
+    const windowHeight = 1.5;
+    const windowY = 1.5;
+    const wallOffset = 0.1;
+
+    let windowPosition: [number, number, number];
+    let windowRotation: [number, number, number] = [0, 0, 0];
+
+    switch (windowPlacement) {
+      case WindowPlacement.RIGHT:
+        windowPosition = [halfWidth - wallOffset, windowY, 0];
+        windowRotation = [0, -Math.PI / 2, 0];
+        break;
+      case WindowPlacement.LEFT:
+        windowPosition = [-halfWidth + wallOffset, windowY, 0];
+        windowRotation = [0, Math.PI / 2, 0];
+        break;
+      default: // OPPOSITE
+        windowPosition = [0, windowY, -halfLength + wallOffset];
+        break;
+    }
+
+    return (
+      <group position={windowPosition} rotation={windowRotation}>
+        <mesh>
+          <planeGeometry args={[windowWidth, windowHeight]} />
+          <meshStandardMaterial color="#bfdbfe" transparent opacity={0.7} />
+        </mesh>
+        <mesh>
+          <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
+          <meshStandardMaterial color="#1e293b" />
+        </mesh>
+      </group>
+    );
+  };
+
   return (
     <group className="room-fly-in">
       {/* Floor with grid */}
@@ -86,25 +126,11 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
-      {/* Back wall with window */}
-      <group position={[0, 1.5, -halfLength]}>
-        <mesh position={[0, 0.75, 0]} receiveShadow>
-          <boxGeometry args={[width, 1.5, 0.1]} />
-          <meshStandardMaterial color="#f8fafc" />
-        </mesh>
-        <mesh position={[0, -0.75, 0]} receiveShadow>
-          <boxGeometry args={[width, 1.5, 0.1]} />
-          <meshStandardMaterial color="#f8fafc" />
-        </mesh>
-        <mesh position={[0, 0, 0]}>
-          <planeGeometry args={[width / 3, 1.5]} />
-          <meshStandardMaterial color="#bfdbfe" transparent opacity={0.7} />
-        </mesh>
-        <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[width / 3 + 0.1, 1.6, 0.05]} />
-          <meshStandardMaterial color="#1e293b" />
-        </mesh>
-      </group>
+      {/* Back wall */}
+      <mesh position={[0, 1.5, -halfLength]} receiveShadow>
+        <boxGeometry args={[width, 3, 0.1]} />
+        <meshStandardMaterial color="#f8fafc" />
+      </mesh>
 
       {/* Left wall */}
       <mesh
@@ -145,6 +171,9 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length }) => {
           <meshStandardMaterial color="#1e293b" />
         </mesh>
       </group>
+
+      {/* Window */}
+      {renderWindow()}
 
       {/* Measurement markers */}
       {generateMarkers(width, true)}

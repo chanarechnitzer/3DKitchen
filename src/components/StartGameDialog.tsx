@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { useKitchen } from '../store/KitchenContext';
+import { useKitchen, WindowPlacement } from '../store/KitchenContext';
 
 interface StartGameDialogProps {
   onClose: () => void;
@@ -11,7 +11,8 @@ const StartGameDialog: React.FC<StartGameDialogProps> = ({ onClose, onSubmit }) 
   const [width, setWidth] = useState<string>('4');
   const [length, setLength] = useState<string>('5');
   const [error, setError] = useState<string>('');
-  const { setKitchenDimensions } = useKitchen();
+  const { setKitchenDimensions, setWindowPlacement } = useKitchen();
+  const [selectedWindow, setSelectedWindow] = useState<WindowPlacement>(WindowPlacement.OPPOSITE);
 
   const validateDimensions = (value: number): boolean => {
     return !isNaN(value) && value >= 1 && value <= 20;
@@ -28,8 +29,9 @@ const StartGameDialog: React.FC<StartGameDialogProps> = ({ onClose, onSubmit }) 
       return;
     }
     
-    // Set dimensions in context first
+    // Set dimensions and window placement in context
     setKitchenDimensions({ width: widthNum, length: lengthNum });
+    setWindowPlacement(selectedWindow);
     
     // Then call onSubmit
     onSubmit(widthNum, lengthNum);
@@ -91,6 +93,22 @@ const StartGameDialog: React.FC<StartGameDialogProps> = ({ onClose, onSubmit }) 
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 transition-colors"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="window" className="block text-sm font-medium text-gray-700">
+              מיקום החלון:
+            </label>
+            <select
+              id="window"
+              value={selectedWindow}
+              onChange={(e) => setSelectedWindow(e.target.value as WindowPlacement)}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 transition-colors"
+            >
+              <option value={WindowPlacement.RIGHT}>מימין לדלת</option>
+              <option value={WindowPlacement.LEFT}>משמאל לדלת</option>
+              <option value={WindowPlacement.OPPOSITE}>מול הדלת</option>
+            </select>
           </div>
           
           {error && (

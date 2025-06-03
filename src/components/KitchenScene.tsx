@@ -11,6 +11,7 @@ import { useKitchen } from '../store/KitchenContext';
 const KitchenScene: React.FC = () => {
   const { 
     kitchenDimensions, 
+    windowPlacement,
     placedItems, 
     selectedItem,
     setSelectedItem,
@@ -126,7 +127,8 @@ const KitchenScene: React.FC = () => {
         
         <KitchenRoom 
           width={kitchenDimensions.width} 
-          length={kitchenDimensions.length} 
+          length={kitchenDimensions.length}
+          windowPlacement={windowPlacement}
         />
         
         {placedItems.map(item => (
