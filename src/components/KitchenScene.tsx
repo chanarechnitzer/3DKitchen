@@ -49,7 +49,7 @@ const KitchenScene: React.FC = () => {
     if (selectedItem) {
       placeItem(
         selectedItem.id, 
-        { x: position.x, y: 0, z: position.z }
+        new THREE.Vector3(position.x, 0, position.z)  // Create a proper Vector3 instance
       );
       setSelectedItem(null);
       setIsDragging(false);

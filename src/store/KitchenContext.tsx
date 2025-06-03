@@ -148,7 +148,10 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Calculate distance between two positions
   const calculateDistance = (pos1: Vector3, pos2: Vector3): number => {
-    return pos1.distanceTo(pos2);
+    // Ensure both positions are Vector3 instances
+    const vector1 = pos1 instanceof Vector3 ? pos1 : new Vector3(pos1.x, pos1.y, pos1.z);
+    const vector2 = pos2 instanceof Vector3 ? pos2 : new Vector3(pos2.x, pos2.y, pos2.z);
+    return vector1.distanceTo(vector2);
   };
 
   // Validate distances for triangle
@@ -222,7 +225,11 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     const itemIndex = availableItems.findIndex(item => item.id === itemId);
     
     if (itemIndex !== -1) {
-      const item = { ...availableItems[itemIndex], position, placed: true };
+      const item = { 
+        ...availableItems[itemIndex], 
+        position: new Vector3(position.x, position.y, position.z),  // Ensure position is a Vector3
+        placed: true 
+      };
       
       // Check if trying to place more than 10 cabinets
       if (item.type === KitchenItemType.COUNTERTOP) {
@@ -245,7 +252,11 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     const itemIndex = placedItems.findIndex(item => item.id === itemId);
     
     if (itemIndex !== -1) {
-      const item = { ...placedItems[itemIndex], placed: false };
+      const item = { 
+        ...placedItems[itemIndex], 
+        position: new Vector3(0, 0, 0),  // Reset position as Vector3
+        placed: false 
+      };
       
       setPlacedItems(prev => prev.filter(item => item.id !== itemId));
       setAvailableItems(prev => [...prev, item]);
