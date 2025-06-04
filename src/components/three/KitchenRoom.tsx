@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Text } from '@react-three/drei';
-import { TextureLoader } from 'three';
+import * as THREE from 'three';
 import { WindowPlacement } from '../../store/KitchenContext';
 
 interface KitchenRoomProps {
@@ -13,22 +13,58 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   const halfWidth = width / 2;
   const halfLength = length / 2;
   const [windowTexture, setWindowTexture] = useState<THREE.Texture | null>(null);
+  const [textureError, setTextureError] = useState(false);
+
+  // Create a canvas with the mountain view
+  const createMountainViewCanvas = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 768;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Sky gradient
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGradient.addColorStop(0, '#87CEEB');
+    skyGradient.addColorStop(1, '#E0F6FF');
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Mountains
+    ctx.fillStyle = '#4B6455';
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height);
+    ctx.lineTo(0, canvas.height * 0.4);
+    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.2);
+    ctx.lineTo(canvas.width * 0.7, canvas.height * 0.5);
+    ctx.lineTo(canvas.width, canvas.height * 0.3);
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.fill();
+
+    // Snow caps
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height * 0.4);
+    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.2);
+    ctx.lineTo(canvas.width * 0.4, canvas.height * 0.25);
+    ctx.lineTo(canvas.width * 0.2, canvas.height * 0.35);
+    ctx.fill();
+
+    return canvas;
+  };
 
   useEffect(() => {
-    const textureLoader = new TextureLoader();
-    textureLoader.load(
-      'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1200&q=80',
-      (texture) => {
-        texture.encoding = 3001; // sRGBEncoding
-        texture.flipY = false;
+    try {
+      const canvas = createMountainViewCanvas();
+      if (canvas) {
+        const texture = new THREE.CanvasTexture(canvas);
         texture.needsUpdate = true;
         setWindowTexture(texture);
-      },
-      undefined,
-      (error) => {
-        console.error('Error loading texture:', error);
       }
-    );
+    } catch (error) {
+      console.error('Error creating window view:', error);
+      setTextureError(true);
+    }
   }, []);
 
   const generateMarkers = (size: number, isWidth: boolean) => {
@@ -139,7 +175,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   );
 
   const renderWindow = () => {
-    if (!windowTexture) return null;
+    if (!windowTexture && !textureError) return null;
 
     const windowWidth = width / 3;
     const windowHeight = 1.5;
@@ -177,26 +213,23 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         <mesh position={backgroundPosition} rotation={backgroundRotation}>
           <planeGeometry args={[windowWidth * 1.2, windowHeight * 1.2]} />
           <meshBasicMaterial 
-            map={windowTexture} 
-            toneMapped={false}
-            transparent={true}
-            opacity={1}
+            map={windowTexture}
+            color={textureError ? '#87CEEB' : undefined}
+            side={THREE.DoubleSide}
           />
         </mesh>
 
-        {/* Window frame */}
+        {/* Window frame and glass */}
         <group position={windowPosition} rotation={windowRotation}>
-          {/* Frame */}
           <mesh>
             <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
             <meshStandardMaterial color="#1e293b" />
           </mesh>
           
-          {/* Glass */}
           <mesh position={[0, 0, 0.01]}>
             <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
             <meshPhysicalMaterial 
-              transparent 
+              transparent
               opacity={0.2}
               roughness={0}
               metalness={0.2}
