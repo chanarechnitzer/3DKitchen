@@ -18,7 +18,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     for (let i = 0; i <= size; i++) {
       const position = (i - size / 2);
 
-      // Number markers inside the room
       markers.push(
         <Text
           key={`marker-${i}`}
@@ -37,7 +36,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         </Text>
       );
 
-      // Tick marks between numbers
       if (i < size) {
         for (let j = 1; j < 10; j++) {
           const subPosition = position + j / 10;
@@ -63,7 +61,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     return markers;
   };
 
-  // Render window based on placement
   const renderWindow = () => {
     const windowWidth = width / 3;
     const windowHeight = 1.5;
@@ -91,7 +88,12 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       <group position={windowPosition} rotation={windowRotation}>
         <mesh>
           <planeGeometry args={[windowWidth, windowHeight]} />
-          <meshStandardMaterial color="#bfdbfe" transparent opacity={0.7} />
+          <meshStandardMaterial>
+            <textureLoader
+              attach="map"
+              args={["https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg"]}
+            />
+          </meshStandardMaterial>
         </mesh>
         <mesh>
           <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
@@ -152,7 +154,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
-      {/* Front wall with door */}
+      {/* Front wall with door opening to living room */}
       <group position={[0, 1.5, halfLength]}>
         <mesh position={[-width / 3, 0, 0]} receiveShadow>
           <boxGeometry args={[width / 3, 3, 0.1]} />
@@ -162,13 +164,15 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           <boxGeometry args={[width / 3, 3, 0.1]} />
           <meshStandardMaterial color="#f8fafc" />
         </mesh>
+        {/* Door opening showing living room */}
         <mesh position={[0, -0.25, 0]}>
-          <boxGeometry args={[0.9, 2.5, 0.05]} />
-          <meshStandardMaterial color="#7c3aed" />
-        </mesh>
-        <mesh position={[0, -0.25, 0]}>
-          <boxGeometry args={[1, 2.6, 0.1]} />
-          <meshStandardMaterial color="#1e293b" />
+          <planeGeometry args={[0.9, 2.5]} />
+          <meshStandardMaterial>
+            <textureLoader
+              attach="map"
+              args={["https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg"]}
+            />
+          </meshStandardMaterial>
         </mesh>
       </group>
 
