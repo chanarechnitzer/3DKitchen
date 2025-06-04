@@ -21,7 +21,12 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       (texture) => {
         texture.encoding = 3001; // sRGBEncoding
         texture.flipY = false;
+        texture.needsUpdate = true;
         setWindowTexture(texture);
+      },
+      undefined,
+      (error) => {
+        console.error('Error loading texture:', error);
       }
     );
   }, []);
@@ -84,27 +89,27 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       
       {/* Plant base */}
       <mesh position={[0, 0.1 * scale, 0]} castShadow>
-        <sphereGeometry args={[0.15 * scale, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <sphereGeometry args={[0.12 * scale, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
         <meshStandardMaterial color="#2F4538" />
       </mesh>
       
-      {/* Plant leaves */}
-      {[...Array(5)].map((_, i) => (
+      {/* Plant leaves - adjusted to be more compact */}
+      {[...Array(4)].map((_, i) => (
         <mesh
           key={i}
           position={[
-            Math.sin(i * Math.PI * 0.4) * 0.1 * scale,
-            0.15 * scale + Math.random() * 0.1 * scale,
-            Math.cos(i * Math.PI * 0.4) * 0.1 * scale
+            Math.sin(i * Math.PI * 0.4) * 0.08 * scale,
+            0.15 * scale + Math.random() * 0.08 * scale,
+            Math.cos(i * Math.PI * 0.4) * 0.08 * scale
           ]}
           rotation={[
-            Math.random() * 0.5,
+            Math.random() * 0.3,
             i * Math.PI * 0.4,
             Math.PI * 0.25 + Math.random() * 0.2
           ]}
           castShadow
         >
-          <sphereGeometry args={[0.1 * scale, 8, 8]} />
+          <sphereGeometry args={[0.08 * scale, 8, 8]} />
           <meshStandardMaterial color="#228B22" />
         </mesh>
       ))}
@@ -113,23 +118,23 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
   const renderShelf = (position: [number, number, number], rotation: [number, number, number] = [0, 0, 0]) => (
     <group position={position} rotation={rotation}>
-      {/* Shelf board */}
+      {/* Shelf board - made slightly smaller */}
       <mesh castShadow receiveShadow>
-        <boxGeometry args={[1, 0.05, 0.3]} />
+        <boxGeometry args={[0.8, 0.04, 0.25]} />
         <meshStandardMaterial color="#8B4513" />
       </mesh>
       
       {/* Shelf brackets */}
-      {[-0.4, 0.4].map((x, i) => (
+      {[-0.3, 0.3].map((x, i) => (
         <mesh key={i} position={[x, -0.05, 0]} castShadow>
-          <boxGeometry args={[0.05, 0.15, 0.3]} />
+          <boxGeometry args={[0.04, 0.12, 0.25]} />
           <meshStandardMaterial color="#5C4033" />
         </mesh>
       ))}
       
-      {/* Plants on shelf */}
-      {renderPlant([-0.3, 0.025, 0], 0.8)}
-      {renderPlant([0.3, 0.025, 0], 0.9)}
+      {/* Plants on shelf - adjusted scale and position */}
+      {renderPlant([-0.25, 0.02, 0], 0.7)}
+      {renderPlant([0.25, 0.02, 0], 0.65)}
     </group>
   );
 
@@ -170,27 +175,33 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       <>
         {/* Window background (mountain view) */}
         <mesh position={backgroundPosition} rotation={backgroundRotation}>
-          <planeGeometry args={[windowWidth * 1.5, windowHeight * 1.5]} />
+          <planeGeometry args={[windowWidth * 1.2, windowHeight * 1.2]} />
           <meshBasicMaterial 
             map={windowTexture} 
             toneMapped={false}
+            transparent={true}
+            opacity={1}
           />
         </mesh>
 
         {/* Window frame */}
         <group position={windowPosition} rotation={windowRotation}>
+          {/* Frame */}
           <mesh>
             <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
             <meshStandardMaterial color="#1e293b" />
           </mesh>
           
-          {/* Window glass */}
+          {/* Glass */}
           <mesh position={[0, 0, 0.01]}>
             <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
-            <meshStandardMaterial 
+            <meshPhysicalMaterial 
               transparent 
-              opacity={0.1}
-              color="#ffffff"
+              opacity={0.2}
+              roughness={0}
+              metalness={0.2}
+              clearcoat={1}
+              clearcoatRoughness={0.1}
             />
           </mesh>
         </group>
@@ -200,11 +211,13 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
   return (
     <group className="room-fly-in">
+      {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[width, length]} />
         <meshStandardMaterial color="#f3f4f6" />
       </mesh>
 
+      {/* Grid helpers */}
       <gridHelper
         args={[width, Math.ceil(width) * 2, '#d1d5db', '#d1d5db']}
         position={[0, 0.001, 0]}
@@ -215,16 +228,19 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         rotation={[0, Math.PI / 2, 0]}
       />
 
+      {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 3, 0]} receiveShadow>
         <planeGeometry args={[width, length]} />
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
+      {/* Back wall */}
       <mesh position={[0, 1.5, -halfLength]} receiveShadow>
         <boxGeometry args={[width, 3, 0.1]} />
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
+      {/* Left wall */}
       <mesh
         position={[-halfWidth, 1.5, 0]}
         rotation={[0, Math.PI / 2, 0]}
@@ -234,6 +250,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
+      {/* Right wall */}
       <mesh
         position={[halfWidth, 1.5, 0]}
         rotation={[0, -Math.PI / 2, 0]}
@@ -243,6 +260,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
+      {/* Front wall with door */}
       <group position={[0, 1.5, halfLength]}>
         <mesh position={[-width / 3, 0, 0]} receiveShadow>
           <boxGeometry args={[width / 3, 3, 0.1]} />
@@ -258,15 +276,18 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         </mesh>
       </group>
 
+      {/* Window with view */}
       {renderWindow()}
 
-      {/* Decorative shelves with plants */}
-      {renderShelf([-halfWidth + 0.2, 2.2, -halfLength + 0.2], [0, Math.PI / 4, 0])}
-      {renderShelf([halfWidth - 0.2, 2.2, -halfLength + 0.2], [0, -Math.PI / 4, 0])}
+      {/* Decorative shelves with plants - adjusted positions */}
+      {renderShelf([-halfWidth + 0.6, 2.1, -halfLength + 0.3], [0, Math.PI / 4, 0])}
+      {renderShelf([halfWidth - 0.6, 2.1, -halfLength + 0.3], [0, -Math.PI / 4, 0])}
 
+      {/* Measurement markers */}
       {generateMarkers(width, true)}
       {generateMarkers(length, false)}
 
+      {/* Dimension labels */}
       <Text
         position={[0, 0.01, -halfLength + 0.4]}
         rotation={[-Math.PI / 2, 0, 0]}
