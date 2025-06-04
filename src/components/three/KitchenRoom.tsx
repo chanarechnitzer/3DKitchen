@@ -19,6 +19,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     textureLoader.load(
       'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1200&q=80',
       (texture) => {
+        texture.encoding = 3001; // sRGBEncoding
         texture.flipY = false;
         setWindowTexture(texture);
       }
@@ -72,6 +73,65 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     }
     return markers;
   };
+
+  const renderPlant = (position: [number, number, number], scale: number = 1) => (
+    <group position={position}>
+      {/* Plant pot */}
+      <mesh position={[0, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.1 * scale, 0.08 * scale, 0.15 * scale, 16]} />
+        <meshStandardMaterial color="#964B00" />
+      </mesh>
+      
+      {/* Plant base */}
+      <mesh position={[0, 0.1 * scale, 0]} castShadow>
+        <sphereGeometry args={[0.15 * scale, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#2F4538" />
+      </mesh>
+      
+      {/* Plant leaves */}
+      {[...Array(5)].map((_, i) => (
+        <mesh
+          key={i}
+          position={[
+            Math.sin(i * Math.PI * 0.4) * 0.1 * scale,
+            0.15 * scale + Math.random() * 0.1 * scale,
+            Math.cos(i * Math.PI * 0.4) * 0.1 * scale
+          ]}
+          rotation={[
+            Math.random() * 0.5,
+            i * Math.PI * 0.4,
+            Math.PI * 0.25 + Math.random() * 0.2
+          ]}
+          castShadow
+        >
+          <sphereGeometry args={[0.1 * scale, 8, 8]} />
+          <meshStandardMaterial color="#228B22" />
+        </mesh>
+      ))}
+    </group>
+  );
+
+  const renderShelf = (position: [number, number, number], rotation: [number, number, number] = [0, 0, 0]) => (
+    <group position={position} rotation={rotation}>
+      {/* Shelf board */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[1, 0.05, 0.3]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      
+      {/* Shelf brackets */}
+      {[-0.4, 0.4].map((x, i) => (
+        <mesh key={i} position={[x, -0.05, 0]} castShadow>
+          <boxGeometry args={[0.05, 0.15, 0.3]} />
+          <meshStandardMaterial color="#5C4033" />
+        </mesh>
+      ))}
+      
+      {/* Plants on shelf */}
+      {renderPlant([-0.3, 0.025, 0], 0.8)}
+      {renderPlant([0.3, 0.025, 0], 0.9)}
+    </group>
+  );
 
   const renderWindow = () => {
     if (!windowTexture) return null;
@@ -199,6 +259,10 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       </group>
 
       {renderWindow()}
+
+      {/* Decorative shelves with plants */}
+      {renderShelf([-halfWidth + 0.2, 2.2, -halfLength + 0.2], [0, Math.PI / 4, 0])}
+      {renderShelf([halfWidth - 0.2, 2.2, -halfLength + 0.2], [0, -Math.PI / 4, 0])}
 
       {generateMarkers(width, true)}
       {generateMarkers(length, false)}
