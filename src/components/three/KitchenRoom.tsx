@@ -18,16 +18,20 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   useEffect(() => {
     const textureLoader = new TextureLoader();
     
-    // Load window texture
     textureLoader.load(
-      'https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg',
-      (texture) => setWindowTexture(texture)
+      'https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg',
+      (texture) => {
+        texture.flipY = false;
+        setWindowTexture(texture);
+      }
     );
     
-    // Load door texture
     textureLoader.load(
       'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg',
-      (texture) => setDoorTexture(texture)
+      (texture) => {
+        texture.flipY = false;
+        setDoorTexture(texture);
+      }
     );
   }, []);
 
@@ -108,7 +112,11 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       <group position={windowPosition} rotation={windowRotation}>
         <mesh>
           <planeGeometry args={[windowWidth, windowHeight]} />
-          <meshStandardMaterial map={windowTexture} />
+          <meshStandardMaterial 
+            map={windowTexture} 
+            transparent 
+            opacity={0.9}
+          />
         </mesh>
         <mesh>
           <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
@@ -175,7 +183,11 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         {doorTexture && (
           <mesh position={[0, -0.25, 0]}>
             <planeGeometry args={[0.9, 2.5]} />
-            <meshStandardMaterial map={doorTexture} />
+            <meshStandardMaterial 
+              map={doorTexture} 
+              transparent 
+              opacity={0.9}
+            />
           </mesh>
         )}
       </group>
