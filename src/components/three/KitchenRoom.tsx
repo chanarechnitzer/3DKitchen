@@ -16,9 +16,8 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
   useEffect(() => {
     const textureLoader = new TextureLoader();
-    
     textureLoader.load(
-      'https://images.pexels.com/photos/640809/pexels-photo-640809.jpeg',
+      'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1200&q=80',
       (texture) => {
         texture.flipY = false;
         setWindowTexture(texture);
@@ -81,39 +80,61 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     const windowHeight = 1.5;
     const windowY = 1.5;
     const wallOffset = 0.1;
+    const windowDepth = 0.2;
 
     let windowPosition: [number, number, number];
     let windowRotation: [number, number, number] = [0, 0, 0];
+    let backgroundPosition: [number, number, number];
+    let backgroundRotation: [number, number, number] = [0, 0, 0];
 
     switch (windowPlacement) {
       case WindowPlacement.RIGHT:
         windowPosition = [halfWidth - wallOffset, windowY, 0];
         windowRotation = [0, -Math.PI / 2, 0];
+        backgroundPosition = [halfWidth + windowDepth, windowY, 0];
+        backgroundRotation = [0, -Math.PI / 2, 0];
         break;
       case WindowPlacement.LEFT:
         windowPosition = [-halfWidth + wallOffset, windowY, 0];
         windowRotation = [0, Math.PI / 2, 0];
+        backgroundPosition = [-halfWidth - windowDepth, windowY, 0];
+        backgroundRotation = [0, Math.PI / 2, 0];
         break;
       default: // OPPOSITE
         windowPosition = [0, windowY, -halfLength + wallOffset];
+        backgroundPosition = [0, windowY, -halfLength - windowDepth];
         break;
     }
 
     return (
-      <group position={windowPosition} rotation={windowRotation}>
-        <mesh>
-          <planeGeometry args={[windowWidth, windowHeight]} />
-          <meshStandardMaterial 
+      <>
+        {/* Window background (mountain view) */}
+        <mesh position={backgroundPosition} rotation={backgroundRotation}>
+          <planeGeometry args={[windowWidth * 1.5, windowHeight * 1.5]} />
+          <meshBasicMaterial 
             map={windowTexture} 
-            transparent 
-            opacity={0.9}
+            toneMapped={false}
           />
         </mesh>
-        <mesh>
-          <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
-          <meshStandardMaterial color="#1e293b" />
-        </mesh>
-      </group>
+
+        {/* Window frame */}
+        <group position={windowPosition} rotation={windowRotation}>
+          <mesh>
+            <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
+            <meshStandardMaterial color="#1e293b" />
+          </mesh>
+          
+          {/* Window glass */}
+          <mesh position={[0, 0, 0.01]}>
+            <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
+            <meshStandardMaterial 
+              transparent 
+              opacity={0.1}
+              color="#ffffff"
+            />
+          </mesh>
+        </group>
+      </>
     );
   };
 
