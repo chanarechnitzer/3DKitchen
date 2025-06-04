@@ -148,7 +148,6 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Calculate distance between two positions
   const calculateDistance = (pos1: Vector3, pos2: Vector3): number => {
-    // Ensure both positions are Vector3 instances
     const vector1 = pos1 instanceof Vector3 ? pos1 : new Vector3(pos1.x, pos1.y, pos1.z);
     const vector2 = pos2 instanceof Vector3 ? pos2 : new Vector3(pos2.x, pos2.y, pos2.z);
     return vector1.distanceTo(vector2);
@@ -227,22 +226,20 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (itemIndex !== -1) {
       const item = { 
         ...availableItems[itemIndex], 
-        position: new Vector3(position.x, position.y, position.z),  // Ensure position is a Vector3
+        position: new Vector3(position.x, position.y, position.z),
         placed: true 
       };
       
-      // Check if trying to place more than 10 cabinets
       if (item.type === KitchenItemType.COUNTERTOP) {
         const placedCabinets = placedItems.filter(i => i.type === KitchenItemType.COUNTERTOP).length;
         if (placedCabinets >= 10) {
-          return; // Don't place if limit reached
+          return;
         }
       }
       
       setAvailableItems(prev => prev.filter(item => item.id !== itemId));
       setPlacedItems(prev => [...prev, item]);
       
-      // Validate triangle after placing an item
       setTimeout(validateTriangle, 100);
     }
   };
@@ -254,7 +251,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (itemIndex !== -1) {
       const item = { 
         ...placedItems[itemIndex], 
-        position: new Vector3(0, 0, 0),  // Reset position as Vector3
+        position: new Vector3(0, 0, 0),
         placed: false 
       };
       
@@ -262,7 +259,6 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       setAvailableItems(prev => [...prev, item]);
       setGameCompleted(false);
       
-      // Validate triangle after removing an item
       setTimeout(validateTriangle, 100);
     }
   };
@@ -273,21 +269,31 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     const stove = placedItems.find(item => item.type === KitchenItemType.STOVE);
     const refrigerator = placedItems.find(item => item.type === KitchenItemType.REFRIGERATOR);
     
-    const isComplete = sinks.length > 0 && stove !== undefined && refrigerator !== undefined;
+    // Check if all required components are present
+    const hasRequiredComponents = sinks.length > 0 && stove && refrigerator;
     
-    if (isComplete) {
+    // Only proceed with validation if all components are present
+    if (hasRequiredComponents) {
       const distances: { [key: string]: number } = {};
       
-      sinks.forEach((sink, index) => {
-        const sinkToStove = calculateDistance(sink.position, stove.position);
-        const sinkToRefrigerator = calculateDistance(sink.position, refrigerator.position);
-        
-        distances[`כיור${index > 0 ? ' ' + (index + 1) : ''} - כיריים`] = sinkToStove;
-        distances[`כיור${index > 0 ? ' ' + (index + 1) : ''} - מקרר`] = sinkToRefrigerator;
-      });
-      
+      // Calculate distances between components
+      const primarySink = sinks[0]; // Use the first sink for primary measurements
+      const sinkToStove = calculateDistance(primarySink.position, stove.position);
+      const sinkToRefrigerator = calculateDistance(primarySink.position, refrigerator.position);
       const stoveToRefrigerator = calculateDistance(stove.position, refrigerator.position);
+      
+      distances['כיור - כיריים'] = sinkToStove;
+      distances['כיור - מקרר'] = sinkToRefrigerator;
       distances['כיריים - מקרר'] = stoveToRefrigerator;
+      
+      // Check additional sinks if present
+      sinks.slice(1).forEach((sink, index) => {
+        const additionalSinkToStove = calculateDistance(sink.position, stove.position);
+        const additionalSinkToRefrigerator = calculateDistance(sink.position, refrigerator.position);
+        
+        distances[`כיור ${index + 2} - כיריים`] = additionalSinkToStove;
+        distances[`כיור ${index + 2} - מקרר`] = additionalSinkToRefrigerator;
+      });
       
       const violations = validateDistances(distances);
       const isValid = violations.length === 0;
@@ -295,17 +301,18 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       const validation = {
         isValid,
         sides: {
-          sinkToStove: distances['כיור - כיריים'],
-          sinkToRefrigerator: distances['כיור - מקרר'],
+          sinkToStove,
+          sinkToRefrigerator,
           stoveToRefrigerator,
         },
         violations,
-        isComplete
+        isComplete: true
       };
       
       setTriangleValidation(validation);
       setGameCompleted(isValid);
     } else {
+      // Reset validation if components are missing
       setTriangleValidation(null);
       setGameCompleted(false);
     }
