@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text } from '@react-three/drei';
+import { TextureLoader } from 'three';
 import { WindowPlacement } from '../../store/KitchenContext';
 
 interface KitchenRoomProps {
@@ -11,8 +12,25 @@ interface KitchenRoomProps {
 const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacement }) => {
   const halfWidth = width / 2;
   const halfLength = length / 2;
+  const [windowTexture, setWindowTexture] = useState<THREE.Texture | null>(null);
+  const [doorTexture, setDoorTexture] = useState<THREE.Texture | null>(null);
 
-  // Generate meter markers - positioned inside the room
+  useEffect(() => {
+    const textureLoader = new TextureLoader();
+    
+    // Load window texture
+    textureLoader.load(
+      'https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg',
+      (texture) => setWindowTexture(texture)
+    );
+    
+    // Load door texture
+    textureLoader.load(
+      'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg',
+      (texture) => setDoorTexture(texture)
+    );
+  }, []);
+
   const generateMarkers = (size: number, isWidth: boolean) => {
     const markers = [];
     for (let i = 0; i <= size; i++) {
@@ -62,6 +80,8 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   };
 
   const renderWindow = () => {
+    if (!windowTexture) return null;
+
     const windowWidth = width / 3;
     const windowHeight = 1.5;
     const windowY = 1.5;
@@ -88,12 +108,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       <group position={windowPosition} rotation={windowRotation}>
         <mesh>
           <planeGeometry args={[windowWidth, windowHeight]} />
-          <meshStandardMaterial>
-            <textureLoader
-              attach="map"
-              args={["https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg"]}
-            />
-          </meshStandardMaterial>
+          <meshStandardMaterial map={windowTexture} />
         </mesh>
         <mesh>
           <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
@@ -105,13 +120,11 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
   return (
     <group className="room-fly-in">
-      {/* Floor with grid */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[width, length]} />
         <meshStandardMaterial color="#f3f4f6" />
       </mesh>
 
-      {/* Grid lines */}
       <gridHelper
         args={[width, Math.ceil(width) * 2, '#d1d5db', '#d1d5db']}
         position={[0, 0.001, 0]}
@@ -122,19 +135,16 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         rotation={[0, Math.PI / 2, 0]}
       />
 
-      {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 3, 0]} receiveShadow>
         <planeGeometry args={[width, length]} />
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
-      {/* Back wall */}
       <mesh position={[0, 1.5, -halfLength]} receiveShadow>
         <boxGeometry args={[width, 3, 0.1]} />
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
-      {/* Left wall */}
       <mesh
         position={[-halfWidth, 1.5, 0]}
         rotation={[0, Math.PI / 2, 0]}
@@ -144,7 +154,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
-      {/* Right wall */}
       <mesh
         position={[halfWidth, 1.5, 0]}
         rotation={[0, -Math.PI / 2, 0]}
@@ -154,7 +163,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
-      {/* Front wall with door opening to living room */}
       <group position={[0, 1.5, halfLength]}>
         <mesh position={[-width / 3, 0, 0]} receiveShadow>
           <boxGeometry args={[width / 3, 3, 0.1]} />
@@ -164,26 +172,19 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           <boxGeometry args={[width / 3, 3, 0.1]} />
           <meshStandardMaterial color="#f8fafc" />
         </mesh>
-        {/* Door opening showing living room */}
-        <mesh position={[0, -0.25, 0]}>
-          <planeGeometry args={[0.9, 2.5]} />
-          <meshStandardMaterial>
-            <textureLoader
-              attach="map"
-              args={["https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg"]}
-            />
-          </meshStandardMaterial>
-        </mesh>
+        {doorTexture && (
+          <mesh position={[0, -0.25, 0]}>
+            <planeGeometry args={[0.9, 2.5]} />
+            <meshStandardMaterial map={doorTexture} />
+          </mesh>
+        )}
       </group>
 
-      {/* Window */}
       {renderWindow()}
 
-      {/* Measurement markers */}
       {generateMarkers(width, true)}
       {generateMarkers(length, false)}
 
-      {/* Main dimension labels */}
       <Text
         position={[0, 0.01, -halfLength + 0.4]}
         rotation={[-Math.PI / 2, 0, 0]}
