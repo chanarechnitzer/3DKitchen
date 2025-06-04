@@ -26,7 +26,7 @@ const KitchenScene: React.FC = () => {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
-  const lastMousePos = useRef({ x: 0, y: 0 });
+  const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
   useEffect(() => {
     if (selectedItem) {
@@ -58,47 +58,40 @@ const KitchenScene: React.FC = () => {
     }
   };
 
+  const convertToWorldPosition = (clientX: number, clientY: number) => {
+    if (!canvasRef.current) return null;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    const camera = controlsRef.current?.object;
+    if (!camera) return null;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    raycaster.ray.intersectPlane(plane, worldPosRef.current);
+
+    return worldPosRef.current.clone();
+  };
+
   const handleMouseMove = (event: React.MouseEvent) => {
     if (!canvasRef.current || !selectedItem) return;
     
     setIsDragging(true);
-    const canvasRect = canvasRef.current.getBoundingClientRect();
-    
-    // Calculate mouse movement delta
-    const deltaX = event.clientX - lastMousePos.current.x;
-    const deltaY = event.clientY - lastMousePos.current.y;
-    
-    // Update last mouse position
-    lastMousePos.current = { x: event.clientX, y: event.clientY };
-    
-    // Convert mouse movement to world space
-    const movementScale = 0.01; // Adjust this value to control movement sensitivity
-    const newX = position.x + deltaX * movementScale;
-    const newZ = position.z + deltaY * movementScale;
-    
-    // Clamp position within kitchen boundaries
+    const worldPos = convertToWorldPosition(event.clientX, event.clientY);
+    if (!worldPos) return;
+
     const maxX = kitchenDimensions.width / 2;
     const maxZ = kitchenDimensions.length / 2;
-    const clampedX = Math.min(Math.max(-maxX, newX), maxX);
-    const clampedZ = Math.min(Math.max(-maxZ, newZ), maxZ);
+    
+    const clampedX = Math.min(Math.max(-maxX, worldPos.x), maxX);
+    const clampedZ = Math.min(Math.max(-maxZ, worldPos.z), maxZ);
     
     setPosition({ x: clampedX, z: clampedZ });
-    setCursorPosition({ 
-      x: event.clientX, 
-      y: event.clientY 
-    });
-  };
-
-  const handleMouseDown = (event: React.MouseEvent) => {
-    if (selectedItem) {
-      lastMousePos.current = { x: event.clientX, y: event.clientY };
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      document.body.style.cursor = 'auto';
-    }
+    setCursorPosition({ x: event.clientX, y: event.clientY });
   };
 
   const handleTouchMove = (event: React.TouchEvent) => {
@@ -108,37 +101,22 @@ const KitchenScene: React.FC = () => {
     setIsDragging(true);
     
     const touch = event.touches[0];
-    const canvasRect = canvasRef.current.getBoundingClientRect();
-    
-    // Calculate touch movement delta
-    const deltaX = touch.clientX - lastMousePos.current.x;
-    const deltaY = touch.clientY - lastMousePos.current.y;
-    
-    // Update last touch position
-    lastMousePos.current = { x: touch.clientX, y: touch.clientY };
-    
-    // Convert touch movement to world space
-    const movementScale = 0.01;
-    const newX = position.x + deltaX * movementScale;
-    const newZ = position.z + deltaY * movementScale;
-    
-    // Clamp position within kitchen boundaries
+    const worldPos = convertToWorldPosition(touch.clientX, touch.clientY);
+    if (!worldPos) return;
+
     const maxX = kitchenDimensions.width / 2;
     const maxZ = kitchenDimensions.length / 2;
-    const clampedX = Math.min(Math.max(-maxX, newX), maxX);
-    const clampedZ = Math.min(Math.max(-maxZ, newZ), maxZ);
+    
+    const clampedX = Math.min(Math.max(-maxX, worldPos.x), maxX);
+    const clampedZ = Math.min(Math.max(-maxZ, worldPos.z), maxZ);
     
     setPosition({ x: clampedX, z: clampedZ });
-    setCursorPosition({ 
-      x: touch.clientX, 
-      y: touch.clientY 
-    });
+    setCursorPosition({ x: touch.clientX, y: touch.clientY });
   };
 
-  const handleTouchStart = (event: React.TouchEvent) => {
-    if (selectedItem) {
-      const touch = event.touches[0];
-      lastMousePos.current = { x: touch.clientX, y: touch.clientY };
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      document.body.style.cursor = 'auto';
     }
   };
 
@@ -146,10 +124,8 @@ const KitchenScene: React.FC = () => {
     <div 
       className="w-full h-full relative"
       onMouseMove={handleMouseMove}
-      onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
       onTouchMove={handleTouchMove}
-      onTouchStart={handleTouchStart}
       onTouchEnd={handlePlaceItem}
       onClick={selectedItem ? handlePlaceItem : undefined}
     >
