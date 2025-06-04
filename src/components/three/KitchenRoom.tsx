@@ -13,24 +13,15 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   const halfWidth = width / 2;
   const halfLength = length / 2;
   const [windowTexture, setWindowTexture] = useState<THREE.Texture | null>(null);
-  const [doorTexture, setDoorTexture] = useState<THREE.Texture | null>(null);
 
   useEffect(() => {
     const textureLoader = new TextureLoader();
     
     textureLoader.load(
-      'https://images.pexels.com/photos/2662116/pexels-photo-2662116.jpeg',
+      'https://images.pexels.com/photos/640809/pexels-photo-640809.jpeg',
       (texture) => {
         texture.flipY = false;
         setWindowTexture(texture);
-      }
-    );
-    
-    textureLoader.load(
-      'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg',
-      (texture) => {
-        texture.flipY = false;
-        setDoorTexture(texture);
       }
     );
   }, []);
@@ -180,16 +171,10 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           <boxGeometry args={[width / 3, 3, 0.1]} />
           <meshStandardMaterial color="#f8fafc" />
         </mesh>
-        {doorTexture && (
-          <mesh position={[0, -0.25, 0]}>
-            <planeGeometry args={[0.9, 2.5]} />
-            <meshStandardMaterial 
-              map={doorTexture} 
-              transparent 
-              opacity={0.9}
-            />
-          </mesh>
-        )}
+        <mesh position={[0, -0.25, 0]}>
+          <boxGeometry args={[0.9, 2.5, 0.05]} />
+          <meshStandardMaterial color="#7c3aed" />
+        </mesh>
       </group>
 
       {renderWindow()}
