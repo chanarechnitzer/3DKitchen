@@ -49,12 +49,30 @@ const KitchenScene: React.FC = () => {
     if (selectedItem) {
       placeItem(
         selectedItem.id, 
-        new THREE.Vector3(position.x, 0, position.z)  // Create a proper Vector3 instance
+        new THREE.Vector3(position.x, 0, position.z)
       );
       setSelectedItem(null);
       setIsDragging(false);
       document.body.style.cursor = 'auto';
     }
+  };
+
+  const getScreenPosition = (worldX: number, worldZ: number) => {
+    if (!canvasRef.current) return null;
+
+    const camera = controlsRef.current?.object;
+    if (!camera) return null;
+
+    const vector = new THREE.Vector3(worldX, 0, worldZ);
+    vector.project(camera);
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+
+    return {
+      x: (vector.x + 1) * rect.width / 2 + rect.left,
+      y: (-vector.y + 1) * rect.height / 2 + rect.top
+    };
   };
 
   const handleMouseMove = (event: React.MouseEvent) => {
@@ -72,7 +90,11 @@ const KitchenScene: React.FC = () => {
     const newZ = Math.min(Math.max(-maxZ, mouseZ * maxZ), maxZ);
     
     setPosition({ x: newX, z: newZ });
-    setCursorPosition({ x: event.clientX, y: event.clientY });
+
+    const screenPos = getScreenPosition(newX, newZ);
+    if (screenPos) {
+      setCursorPosition(screenPos);
+    }
   };
 
   const handleMouseLeave = () => {
@@ -99,7 +121,11 @@ const KitchenScene: React.FC = () => {
     const newZ = Math.min(Math.max(-maxZ, touchZ * maxZ), maxZ);
     
     setPosition({ x: newX, z: newZ });
-    setCursorPosition({ x: touch.clientX, y: touch.clientY });
+
+    const screenPos = getScreenPosition(newX, newZ);
+    if (screenPos) {
+      setCursorPosition(screenPos);
+    }
   };
 
   return (
