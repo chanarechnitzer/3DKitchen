@@ -18,65 +18,64 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   // Create a canvas with the mountain view
   const createMountainViewCanvas = () => {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 768;
+    canvas.width = 512;  // Reduced for better performance
+    canvas.height = 512; // Square aspect ratio
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
     // Sky gradient
-    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.6);
-    skyGradient.addColorStop(0, '#87CEEB'); // Light blue at top
-    skyGradient.addColorStop(0.5, '#B0E2FF'); // Lighter blue in middle
-    skyGradient.addColorStop(1, '#E0F6FF'); // Almost white at horizon
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.7);
+    skyGradient.addColorStop(0, '#4A90E2');   // Deeper blue at top
+    skyGradient.addColorStop(0.5, '#87CEEB'); // Light blue in middle
+    skyGradient.addColorStop(1, '#E0F6FF');   // Almost white at horizon
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Distant mountains (background)
+    // Clouds
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    for (let i = 0; i < 8; i++) {
+      const x = canvas.width * Math.random();
+      const y = canvas.height * 0.2 * Math.random();
+      const size = 30 + Math.random() * 20;
+      
+      for (let j = 0; j < 3; j++) {
+        ctx.beginPath();
+        ctx.arc(x + j * 15, y + Math.sin(j) * 5, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Background mountains
     ctx.fillStyle = '#8BA9A5';
     ctx.beginPath();
-    ctx.moveTo(0, canvas.height * 0.5);
-    ctx.lineTo(canvas.width * 0.2, canvas.height * 0.35);
-    ctx.lineTo(canvas.width * 0.4, canvas.height * 0.45);
-    ctx.lineTo(canvas.width * 0.6, canvas.height * 0.3);
-    ctx.lineTo(canvas.width * 0.8, canvas.height * 0.4);
-    ctx.lineTo(canvas.width, canvas.height * 0.35);
+    ctx.moveTo(0, canvas.height * 0.7);
+    ctx.lineTo(canvas.width * 0.2, canvas.height * 0.5);
+    ctx.lineTo(canvas.width * 0.5, canvas.height * 0.6);
+    ctx.lineTo(canvas.width * 0.8, canvas.height * 0.45);
+    ctx.lineTo(canvas.width, canvas.height * 0.55);
     ctx.lineTo(canvas.width, canvas.height);
     ctx.lineTo(0, canvas.height);
     ctx.fill();
 
-    // Closer mountains (foreground)
+    // Foreground mountains
     ctx.fillStyle = '#4B6455';
     ctx.beginPath();
     ctx.moveTo(0, canvas.height);
-    ctx.lineTo(0, canvas.height * 0.45);
-    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.25);
-    ctx.lineTo(canvas.width * 0.7, canvas.height * 0.55);
-    ctx.lineTo(canvas.width, canvas.height * 0.35);
+    ctx.lineTo(0, canvas.height * 0.6);
+    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.4);
+    ctx.lineTo(canvas.width * 0.7, canvas.height * 0.65);
+    ctx.lineTo(canvas.width, canvas.height * 0.5);
     ctx.lineTo(canvas.width, canvas.height);
     ctx.fill();
 
     // Snow caps
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.moveTo(canvas.width * 0.2, canvas.height * 0.3);
-    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.25);
-    ctx.lineTo(canvas.width * 0.4, canvas.height * 0.28);
-    ctx.lineTo(canvas.width * 0.25, canvas.height * 0.35);
+    ctx.moveTo(canvas.width * 0.25, canvas.height * 0.45);
+    ctx.lineTo(canvas.width * 0.35, canvas.height * 0.4);
+    ctx.lineTo(canvas.width * 0.45, canvas.height * 0.43);
+    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.48);
     ctx.fill();
-
-    // Add some clouds
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    for (let i = 0; i < 5; i++) {
-      const x = canvas.width * (i * 0.2 + 0.1);
-      const y = canvas.height * 0.15;
-      const size = 40 + Math.random() * 30;
-      
-      for (let j = 0; j < 5; j++) {
-        ctx.beginPath();
-        ctx.arc(x + j * 20, y + Math.sin(j) * 10, size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
 
     return canvas;
   };
@@ -86,8 +85,11 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       const canvas = createMountainViewCanvas();
       if (canvas) {
         const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
         texture.needsUpdate = true;
         setWindowTexture(texture);
+        console.log('Window texture created successfully');
       }
     } catch (error) {
       console.error('Error creating window view:', error);
@@ -214,8 +216,8 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   };
 
   const renderWindow = () => {
-    if (!windowTexture && !textureError) return null;
-
+    console.log('Rendering window, texture:', windowTexture);
+    
     const windowWidth = 1.2;
     const windowHeight = 1.2;
     const windowY = 1.4;
@@ -240,20 +242,20 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
     return (
       <group position={windowPosition} rotation={windowRotation}>
-        {/* Background view (mountains) */}
-        <mesh position={[0, 0, -0.01]}>
-          <planeGeometry args={[windowWidth, windowHeight]} />
+        {/* Mountain view */}
+        <mesh position={[0, 0, -0.02]}>
+          <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
           <meshBasicMaterial 
             map={windowTexture}
             side={THREE.DoubleSide}
             toneMapped={false}
-            color="white"
+            color={textureError ? "#87CEEB" : "white"}
           />
         </mesh>
 
         {/* Glass */}
-        <mesh>
-          <planeGeometry args={[windowWidth, windowHeight]} />
+        <mesh position={[0, 0, -0.01]}>
+          <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
           <meshPhysicalMaterial 
             transparent
             opacity={0.2}
@@ -267,23 +269,23 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
         {/* Frame */}
         <mesh>
-          <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
+          <boxGeometry args={[windowWidth, windowHeight, 0.05]} />
           <meshStandardMaterial color="#1e293b" />
         </mesh>
 
-        {/* Dividers */}
+        {/* Window dividers */}
         <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[0.05, windowHeight, 0.02]} />
+          <boxGeometry args={[0.05, windowHeight - 0.1, 0.02]} />
           <meshStandardMaterial color="#1e293b" />
         </mesh>
         <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[windowWidth, 0.05, 0.02]} />
+          <boxGeometry args={[windowWidth - 0.1, 0.05, 0.02]} />
           <meshStandardMaterial color="#1e293b" />
         </mesh>
       </group>
     );
   };
-
+  
   return (
     <group className="room-fly-in">
       {/* Floor */}
