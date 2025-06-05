@@ -115,6 +115,45 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     return markers;
   };
 
+  const renderPlants = () => {
+    const plants = [];
+    const shelfHeight = 2.2;
+    const shelfDepth = 0.3;
+    const plantSpacing = 1.2;
+
+    // Create plants along the back wall
+    for (let i = -2; i <= 2; i++) {
+      plants.push(
+        <group key={`plant-${i}`} position={[i * plantSpacing, shelfHeight, -halfLength + shelfDepth]}>
+          {/* Plant pot */}
+          <mesh castShadow>
+            <cylinderGeometry args={[0.15, 0.12, 0.25, 16]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+          
+          {/* Plant leaves */}
+          <mesh position={[0, 0.2, 0]} castShadow>
+            <sphereGeometry args={[0.25, 16, 16]} />
+            <meshStandardMaterial color="#228B22" />
+          </mesh>
+        </group>
+      );
+
+      // Shelf
+      plants.push(
+        <mesh 
+          key={`shelf-${i}`} 
+          position={[i * plantSpacing, shelfHeight - 0.15, -halfLength + shelfDepth]}
+        >
+          <boxGeometry args={[0.8, 0.05, 0.4]} />
+          <meshStandardMaterial color="#4a5568" />
+        </mesh>
+      );
+    }
+
+    return plants;
+  };
+
   const renderWindow = () => {
     if (!windowTexture && !textureError) return null;
 
@@ -248,6 +287,9 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           <meshStandardMaterial color="#f8fafc" />
         </mesh>
       </group>
+
+      {/* Plants and shelves */}
+      {renderPlants()}
 
       {/* Window with view */}
       {renderWindow()}
