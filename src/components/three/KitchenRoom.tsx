@@ -147,25 +147,23 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     const plants = [];
     const shelfHeight = 2.2;
     const shelfDepth = 0.3;
-    const plantSpacing = 1;
 
-    // Only place plants on the back wall, avoiding window area
-    const backWallWidth = width - 1; // Leave some space on edges
-    const numPlants = Math.floor(backWallWidth / plantSpacing);
-    const startX = -(numPlants * plantSpacing) / 2;
+    // Only place two plants in opposite corners
+    const cornerPositions = [
+      [-halfWidth + 0.4, shelfHeight, -halfLength + shelfDepth], // Left back corner
+      [halfWidth - 0.4, shelfHeight, -halfLength + shelfDepth],  // Right back corner
+    ];
 
-    for (let i = 0; i < numPlants; i++) {
-      const x = startX + i * plantSpacing;
-      
+    cornerPositions.forEach((position, index) => {
       // Skip if this position would interfere with the window
-      if (windowPlacement === WindowPlacement.OPPOSITE &&
-          x > -width/6 && x < width/6) {
-        continue;
+      if (windowPlacement === WindowPlacement.OPPOSITE && 
+          position[0] > -width/6 && position[0] < width/6) {
+        return;
       }
 
       // Plant group
       plants.push(
-        <group key={`plant-${i}`} position={[x, shelfHeight, -halfLength + shelfDepth]}>
+        <group key={`plant-${index}`} position={position}>
           {/* Plant pot */}
           <mesh castShadow>
             <cylinderGeometry args={[0.12, 0.08, 0.2, 16]} />
@@ -195,14 +193,14 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       // Shelf
       plants.push(
         <mesh 
-          key={`shelf-${i}`} 
-          position={[x, shelfHeight - 0.12, -halfLength + shelfDepth]}
+          key={`shelf-${index}`} 
+          position={[position[0], shelfHeight - 0.12, position[2]]}
         >
           <boxGeometry args={[0.6, 0.03, 0.3]} />
           <meshStandardMaterial color="#4a5568" />
         </mesh>
       );
-    }
+    });
 
     return plants;
   };
@@ -213,7 +211,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     const windowWidth = width / 3;
     const windowHeight = 1.5;
     const windowY = 1.5;
-    const wallOffset = 0.1;
+    const wallOffset = 0.01; // Reduced to align perfectly with wall
     const viewDistance = 5;
 
     let windowPosition: [number, number, number];
