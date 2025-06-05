@@ -160,6 +160,14 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           position[0] > -width/6 && position[0] < width/6) {
         return;
       }
+      if (windowPlacement === WindowPlacement.LEFT && 
+          position[0] < 0) {
+        return;
+      }
+      if (windowPlacement === WindowPlacement.RIGHT && 
+          position[0] > 0) {
+        return;
+      }
 
       // Plant group
       plants.push(
