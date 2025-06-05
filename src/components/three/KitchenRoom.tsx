@@ -198,7 +198,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         </group>
       );
 
-      // Shelf
+      // Shelf under plant
       plants.push(
         <mesh 
           key={`shelf-${index}`} 
