@@ -24,31 +24,59 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     if (!ctx) return null;
 
     // Sky gradient
-    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    skyGradient.addColorStop(0, '#87CEEB');
-    skyGradient.addColorStop(1, '#E0F6FF');
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.6);
+    skyGradient.addColorStop(0, '#87CEEB'); // Light blue at top
+    skyGradient.addColorStop(0.5, '#B0E2FF'); // Lighter blue in middle
+    skyGradient.addColorStop(1, '#E0F6FF'); // Almost white at horizon
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Mountains
+    // Distant mountains (background)
+    ctx.fillStyle = '#8BA9A5';
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height * 0.5);
+    ctx.lineTo(canvas.width * 0.2, canvas.height * 0.35);
+    ctx.lineTo(canvas.width * 0.4, canvas.height * 0.45);
+    ctx.lineTo(canvas.width * 0.6, canvas.height * 0.3);
+    ctx.lineTo(canvas.width * 0.8, canvas.height * 0.4);
+    ctx.lineTo(canvas.width, canvas.height * 0.35);
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.fill();
+
+    // Closer mountains (foreground)
     ctx.fillStyle = '#4B6455';
     ctx.beginPath();
     ctx.moveTo(0, canvas.height);
-    ctx.lineTo(0, canvas.height * 0.4);
-    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.2);
-    ctx.lineTo(canvas.width * 0.7, canvas.height * 0.5);
-    ctx.lineTo(canvas.width, canvas.height * 0.3);
+    ctx.lineTo(0, canvas.height * 0.45);
+    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.25);
+    ctx.lineTo(canvas.width * 0.7, canvas.height * 0.55);
+    ctx.lineTo(canvas.width, canvas.height * 0.35);
     ctx.lineTo(canvas.width, canvas.height);
     ctx.fill();
 
     // Snow caps
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.moveTo(0, canvas.height * 0.4);
-    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.2);
-    ctx.lineTo(canvas.width * 0.4, canvas.height * 0.25);
-    ctx.lineTo(canvas.width * 0.2, canvas.height * 0.35);
+    ctx.moveTo(canvas.width * 0.2, canvas.height * 0.3);
+    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.25);
+    ctx.lineTo(canvas.width * 0.4, canvas.height * 0.28);
+    ctx.lineTo(canvas.width * 0.25, canvas.height * 0.35);
     ctx.fill();
+
+    // Add some clouds
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    for (let i = 0; i < 5; i++) {
+      const x = canvas.width * (i * 0.2 + 0.1);
+      const y = canvas.height * 0.15;
+      const size = 40 + Math.random() * 30;
+      
+      for (let j = 0; j < 5; j++) {
+        ctx.beginPath();
+        ctx.arc(x + j * 20, y + Math.sin(j) * 10, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
     return canvas;
   };
@@ -119,23 +147,48 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     const plants = [];
     const shelfHeight = 2.2;
     const shelfDepth = 0.3;
-    const plantSpacing = 1.2;
+    const plantSpacing = 1;
 
-    // Create plants along the back wall
-    for (let i = -2; i <= 2; i++) {
+    // Only place plants on the back wall, avoiding window area
+    const backWallWidth = width - 1; // Leave some space on edges
+    const numPlants = Math.floor(backWallWidth / plantSpacing);
+    const startX = -(numPlants * plantSpacing) / 2;
+
+    for (let i = 0; i < numPlants; i++) {
+      const x = startX + i * plantSpacing;
+      
+      // Skip if this position would interfere with the window
+      if (windowPlacement === WindowPlacement.OPPOSITE &&
+          x > -width/6 && x < width/6) {
+        continue;
+      }
+
+      // Plant group
       plants.push(
-        <group key={`plant-${i}`} position={[i * plantSpacing, shelfHeight, -halfLength + shelfDepth]}>
+        <group key={`plant-${i}`} position={[x, shelfHeight, -halfLength + shelfDepth]}>
           {/* Plant pot */}
           <mesh castShadow>
-            <cylinderGeometry args={[0.15, 0.12, 0.25, 16]} />
+            <cylinderGeometry args={[0.12, 0.08, 0.2, 16]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
           
-          {/* Plant leaves */}
-          <mesh position={[0, 0.2, 0]} castShadow>
-            <sphereGeometry args={[0.25, 16, 16]} />
-            <meshStandardMaterial color="#228B22" />
-          </mesh>
+          {/* Plant leaves - create more natural-looking foliage */}
+          <group position={[0, 0.15, 0]}>
+            {[0, 1, 2].map((layer) => (
+              <mesh 
+                key={`leaves-${layer}`} 
+                position={[0, layer * 0.08, 0]} 
+                rotation={[layer * 0.2, layer * Math.PI / 4, 0]}
+                castShadow
+              >
+                <sphereGeometry args={[0.15 - layer * 0.03, 8, 8]} />
+                <meshStandardMaterial 
+                  color={layer === 0 ? "#2D5A27" : "#3A7A34"} 
+                  roughness={0.8}
+                />
+              </mesh>
+            ))}
+          </group>
         </group>
       );
 
@@ -143,9 +196,9 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       plants.push(
         <mesh 
           key={`shelf-${i}`} 
-          position={[i * plantSpacing, shelfHeight - 0.15, -halfLength + shelfDepth]}
+          position={[x, shelfHeight - 0.12, -halfLength + shelfDepth]}
         >
-          <boxGeometry args={[0.8, 0.05, 0.4]} />
+          <boxGeometry args={[0.6, 0.03, 0.3]} />
           <meshStandardMaterial color="#4a5568" />
         </mesh>
       );
@@ -218,6 +271,16 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           {/* Window frame */}
           <mesh>
             <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
+            <meshStandardMaterial color="#1e293b" />
+          </mesh>
+
+          {/* Window dividers */}
+          <mesh position={[0, 0, 0.01]}>
+            <boxGeometry args={[0.05, windowHeight, 0.02]} />
+            <meshStandardMaterial color="#1e293b" />
+          </mesh>
+          <mesh position={[0, 0, 0.01]}>
+            <boxGeometry args={[windowWidth, 0.05, 0.02]} />
             <meshStandardMaterial color="#1e293b" />
           </mesh>
         </group>
