@@ -181,7 +181,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     const windowHeight = 1.5;
     const windowY = 1.5;
     const wallOffset = 0.1;
-    const viewDistance = 0.5; // Distance of the view behind the window
+    const viewDistance = 0.5;
 
     let windowPosition: [number, number, number];
     let windowRotation: [number, number, number] = [0, 0, 0];
@@ -192,18 +192,18 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       case WindowPlacement.RIGHT:
         windowPosition = [halfWidth - wallOffset, windowY, 0];
         windowRotation = [0, -Math.PI / 2, 0];
-        viewPosition = [halfWidth - wallOffset * 2, windowY, 0];
+        viewPosition = [halfWidth - wallOffset - viewDistance, windowY, 0];
         viewRotation = [0, -Math.PI / 2, 0];
         break;
       case WindowPlacement.LEFT:
         windowPosition = [-halfWidth + wallOffset, windowY, 0];
         windowRotation = [0, Math.PI / 2, 0];
-        viewPosition = [-halfWidth + wallOffset * 2, windowY, 0];
+        viewPosition = [-halfWidth + wallOffset + viewDistance, windowY, 0];
         viewRotation = [0, Math.PI / 2, 0];
         break;
       default: // OPPOSITE
         windowPosition = [0, windowY, -halfLength + wallOffset];
-        viewPosition = [0, windowY, -halfLength + wallOffset * 2];
+        viewPosition = [0, windowY, -halfLength + wallOffset + viewDistance];
         break;
     }
 
