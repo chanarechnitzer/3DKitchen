@@ -10,7 +10,8 @@ const KitchenDesigner: React.FC = () => {
   const { 
     gameCompleted, 
     triangleValidation,
-    kitchenDimensions
+    kitchenDimensions,
+    windowPlacement
   } = useKitchen();
   
   useEffect(() => {
@@ -24,7 +25,7 @@ const KitchenDesigner: React.FC = () => {
       <div className="lg:col-span-3 bg-white rounded-lg shadow-md overflow-hidden">
         <div className="h-[500px] md:h-[600px] relative">
           <ErrorBoundary>
-            <KitchenScene />
+            <KitchenScene windowPlacement={windowPlacement} />
           </ErrorBoundary>
         </div>
       </div>

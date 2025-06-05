@@ -219,8 +219,8 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     const windowWidth = 1.2; // 1.2 meters wide
     const windowHeight = 1.2; // 1.2 meters tall
     const windowY = 1.4; // Eye level (1.4 meters from floor)
-    const wallOffset = 0.01; // Reduced to align perfectly with wall
-    const viewDistance = 5;
+    const wallOffset = 0.05; // Offset to prevent z-fighting
+    const viewDistance = 1.5; // Reduced view distance
 
     let windowPosition: [number, number, number];
     let windowRotation: [number, number, number] = [0, 0, 0];

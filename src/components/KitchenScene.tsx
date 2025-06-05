@@ -6,12 +6,15 @@ import KitchenRoom from './three/KitchenRoom';
 import DraggableObject from './three/DraggableObject';
 import TriangleLines from './three/TriangleLines';
 import DistanceLines from './three/DistanceLines';
-import { useKitchen } from '../store/KitchenContext';
+import { useKitchen, WindowPlacement } from '../store/KitchenContext';
 
-const KitchenScene: React.FC = () => {
+interface KitchenSceneProps {
+  windowPlacement: WindowPlacement;
+}
+
+const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
   const { 
     kitchenDimensions, 
-    windowPlacement,
     placedItems, 
     selectedItem,
     setSelectedItem,
