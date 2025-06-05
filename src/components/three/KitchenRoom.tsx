@@ -216,81 +216,71 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   const renderWindow = () => {
     if (!windowTexture && !textureError) return null;
 
-    const windowWidth = 1.2; // 1.2 meters wide
-    const windowHeight = 1.2; // 1.2 meters tall
-    const windowY = 1.4; // Eye level (1.4 meters from floor)
-    const wallOffset = 0.05; // Offset to prevent z-fighting
-    const viewDistance = 1.5; // Reduced view distance
+    const windowWidth = 1.2;
+    const windowHeight = 1.2;
+    const windowY = 1.4;
+    const wallOffset = 0.05;
 
     let windowPosition: [number, number, number];
     let windowRotation: [number, number, number] = [0, 0, 0];
-    let viewPosition: [number, number, number];
-    let viewRotation: [number, number, number] = [0, 0, 0];
 
     switch (windowPlacement) {
       case WindowPlacement.RIGHT:
         windowPosition = [halfWidth - wallOffset, windowY, 0];
         windowRotation = [0, -Math.PI / 2, 0];
-        viewPosition = [halfWidth + viewDistance, windowY, 0];
-        viewRotation = [0, -Math.PI / 2, 0];
         break;
       case WindowPlacement.LEFT:
         windowPosition = [-halfWidth + wallOffset, windowY, 0];
         windowRotation = [0, Math.PI / 2, 0];
-        viewPosition = [-halfWidth - viewDistance, windowY, 0];
-        viewRotation = [0, Math.PI / 2, 0];
         break;
       default: // OPPOSITE
         windowPosition = [0, windowY, -halfLength + wallOffset];
-        viewPosition = [0, windowY, -halfLength - viewDistance];
         break;
     }
 
     return (
-      <>
-        {/* Window view */}
-        <mesh position={viewPosition} rotation={viewRotation}>
-          <planeGeometry args={[windowWidth * 3, windowHeight * 3]} />
+      <group position={windowPosition} rotation={windowRotation}>
+        {/* Background view (mountains) */}
+        <mesh position={[0, 0, -0.01]}>
+          <planeGeometry args={[windowWidth, windowHeight]} />
           <meshBasicMaterial 
             map={windowTexture}
-            color={textureError ? '#87CEEB' : undefined}
+            side={THREE.DoubleSide}
+            toneMapped={false}
+            color="white"
+          />
+        </mesh>
+
+        {/* Glass */}
+        <mesh>
+          <planeGeometry args={[windowWidth, windowHeight]} />
+          <meshPhysicalMaterial 
+            transparent
+            opacity={0.2}
+            roughness={0}
+            metalness={0.2}
+            clearcoat={1}
+            clearcoatRoughness={0.1}
             side={THREE.DoubleSide}
           />
         </mesh>
 
-        {/* Window frame */}
-        <group position={windowPosition} rotation={windowRotation}>
-          {/* Window glass */}
-          <mesh>
-            <planeGeometry args={[windowWidth, windowHeight]} />
-            <meshPhysicalMaterial 
-              transparent
-              opacity={0.2}
-              roughness={0}
-              metalness={0.2}
-              clearcoat={1}
-              clearcoatRoughness={0.1}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
+        {/* Frame */}
+        <mesh>
+          <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
+          <meshStandardMaterial color="#1e293b" />
+        </mesh>
 
-          {/* Window frame */}
-          <mesh>
-            <boxGeometry args={[windowWidth + 0.1, windowHeight + 0.1, 0.05]} />
-            <meshStandardMaterial color="#1e293b" />
-          </mesh>
-
-          {/* Window dividers */}
-          <mesh position={[0, 0, 0.01]}>
-            <boxGeometry args={[0.05, windowHeight, 0.02]} />
-            <meshStandardMaterial color="#1e293b" />
-          </mesh>
-          <mesh position={[0, 0, 0.01]}>
-            <boxGeometry args={[windowWidth, 0.05, 0.02]} />
-            <meshStandardMaterial color="#1e293b" />
-          </mesh>
-        </group>
-      </>
+        {/* Dividers */}
+        <mesh position={[0, 0, 0.01]}>
+          <boxGeometry args={[0.05, windowHeight, 0.02]} />
+          <meshStandardMaterial color="#1e293b" />
+        </mesh>
+        <mesh position={[0, 0, 0.01]}>
+          <boxGeometry args={[windowWidth, 0.05, 0.02]} />
+          <meshStandardMaterial color="#1e293b" />
+        </mesh>
+      </group>
     );
   };
 
