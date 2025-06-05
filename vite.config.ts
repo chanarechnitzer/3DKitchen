@@ -13,4 +13,3 @@ export default defineConfig({
   },
   base: '/3DKitchen/',
 });
-
