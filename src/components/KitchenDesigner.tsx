@@ -36,7 +36,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
     const sink = placedItems.find(item => item.type === 'sink');
     const stove = placedItems.find(item => item.type === 'stove');
     const refrigerator = placedItems.find(item => item.type === 'refrigerator');
-    return sink && stove && refrigerator;
+    return !!(sink && stove && refrigerator);
   };
 
   const handleFinishDesigning = () => {
@@ -109,7 +109,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           
           {/* Action Buttons */}
           <div className="flex-shrink-0 space-y-2">
-            {/* Finish Designing Button - Only show when triangle items are placed */}
+            {/* Finish Designing Button - Only show when triangle items are placed and design not finished */}
             {hasTriangleItems() && !designPhaseComplete && (
               <button
                 onClick={handleFinishDesigning}
@@ -120,7 +120,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
               </button>
             )}
 
-            {/* Back to Customization Button */}
+            {/* Back to Customization Button - Only show after design is finished */}
             {designPhaseComplete && (
               <button
                 onClick={onBackToCustomize}
