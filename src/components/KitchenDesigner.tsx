@@ -15,6 +15,7 @@ interface KitchenDesignerProps {
 const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) => {
   const { 
     gameCompleted, 
+    setGameCompleted,
     triangleValidation,
     kitchenDimensions,
     windowPlacement,
@@ -41,9 +42,14 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
 
   const handleFinishDesigning = () => {
     setDesignPhaseComplete(true);
-    // Show completion dialog only when user clicks finish button
+    
+    // Mark game as completed when user clicks finish button
     if (triangleValidation?.isValid) {
+      setGameCompleted(true);
       setTimeout(() => setShowCompletionDialog(true), 500);
+    } else {
+      // Even if triangle is not valid, allow finishing design phase
+      setGameCompleted(false);
     }
   };
 
@@ -143,8 +149,8 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         />
       )}
       
-      {/* Completion Dialog - Only show when user finishes designing */}
-      {showCompletionDialog && designPhaseComplete && triangleValidation?.isValid && (
+      {/* Completion Dialog - Only show when user finishes designing and triangle is valid */}
+      {showCompletionDialog && designPhaseComplete && gameCompleted && triangleValidation?.isValid && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -176,8 +182,8 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         </div>
       )}
       
-      {/* Confetti only shows when game is actually completed */}
-      {designPhaseComplete && triangleValidation?.isValid && <Confetti />}
+      {/* Confetti only shows when game is actually completed by user action */}
+      {gameCompleted && designPhaseComplete && triangleValidation?.isValid && <Confetti />}
     </div>
   );
 };

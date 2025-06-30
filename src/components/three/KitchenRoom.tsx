@@ -47,6 +47,14 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     }
   };
 
+  // Get text color based on floor darkness
+  const getTextColor = () => {
+    const floorColor = getFloorColor();
+    // Check if floor is dark - if so, use white text, otherwise black
+    const isDarkFloor = ['#64748B', '#374151', '#8B4513'].includes(floorColor);
+    return isDarkFloor ? '#ffffff' : '#000000';
+  };
+
   // Create a canvas with the mountain view
   const createMountainViewCanvas = () => {
     const canvas = document.createElement('canvas');
@@ -130,6 +138,8 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
   const generateMarkers = (size: number, isWidth: boolean) => {
     const markers = [];
+    const textColor = getTextColor();
+    
     for (let i = 0; i <= size; i++) {
       const position = (i - size / 2);
 
@@ -138,11 +148,11 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           key={`marker-${i}`}
           position={
             isWidth
-              ? [position, 0.01, -halfLength + 0.2]
-              : [-halfWidth + 0.2, 0.01, position]
+              ? [position, 0.02, -halfLength + 0.2]
+              : [-halfWidth + 0.2, 0.02, position]
           }
           rotation={[-Math.PI / 2, 0, isWidth ? 0 : Math.PI / 2]}
-          color="black"
+          color={textColor}
           fontSize={0.15}
           anchorX="center"
           anchorY="middle"
@@ -161,13 +171,13 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
               key={`tick-${i}-${j}`}
               position={
                 isWidth
-                  ? [subPosition, 0.01, -halfLength + 0.2]
-                  : [-halfWidth + 0.2, 0.01, subPosition]
+                  ? [subPosition, 0.02, -halfLength + 0.2]
+                  : [-halfWidth + 0.2, 0.02, subPosition]
               }
               rotation={[-Math.PI / 2, 0, isWidth ? 0 : Math.PI / 2]}
             >
               <planeGeometry args={[0.01, lineHeight]} />
-              <meshStandardMaterial color="#4b5563" />
+              <meshStandardMaterial color={textColor} />
             </mesh>
           );
         }
@@ -307,6 +317,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   
   const wallColor = getWallColor();
   const floorColor = getFloorColor();
+  const textColor = getTextColor();
   
   return (
     <group className="room-fly-in">
@@ -375,15 +386,15 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Window with view */}
       {renderWindow()}
 
-      {/* Measurement markers */}
+      {/* Measurement markers with adaptive color */}
       {generateMarkers(width, true)}
       {generateMarkers(length, false)}
 
-      {/* Dimension labels */}
+      {/* Dimension labels with adaptive color */}
       <Text
-        position={[0, 0.01, -halfLength + 0.4]}
+        position={[0, 0.02, -halfLength + 0.4]}
         rotation={[-Math.PI / 2, 0, 0]}
-        color="black"
+        color={textColor}
         fontSize={0.25}
         anchorX="center"
         anchorY="middle"
@@ -392,9 +403,9 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       </Text>
 
       <Text
-        position={[-halfWidth + 0.4, 0.01, 0]}
+        position={[-halfWidth + 0.4, 0.02, 0]}
         rotation={[-Math.PI / 2, 0, Math.PI / 2]}
-        color="black"
+        color={textColor}
         fontSize={0.25}
         anchorX="center"
         anchorY="middle"

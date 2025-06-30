@@ -69,6 +69,7 @@ interface KitchenContextType {
   triangleValidation: TriangleValidation | null;
   validateTriangle: () => void;
   gameCompleted: boolean;
+  setGameCompleted: (completed: boolean) => void; // Add manual control
   getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
 }
 
@@ -95,6 +96,7 @@ const defaultContext: KitchenContextType = {
   triangleValidation: null,
   validateTriangle: () => {},
   gameCompleted: false,
+  setGameCompleted: () => {},
   getDragValidation: () => ({ isValid: false, distances: {} }),
 };
 
@@ -281,6 +283,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       setAvailableItems(prev => prev.filter(item => item.id !== itemId));
       setPlacedItems(prev => [...prev, item]);
       
+      // Only validate triangle, don't auto-complete game
       setTimeout(validateTriangle, 100);
     }
   };
@@ -299,13 +302,15 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       
       setPlacedItems(prev => prev.filter(item => item.id !== itemId));
       setAvailableItems(prev => [...prev, item]);
+      
+      // Reset game completion when items are removed
       setGameCompleted(false);
       
       setTimeout(validateTriangle, 100);
     }
   };
 
-  // Validate the kitchen triangle
+  // Validate the kitchen triangle - but don't auto-complete the game
   const validateTriangle = () => {
     const sinks = placedItems.filter(item => item.type === KitchenItemType.SINK);
     const stove = placedItems.find(item => item.type === KitchenItemType.STOVE);
@@ -352,7 +357,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       };
       
       setTriangleValidation(validation);
-      setGameCompleted(isValid);
+      // Don't auto-complete the game - let the user decide when to finish
     } else {
       // Reset validation if components are missing
       setTriangleValidation(null);
@@ -377,6 +382,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     triangleValidation,
     validateTriangle,
     gameCompleted,
+    setGameCompleted,
     getDragValidation,
   };
 
