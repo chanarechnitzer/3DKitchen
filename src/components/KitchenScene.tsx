@@ -39,9 +39,35 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // ✅ FIXED: Improved collision detection - only blocks when items actually overlap
+  // ✅ FIXED: Check if position is near a wall
+  const isNearWall = (x: number, z: number) => {
+    if (!selectedItem) return false;
+    
+    const halfWidth = kitchenDimensions.width / 2;
+    const halfLength = kitchenDimensions.length / 2;
+    const itemHalfWidth = selectedItem.dimensions.width / 2;
+    const itemHalfDepth = selectedItem.dimensions.depth / 2;
+    const snapDistance = 0.05;
+    const wallThreshold = 0.1; // Distance to consider "near wall"
+    
+    // Check if item is positioned near any wall
+    const nearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < wallThreshold;
+    const nearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfWidth)) < wallThreshold;
+    const nearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < wallThreshold;
+    const nearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < wallThreshold;
+    
+    return nearLeftWall || nearRightWall || nearBackWall || nearFrontWall;
+  };
+
+  // ✅ FIXED: Improved collision detection - NO collision warning when snapped to walls
   const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
     if (!selectedItem) return null;
+    
+    // ✅ CRITICAL: If item is near a wall, don't check for collisions
+    // Items against walls should never show collision warnings
+    if (isNearWall(x, z)) {
+      return null;
+    }
     
     // Calculate rotated dimensions
     const rotatedWidth = Math.abs(Math.cos(rotation)) * itemWidth + Math.abs(Math.sin(rotation)) * itemDepth;
@@ -391,18 +417,14 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snap || validatedPos;
       const finalRotation = snap?.rotation !== undefined ? snap.rotation : itemRotation;
       
-      // ✅ FIXED: Only check for collisions if NOT snapping to an item
-      // When snapping to items, we WANT them to be adjacent, so no collision warning
-      let collision = null;
-      if (!snap || !snap.snapType?.includes('נצמד')) {
-        collision = checkCollisions(
-          finalPos.x, 
-          finalPos.z, 
-          selectedItem.dimensions.width, 
-          selectedItem.dimensions.depth,
-          finalRotation
-        );
-      }
+      // ✅ FIXED: Check for collisions - but exclude wall-snapped items
+      const collision = checkCollisions(
+        finalPos.x, 
+        finalPos.z, 
+        selectedItem.dimensions.width, 
+        selectedItem.dimensions.depth,
+        finalRotation
+      );
       setCollisionWarning(collision);
       
       const validation = getDragValidation(
@@ -655,7 +677,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               </p>
             </div>
             
-            {/* Collision Warning */}
+            {/* ✅ FIXED: Collision Warning - only shows for actual overlaps, NOT for wall-adjacent items */}
             {collisionWarning && (
               <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-3 border border-red-200">
                 <p className="text-sm font-medium text-red-800 mb-1">
