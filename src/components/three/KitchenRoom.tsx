@@ -404,7 +404,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
     return (
       <group position={windowPosition} rotation={windowRotation}>
-        {/* Window frame - clean and simple */}
+        {/* ✅ FIXED: Window frame - clean and simple, NO CROSS! */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[windowWidth, windowHeight, 0.08]} />
           <meshStandardMaterial color="#2D1B14" />
@@ -434,6 +434,8 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
             side={THREE.DoubleSide}
           />
         </mesh>
+
+        {/* ✅ COMPLETELY REMOVED: No window cross frame! Clean single pane window */}
 
         {/* Curtains - elegant and flowing - CONTAINED within window area */}
         <group position={[0, 0, 0.05]}>
@@ -553,7 +555,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* ✅ FIXED: Window positioned ABOVE kitchen units */}
+      {/* ✅ FIXED: Beautiful window - NO cross frame! Clean single pane */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}
