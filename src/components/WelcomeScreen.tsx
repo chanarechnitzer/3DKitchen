@@ -19,7 +19,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
             <span className="text-primary"> כמעצבים</span>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            למד ותרגל את עקרון המשולש הזהב בתכנון מטבחים - הכלי המקצועי לעיצוב מטבחים פונקציונליים ויעילים
+            למד ותרגל את עקרון משולש הזהב בתכנון מטבחים - הכלי המקצועי לעיצוב מטבחים פונקציונליים ויעילים
           </p>
         </div>
 
@@ -29,11 +29,11 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
             <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
               <Target className="text-white" size={20} />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">מה זה המשולש הזהב?</h2>
+            <h2 className="text-xl font-bold text-gray-900">מה זה משולש הזהב?</h2>
           </div>
           
           <p className="text-gray-700 mb-4 leading-relaxed">
-            המשולש הזהב הוא עקרון יסוד בתכנון מטבחים המחבר בין שלושת אזורי העבודה המרכזיים במטבח:
+            משולש הזהב הוא עקרון יסוד בתכנון מטבחים המחבר בין שלושת אזורי העבודה המרכזיים במטבח:
           </p>
           
           <div className="grid md:grid-cols-3 gap-4 mb-4">
