@@ -56,7 +56,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
   };
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="h-full overflow-hidden">
       <div className="h-full grid grid-cols-1 xl:grid-cols-4 gap-3 p-3">
         {/* Main Design Area */}
         <div className="xl:col-span-3 flex flex-col">
@@ -84,7 +84,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         </div>
         
         {/* Side Panel */}
-        <div className="xl:col-span-1 flex flex-col gap-3 overflow-y-auto max-h-screen">
+        <div className="xl:col-span-1 flex flex-col gap-3 max-h-full overflow-hidden">
           {/* Kitchen Info */}
           <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 flex-shrink-0">
             <h3 className="text-base font-bold text-gray-900 mb-2">פרטי המטבח</h3>
@@ -111,23 +111,12 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           )}
           
           {/* Kitchen Controls */}
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-hidden">
             <KitchenControls />
           </div>
           
-          {/* Action Buttons */}
-          <div className="flex-shrink-0 space-y-2">
-            {/* Finish Designing Button - Show when triangle items are placed and design not finished */}
-            {hasTriangleItems() && !designPhaseComplete && (
-              <button
-                onClick={handleFinishDesigning}
-                className="w-full flex items-center justify-center gap-2 px-3 py-3 text-base font-bold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-green-400"
-              >
-                <CheckCircle size={18} />
-                <span>🎯 סיימתי לעצב!</span>
-              </button>
-            )}
-
+          {/* Action Buttons - Fixed at bottom */}
+          <div className="flex-shrink-0 space-y-2 bg-white rounded-xl p-3 border border-gray-100 shadow-lg">
             {/* Message when triangle items are missing */}
             {!hasTriangleItems() && !designPhaseComplete && (
               <div className="w-full p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 text-center">
@@ -140,11 +129,22 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
               </div>
             )}
 
+            {/* Finish Designing Button - Show when triangle items are placed and design not finished */}
+            {hasTriangleItems() && !designPhaseComplete && (
+              <button
+                onClick={handleFinishDesigning}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-base font-bold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-green-400"
+              >
+                <CheckCircle size={18} />
+                <span>🎯 סיימתי לעצב!</span>
+              </button>
+            )}
+
             {/* Back to Customization Button - Only show after design is finished */}
             {designPhaseComplete && (
               <button
                 onClick={onBackToCustomize}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
               >
                 <Palette size={16} />
                 <span>התאם אישית</span>
