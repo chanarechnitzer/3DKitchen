@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import KitchenScene from './KitchenScene';
 import KitchenControls from './KitchenControls';
 import TriangleStatus from './TriangleStatus';
-import ItemPreview from './ItemPreview';
 import Confetti from './Confetti';
 import ErrorBoundary from './ErrorBoundary';
 import { useKitchen } from '../store/KitchenContext';
@@ -127,10 +126,12 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
             </div>
           )}
           
-          {/* Kitchen Controls */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <KitchenControls />
-          </div>
+          {/* Kitchen Controls - Only show if no item is being dragged */}
+          {!selectedItem && (
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <KitchenControls />
+            </div>
+          )}
           
           {/* Action Buttons - Fixed at bottom */}
           <div className="flex-shrink-0 space-y-2 bg-white rounded-xl p-3 border border-gray-100 shadow-lg">
@@ -225,14 +226,6 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           </div>
         </div>
       </div>
-      
-      {/* Item Preview Modal */}
-      {selectedItem && (
-        <ItemPreview 
-          item={selectedItem}
-          onClose={() => {}}
-        />
-      )}
       
       {/* Completion Dialog - Only show when user finishes designing AND triangle is valid */}
       {showCompletionDialog && designPhaseComplete && gameCompleted && triangleValidation?.isValid && (

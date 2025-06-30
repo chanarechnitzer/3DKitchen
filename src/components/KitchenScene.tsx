@@ -391,6 +391,28 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const finalPosition = snapPosition || validatePosition(position.x, position.z);
   const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
 
+  const getItemIcon = (type: string) => {
+    switch (type) {
+      case 'sink': return '💧';
+      case 'stove': return '🔥';
+      case 'oven': return '♨️';
+      case 'refrigerator': return '❄️';
+      case 'countertop': return '📦';
+      default: return '📄';
+    }
+  };
+
+  const getItemColor = (type: string) => {
+    switch (type) {
+      case 'sink': return 'from-blue-400 to-blue-600';
+      case 'stove': return 'from-red-400 to-red-600';
+      case 'oven': return 'from-orange-400 to-orange-600';
+      case 'refrigerator': return 'from-cyan-400 to-cyan-600';
+      case 'countertop': return 'from-gray-400 to-gray-600';
+      default: return 'from-gray-400 to-gray-600';
+    }
+  };
+
   return (
     <div 
       className="w-full h-full relative"
@@ -477,11 +499,12 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         />
       </Canvas>
       
-      {/* ✅ Enhanced placement instructions with clear removal guidance */}
+      {/* ✅ FIXED: Single right-side panel with all drag information */}
       {selectedItem && (
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 max-w-md mx-4 border border-gray-200">
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3">
+        <div className="fixed top-4 right-4 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 w-80 border border-gray-200 z-40">
+          <div className="space-y-4">
+            {/* Item Header */}
+            <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white text-xl ${
                 collisionWarning 
                   ? 'bg-gradient-to-br from-red-400 to-red-600' 
@@ -489,22 +512,29 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
                     ? 'bg-gradient-to-br from-green-400 to-green-600' 
                     : 'bg-gradient-to-br from-yellow-400 to-yellow-600'
               }`}>
-                {selectedItem.type === 'sink' ? '💧' : selectedItem.type === 'stove' ? '🔥' : selectedItem.type === 'oven' ? '♨️' : selectedItem.type === 'refrigerator' ? '❄️' : '📦'}
+                {getItemIcon(selectedItem.type)}
               </div>
               <div>
                 <h3 className="font-bold text-gray-900">{selectedItem.name}</h3>
                 <p className="text-sm text-gray-600">
-                  {collisionWarning 
-                    ? `⚠️ חוסם את ${collisionWarning}` 
-                    : snapPosition 
-                      ? `${snapPosition.snapType || '🧲 נצמד'}` 
-                      : 'גרור למיקום הרצוי'
-                  }
+                  {selectedItem.dimensions.width} × {selectedItem.dimensions.depth} × {selectedItem.dimensions.height}מ'
                 </p>
               </div>
             </div>
+
+            {/* Status */}
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-700">
+                {collisionWarning 
+                  ? `⚠️ חוסם את ${collisionWarning}` 
+                  : snapPosition 
+                    ? `${snapPosition.snapType || '🧲 נצמד'}` 
+                    : 'גרור למיקום הרצוי'
+                }
+              </p>
+            </div>
             
-            {/* ✅ Collision Warning - only shows for actual overlaps */}
+            {/* Collision Warning */}
             {collisionWarning && (
               <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-3 border border-red-200">
                 <p className="text-sm font-medium text-red-800 mb-1">
@@ -516,10 +546,10 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               </div>
             )}
             
-            {/* ✅ Rotation hint for corners */}
+            {/* Rotation Controls */}
             {showRotationHint && !collisionWarning && (
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-3 border border-blue-200">
-                <p className="text-sm font-medium text-blue-800 mb-1">
+                <p className="text-sm font-medium text-blue-800 mb-2">
                   🔄 פינה זוהתה!
                 </p>
                 <p className="text-xs text-blue-600 mb-2">
@@ -530,32 +560,38 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
                     e.stopPropagation();
                     handleRotationToggle();
                   }}
-                  className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
+                  className="w-full px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                 >
                   🔄 סובב חזית ({Math.round(itemRotation * 180 / Math.PI)}°)
                 </button>
               </div>
             )}
             
+            {/* Distance Measurements */}
             {Object.keys(dragValidation.distances).length > 0 && !collisionWarning && (
-              <div className="grid grid-cols-2 gap-3">
-                {Object.entries(dragValidation.distances).map(([key, distance]) => (
-                  <div 
-                    key={key}
-                    className={`p-3 rounded-xl border-2 ${
-                      distance > 1.2 && distance < 5 
-                        ? 'bg-green-50 border-green-200 text-green-800' 
-                        : 'bg-red-50 border-red-200 text-red-800'
-                    }`}
-                  >
-                    <p className="text-xs font-medium">{key}</p>
-                    <p className="text-lg font-bold">{distance.toFixed(2)}מ'</p>
-                  </div>
-                ))}
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 mb-2">מרחקי משולש הזהב</h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {Object.entries(dragValidation.distances).map(([key, distance]) => (
+                    <div 
+                      key={key}
+                      className={`p-2 rounded-lg border-2 ${
+                        distance > 1.2 && distance < 5 
+                          ? 'bg-green-50 border-green-200 text-green-800' 
+                          : 'bg-red-50 border-red-200 text-red-800'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs font-medium">{key}</p>
+                        <p className="text-sm font-bold">{distance.toFixed(2)}מ'</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             
-            {/* ✅ NEW: Clear instructions about placement and removal */}
+            {/* Instructions */}
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-3 border border-gray-200">
               <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-2">
                 <div className={`w-2 h-2 rounded-full animate-pulse ${
