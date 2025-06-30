@@ -206,35 +206,36 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
 
     // ✅ PRIORITY 2: If not snapped to items, check wall snapping
     if (!snapped) {
-      const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfDepth)) < cornerThreshold;
-      const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfDepth)) < cornerThreshold;
+      // ✅ FIXED: Use itemHalfWidth for wall distance calculation (not itemHalfDepth)
+      const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < cornerThreshold;
+      const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfWidth)) < cornerThreshold;
       const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
       const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
       // ✅ Corner snapping with rotation options
       if (isNearLeftWall && isNearBackWall) {
-        snapX = -halfWidth + snapDistance + itemHalfDepth;
+        snapX = -halfWidth + snapDistance + itemHalfWidth;
         snapZ = -halfLength + snapDistance + itemHalfDepth;
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה שמאל-אחור';
         setShowRotationHint(true);
       } else if (isNearRightWall && isNearBackWall) {
-        snapX = halfWidth - snapDistance - itemHalfDepth;
+        snapX = halfWidth - snapDistance - itemHalfWidth;
         snapZ = -halfLength + snapDistance + itemHalfDepth;
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה ימין-אחור';
         setShowRotationHint(true);
       } else if (isNearLeftWall && isNearFrontWall) {
-        snapX = -halfWidth + snapDistance + itemHalfDepth;
+        snapX = -halfWidth + snapDistance + itemHalfWidth;
         snapZ = halfLength - snapDistance - itemHalfDepth;
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה שמאל-קדמי';
         setShowRotationHint(true);
       } else if (isNearRightWall && isNearFrontWall) {
-        snapX = halfWidth - snapDistance - itemHalfDepth;
+        snapX = halfWidth - snapDistance - itemHalfWidth;
         snapZ = halfLength - snapDistance - itemHalfDepth;
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
@@ -243,13 +244,13 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       }
       // ✅ Wall snapping (not corners) - automatic rotation to face away from wall
       else if (isNearLeftWall) {
-        snapX = -halfWidth + snapDistance + itemHalfDepth;
+        snapX = -halfWidth + snapDistance + itemHalfWidth;
         rotation = Math.PI / 2; // Face right (away from left wall)
         snapped = true;
         snapType = '🧲 קיר שמאל';
         setShowRotationHint(false);
       } else if (isNearRightWall) {
-        snapX = halfWidth - snapDistance - itemHalfDepth;
+        snapX = halfWidth - snapDistance - itemHalfWidth;
         rotation = -Math.PI / 2; // Face left (away from right wall)
         snapped = true;
         snapType = '🧲 קיר ימין';
@@ -552,9 +553,9 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         />
       </Canvas>
       
-      {/* ✅ FIXED: Single right-side panel with all drag information */}
+      {/* ✅ FIXED: Elevated window position - starts above kitchen units */}
       {selectedItem && (
-        <div className="fixed top-4 right-4 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 w-80 border border-gray-200 z-40">
+        <div className="fixed top-20 right-4 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 w-80 border border-gray-200 z-40">
           <div className="space-y-4">
             {/* Item Header */}
             <div className="flex items-center gap-3">

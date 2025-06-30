@@ -22,7 +22,6 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
     placedItems
   } = useKitchen();
   
-  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
   const [designPhaseComplete, setDesignPhaseComplete] = useState(false);
 
   useEffect(() => {
@@ -51,7 +50,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
     if (triangleValidation?.isValid === true) {
       console.log('Triangle is valid - completing game');
       setGameCompleted(true);
-      setTimeout(() => setShowCompletionDialog(true), 500);
+      // ✅ REMOVED: No completion dialog anymore - just confetti
     } else {
       console.log('Triangle is not valid - design phase complete but game not completed');
       // Design phase is complete but game is NOT completed
@@ -63,7 +62,6 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
   const handleBackToEditing = () => {
     setDesignPhaseComplete(false);
     setGameCompleted(false);
-    setShowCompletionDialog(false);
   };
 
   return (
@@ -227,40 +225,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         </div>
       </div>
       
-      {/* Completion Dialog - Only show when user finishes designing AND triangle is valid */}
-      {showCompletionDialog && designPhaseComplete && gameCompleted && triangleValidation?.isValid && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="text-white" size={32} />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">מעולה!</h2>
-            <p className="text-gray-600 mb-4">
-              המטבח שלך עומד בכל הדרישות של משולש הזהב. עכשיו אתה יכול להתאים אישית את הצבעים והחומרים.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowCompletionDialog(false)}
-                className="flex-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                המשך עיצוב
-              </button>
-              <button
-                onClick={() => {
-                  setShowCompletionDialog(false);
-                  onBackToCustomize();
-                }}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl hover:shadow-lg transition-all"
-              >
-                <Palette size={16} />
-                התאם אישית
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Confetti only shows when game is actually completed by user action AND triangle is valid */}
+      {/* ✅ FIXED: Only confetti, no completion dialog */}
       {gameCompleted && designPhaseComplete && triangleValidation?.isValid && <Confetti />}
     </div>
   );
