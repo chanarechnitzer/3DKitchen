@@ -32,19 +32,17 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
       : 'מעצב המטבח המקצועי';
   }, [gameCompleted]);
 
-  // Check if all three essential triangle items are placed - FIXED FUNCTION
+  // Check if all three essential triangle items are placed
   const hasTriangleItems = () => {
     const hasSink = placedItems.some(item => item.type === 'sink');
     const hasStove = placedItems.some(item => item.type === 'stove');
     const hasRefrigerator = placedItems.some(item => item.type === 'refrigerator');
     
-    console.log('Triangle items check:', { hasSink, hasStove, hasRefrigerator, placedItems: placedItems.length });
-    
     return hasSink && hasStove && hasRefrigerator;
   };
 
   const handleFinishDesigning = () => {
-    console.log('Finishing design phase...');
+    console.log('User clicked finish designing button');
     setDesignPhaseComplete(true);
     
     // Mark game as completed when user clicks finish button
@@ -56,14 +54,6 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
       setGameCompleted(false);
     }
   };
-
-  // Debug: Log current state
-  console.log('Current state:', {
-    hasTriangleItems: hasTriangleItems(),
-    designPhaseComplete,
-    placedItemsCount: placedItems.length,
-    placedItemTypes: placedItems.map(item => item.type)
-  });
 
   return (
     <div className="h-screen overflow-hidden">
@@ -127,13 +117,6 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           
           {/* Action Buttons */}
           <div className="flex-shrink-0 space-y-2">
-            {/* Debug Info - Remove this in production */}
-            <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
-              Debug: Triangle items: {hasTriangleItems() ? 'YES' : 'NO'} | 
-              Design complete: {designPhaseComplete ? 'YES' : 'NO'} |
-              Items: {placedItems.map(i => i.type).join(', ')}
-            </div>
-            
             {/* Finish Designing Button - Show when triangle items are placed and design not finished */}
             {hasTriangleItems() && !designPhaseComplete && (
               <button

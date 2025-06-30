@@ -283,7 +283,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       setAvailableItems(prev => prev.filter(item => item.id !== itemId));
       setPlacedItems(prev => [...prev, item]);
       
-      // Only validate triangle, don't auto-complete game
+      // Only validate triangle, NEVER auto-complete the game
       setTimeout(validateTriangle, 100);
     }
   };
@@ -310,7 +310,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Validate the kitchen triangle - but don't auto-complete the game
+  // Validate the kitchen triangle - but NEVER auto-complete the game
   const validateTriangle = () => {
     const sinks = placedItems.filter(item => item.type === KitchenItemType.SINK);
     const stove = placedItems.find(item => item.type === KitchenItemType.STOVE);
@@ -357,11 +357,11 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       };
       
       setTriangleValidation(validation);
-      // Don't auto-complete the game - let the user decide when to finish
+      // REMOVED: setGameCompleted(isValid); - Game only completes when user clicks finish button
     } else {
       // Reset validation if components are missing
       setTriangleValidation(null);
-      setGameCompleted(false);
+      // REMOVED: setGameCompleted(false); - Game completion is only controlled by user action
     }
   };
 
