@@ -32,15 +32,19 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
       : 'מעצב המטבח המקצועי';
   }, [gameCompleted]);
 
-  // Check if all three essential triangle items are placed
+  // Check if all three essential triangle items are placed - FIXED FUNCTION
   const hasTriangleItems = () => {
-    const sink = placedItems.find(item => item.type === 'sink');
-    const stove = placedItems.find(item => item.type === 'stove');
-    const refrigerator = placedItems.find(item => item.type === 'refrigerator');
-    return !!(sink && stove && refrigerator);
+    const hasSink = placedItems.some(item => item.type === 'sink');
+    const hasStove = placedItems.some(item => item.type === 'stove');
+    const hasRefrigerator = placedItems.some(item => item.type === 'refrigerator');
+    
+    console.log('Triangle items check:', { hasSink, hasStove, hasRefrigerator, placedItems: placedItems.length });
+    
+    return hasSink && hasStove && hasRefrigerator;
   };
 
   const handleFinishDesigning = () => {
+    console.log('Finishing design phase...');
     setDesignPhaseComplete(true);
     
     // Mark game as completed when user clicks finish button
@@ -52,6 +56,14 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
       setGameCompleted(false);
     }
   };
+
+  // Debug: Log current state
+  console.log('Current state:', {
+    hasTriangleItems: hasTriangleItems(),
+    designPhaseComplete,
+    placedItemsCount: placedItems.length,
+    placedItemTypes: placedItems.map(item => item.type)
+  });
 
   return (
     <div className="h-screen overflow-hidden">
@@ -115,15 +127,34 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           
           {/* Action Buttons */}
           <div className="flex-shrink-0 space-y-2">
-            {/* Finish Designing Button - Only show when triangle items are placed and design not finished */}
+            {/* Debug Info - Remove this in production */}
+            <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+              Debug: Triangle items: {hasTriangleItems() ? 'YES' : 'NO'} | 
+              Design complete: {designPhaseComplete ? 'YES' : 'NO'} |
+              Items: {placedItems.map(i => i.type).join(', ')}
+            </div>
+            
+            {/* Finish Designing Button - Show when triangle items are placed and design not finished */}
             {hasTriangleItems() && !designPhaseComplete && (
               <button
                 onClick={handleFinishDesigning}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full flex items-center justify-center gap-2 px-3 py-3 text-base font-bold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-green-400"
               >
-                <CheckCircle size={16} />
-                <span>סיימתי לעצב</span>
+                <CheckCircle size={18} />
+                <span>🎯 סיימתי לעצב!</span>
               </button>
+            )}
+
+            {/* Message when triangle items are missing */}
+            {!hasTriangleItems() && !designPhaseComplete && (
+              <div className="w-full p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 text-center">
+                <p className="text-sm font-medium text-blue-800 mb-1">
+                  🎯 הנח את 3 רכיבי המשולש
+                </p>
+                <p className="text-xs text-blue-600">
+                  כיור 💧 + כיריים 🔥 + מקרר ❄️
+                </p>
+              </div>
             )}
 
             {/* Back to Customization Button - Only show after design is finished */}
