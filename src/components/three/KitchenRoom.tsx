@@ -403,7 +403,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
     return (
       <group position={windowPosition} rotation={windowRotation}>
-        {/* ✅ FIXED: Window frame - clean and simple */}
+        {/* Window frame - clean and simple */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[windowWidth, windowHeight, 0.08]} />
           <meshStandardMaterial color="#2D1B14" />
@@ -434,9 +434,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        {/* ✅ COMPLETELY REMOVED: Window cross frame - NO MORE CROSS AT ALL! */}
-
-        {/* ✅ FIXED: Curtains - elegant and flowing - CONTAINED within window area */}
+        {/* Curtains - elegant and flowing - CONTAINED within window area */}
         <group position={[0, 0, 0.05]}>
           {/* Left curtain - ONLY covers part of window */}
           <mesh position={[-windowWidth * 0.35, 0, 0]}>
@@ -460,13 +458,13 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
             />
           </mesh>
 
-          {/* ✅ FIXED: Curtain rod - CONTAINED within window frame - SMALLER and INSIDE */}
+          {/* Curtain rod - CONTAINED within window frame - SMALLER and INSIDE */}
           <mesh position={[0, windowHeight * 0.35, 0.02]}>
             <cylinderGeometry args={[0.012, 0.012, windowWidth * 0.7, 16]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
 
-          {/* ✅ FIXED: Curtain rod ends - CONTAINED within window frame - SMALLER */}
+          {/* Curtain rod ends - CONTAINED within window frame - SMALLER */}
           <mesh position={[-windowWidth * 0.35, windowHeight * 0.35, 0.02]}>
             <sphereGeometry args={[0.025, 8, 8]} />
             <meshStandardMaterial color="#8B4513" />
@@ -554,7 +552,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* ✅ PERFECT: Beautiful window - NO cross frame! Clean and simple */}
+      {/* Beautiful window - NO cross frame! Clean and simple */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}

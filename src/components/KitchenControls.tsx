@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoveHorizontal, AlertCircle, Eye, Package, Info } from 'lucide-react';
+import { MoveHorizontal, AlertCircle, Eye, Package } from 'lucide-react';
 import { useKitchen, KitchenItemType } from '../store/KitchenContext';
 
 const KitchenControls: React.FC = () => {
@@ -85,22 +85,6 @@ const KitchenControls: React.FC = () => {
           <Package className="text-white" size={16} />
         </div>
         <h2 className="text-base font-bold text-gray-900">רכיבי מטבח</h2>
-      </div>
-
-      {/* ✅ NEW: Clear instructions about item placement and removal */}
-      <div className="mb-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-        <div className="flex items-start gap-2">
-          <Info className="text-blue-600 mt-0.5" size={16} />
-          <div>
-            <h3 className="text-sm font-bold text-blue-800 mb-1">💡 טיפים חשובים</h3>
-            <ul className="text-xs text-blue-700 space-y-1">
-              <li>• <strong>הצמדה חכמה:</strong> רכיבים נצמדים אוטומטית לקירות ולרכיבים אחרים</li>
-              <li>• <strong>מיקום לא מדויק?</strong> לחץ "הסר" ולאחר מכן גרור שוב למיקום הנכון</li>
-              <li>• <strong>בפינות:</strong> לחץ R או על כפתור הסיבוב כדי לשנות כיוון</li>
-              <li>• <strong>אחרי סיום:</strong> תמיד ניתן לחזור ולהזיז רכיבים</li>
-            </ul>
-          </div>
-        </div>
       </div>
       
       {Object.keys(groupedItems).length === 0 && (
@@ -194,7 +178,6 @@ const KitchenControls: React.FC = () => {
             רכיבים במטבח ({placedItems.length})
           </h3>
           
-          {/* ✅ NEW: Enhanced instructions for placed items */}
           <div className="mb-2 p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
             <p className="text-xs text-green-700 font-medium text-center">
               💡 לא במקום הנכון? לחץ "הסר" ולאחר מכן גרור שוב
