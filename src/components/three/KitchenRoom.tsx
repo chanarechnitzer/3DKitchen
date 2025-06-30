@@ -403,7 +403,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
     return (
       <group position={windowPosition} rotation={windowRotation}>
-        {/* ✅ FIXED: Window frame - ONLY the frame, NO brown bar above! */}
+        {/* ✅ FIXED: Window frame - clean and simple */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[windowWidth, windowHeight, 0.08]} />
           <meshStandardMaterial color="#2D1B14" />
@@ -434,15 +434,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        {/* ✅ FIXED: Window cross frame - CONTAINED within frame - SMALLER! */}
-        <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[0.04, windowHeight - 0.2, 0.03]} />
-          <meshStandardMaterial color="#2D1B14" />
-        </mesh>
-        <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[windowWidth - 0.2, 0.04, 0.03]} />
-          <meshStandardMaterial color="#2D1B14" />
-        </mesh>
+        {/* ✅ REMOVED: Window cross frame completely - NO MORE CROSS! */}
 
         {/* ✅ FIXED: Curtains - elegant and flowing - CONTAINED within window area */}
         <group position={[0, 0, 0.05]}>
@@ -562,7 +554,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* ✅ FIXED: Beautiful window - NO brown bar above! Rod and cross frame are INSIDE frame */}
+      {/* ✅ FIXED: Beautiful window - NO cross frame! Clean and simple */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}

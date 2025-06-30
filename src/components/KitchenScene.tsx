@@ -75,7 +75,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return null;
   };
 
-  // ✅ IMPROVED: Smart snapping with better distance thresholds
+  // ✅ IMPROVED: Smart snapping - allows items to be placed adjacent to walls and other items
   const getSnapPosition = (x: number, z: number) => {
     if (!selectedItem) return null;
     
@@ -477,7 +477,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         />
       </Canvas>
       
-      {/* ✅ Enhanced placement instructions with improved collision detection */}
+      {/* ✅ Enhanced placement instructions with clear removal guidance */}
       {selectedItem && (
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 max-w-md mx-4 border border-gray-200">
           <div className="text-center space-y-4">
@@ -555,11 +555,17 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               </div>
             )}
             
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-              <div className={`w-2 h-2 rounded-full animate-pulse ${
-                collisionWarning ? 'bg-red-500' : 'bg-primary'
-              }`}></div>
-              <span>{collisionWarning ? 'בחר מיקום אחר' : 'לחץ כדי למקם'}</span>
+            {/* ✅ NEW: Clear instructions about placement and removal */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-3 border border-gray-200">
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-2">
+                <div className={`w-2 h-2 rounded-full animate-pulse ${
+                  collisionWarning ? 'bg-red-500' : 'bg-primary'
+                }`}></div>
+                <span>{collisionWarning ? 'בחר מיקום אחר' : 'לחץ כדי למקם'}</span>
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                💡 <strong>לא במקום הנכון?</strong> לחץ "הסר" ברשימת הרכיבים ולאחר מכן גרור שוב
+              </p>
             </div>
           </div>
         </div>
