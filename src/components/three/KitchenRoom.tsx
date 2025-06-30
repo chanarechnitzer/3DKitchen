@@ -434,13 +434,13 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        {/* Window cross frame - CONTAINED within frame */}
+        {/* ✅ FIXED: Window cross frame - CONTAINED within frame - SMALLER! */}
         <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[0.06, windowHeight - 0.1, 0.03]} />
+          <boxGeometry args={[0.04, windowHeight - 0.2, 0.03]} />
           <meshStandardMaterial color="#2D1B14" />
         </mesh>
         <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[windowWidth - 0.1, 0.06, 0.03]} />
+          <boxGeometry args={[windowWidth - 0.2, 0.04, 0.03]} />
           <meshStandardMaterial color="#2D1B14" />
         </mesh>
 
@@ -469,18 +469,18 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           </mesh>
 
           {/* ✅ FIXED: Curtain rod - CONTAINED within window frame - SMALLER and INSIDE */}
-          <mesh position={[0, windowHeight * 0.4, 0.02]}>
-            <cylinderGeometry args={[0.015, 0.015, windowWidth * 0.8, 16]} />
+          <mesh position={[0, windowHeight * 0.35, 0.02]}>
+            <cylinderGeometry args={[0.012, 0.012, windowWidth * 0.7, 16]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
 
           {/* ✅ FIXED: Curtain rod ends - CONTAINED within window frame - SMALLER */}
-          <mesh position={[-windowWidth * 0.4, windowHeight * 0.4, 0.02]}>
-            <sphereGeometry args={[0.03, 8, 8]} />
+          <mesh position={[-windowWidth * 0.35, windowHeight * 0.35, 0.02]}>
+            <sphereGeometry args={[0.025, 8, 8]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
-          <mesh position={[windowWidth * 0.4, windowHeight * 0.4, 0.02]}>
-            <sphereGeometry args={[0.03, 8, 8]} />
+          <mesh position={[windowWidth * 0.35, windowHeight * 0.35, 0.02]}>
+            <sphereGeometry args={[0.025, 8, 8]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
         </group>
@@ -562,7 +562,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* ✅ FIXED: Beautiful window - NO brown bar above! Rod is INSIDE frame */}
+      {/* ✅ FIXED: Beautiful window - NO brown bar above! Rod and cross frame are INSIDE frame */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}
