@@ -43,14 +43,19 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
 
   const handleFinishDesigning = () => {
     console.log('User clicked finish designing button');
+    console.log('Triangle validation:', triangleValidation);
+    
+    // Always mark design phase as complete when user clicks the button
     setDesignPhaseComplete(true);
     
-    // Mark game as completed when user clicks finish button
-    if (triangleValidation?.isValid) {
+    // CRITICAL: Only mark game as completed if triangle is actually valid
+    if (triangleValidation?.isValid === true) {
+      console.log('Triangle is valid - completing game');
       setGameCompleted(true);
       setTimeout(() => setShowCompletionDialog(true), 500);
     } else {
-      // Even if triangle is not valid, allow finishing design phase
+      console.log('Triangle is not valid - design phase complete but game not completed');
+      // Design phase is complete but game is NOT completed
       setGameCompleted(false);
     }
   };
@@ -141,8 +146,26 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
               </button>
             )}
 
-            {/* Back to Customization Button - Only show after design is finished */}
-            {designPhaseComplete && (
+            {/* Show message after design phase is complete but triangle is invalid */}
+            {designPhaseComplete && !gameCompleted && triangleValidation && !triangleValidation.isValid && (
+              <div className="w-full p-3 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200 text-center">
+                <p className="text-sm font-medium text-red-800 mb-1">
+                  ⚠️ המשולש זקוק לתיקון
+                </p>
+                <p className="text-xs text-red-600">
+                  תקן את המרחקים ולחץ שוב על "סיימתי לעצב"
+                </p>
+                <button
+                  onClick={() => setDesignPhaseComplete(false)}
+                  className="mt-2 px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  המשך עיצוב
+                </button>
+              </div>
+            )}
+
+            {/* Back to Customization Button - Only show after successful completion */}
+            {gameCompleted && triangleValidation?.isValid && (
               <button
                 onClick={onBackToCustomize}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -164,7 +187,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         />
       )}
       
-      {/* Completion Dialog - Only show when user finishes designing and triangle is valid */}
+      {/* Completion Dialog - Only show when user finishes designing AND triangle is valid */}
       {showCompletionDialog && designPhaseComplete && gameCompleted && triangleValidation?.isValid && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center">
@@ -197,7 +220,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         </div>
       )}
       
-      {/* Confetti only shows when game is actually completed by user action */}
+      {/* Confetti only shows when game is actually completed by user action AND triangle is valid */}
       {gameCompleted && designPhaseComplete && triangleValidation?.isValid && <Confetti />}
     </div>
   );
