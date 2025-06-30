@@ -6,7 +6,7 @@ import ItemPreview from './ItemPreview';
 import Confetti from './Confetti';
 import ErrorBoundary from './ErrorBoundary';
 import { useKitchen } from '../store/KitchenContext';
-import { Palette, CheckCircle, Lightbulb, ArrowRight } from 'lucide-react';
+import { Palette, CheckCircle, Lightbulb, ArrowRight, Edit3 } from 'lucide-react';
 
 interface KitchenDesignerProps {
   onBackToCustomize: () => void;
@@ -58,6 +58,13 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
       // Design phase is complete but game is NOT completed
       setGameCompleted(false);
     }
+  };
+
+  // NEW: Handle going back to editing mode
+  const handleBackToEditing = () => {
+    setDesignPhaseComplete(false);
+    setGameCompleted(false);
+    setShowCompletionDialog(false);
   };
 
   return (
@@ -152,18 +159,32 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
 
             {/* Show message after design phase is complete but triangle is invalid */}
             {designPhaseComplete && !gameCompleted && triangleValidation && !triangleValidation.isValid && (
-              <div className="w-full p-3 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200 text-center">
-                <p className="text-sm font-medium text-red-800 mb-1">
-                  ⚠️ המשולש זקוק לתיקון
-                </p>
-                <p className="text-xs text-red-600">
-                  תקן את המרחקים ולחץ שוב על "סיימתי לעצב"
-                </p>
+              <div className="w-full space-y-2">
+                <div className="p-3 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200 text-center">
+                  <p className="text-sm font-medium text-red-800 mb-1">
+                    ⚠️ המשולש זקוק לתיקון
+                  </p>
+                  <p className="text-xs text-red-600 mb-2">
+                    תקן את המרחקים ולחץ שוב על "סיימתי לעצב"
+                  </p>
+                </div>
+                
+                {/* NEW: Back to editing button */}
                 <button
-                  onClick={() => setDesignPhaseComplete(false)}
-                  className="mt-2 px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
+                  onClick={handleBackToEditing}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                 >
-                  המשך עיצוב
+                  <Edit3 size={16} />
+                  חזור לעריכה
+                </button>
+                
+                {/* Try again button */}
+                <button
+                  onClick={handleFinishDesigning}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-base font-bold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  <CheckCircle size={18} />
+                  <span>🎯 סיימתי לעצב!</span>
                 </button>
               </div>
             )}
