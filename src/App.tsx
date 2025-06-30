@@ -52,18 +52,18 @@ function App() {
     <KitchenProvider>
       <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {currentScreen === 'design' && (
-          <header className="bg-white/90 backdrop-blur-sm border-b border-gray-200 h-16 flex-shrink-0">
-            <div className="container mx-auto px-6 h-full">
+          <header className="bg-white/90 backdrop-blur-sm border-b border-gray-200 h-12 flex-shrink-0">
+            <div className="container mx-auto px-4 h-full">
               <div className="flex justify-between items-center h-full">
-                <div className="flex items-center gap-3">
-                  <Home className="text-primary" size={20} />
-                  <h1 className="text-lg font-bold text-gray-800">מעצב המטבח המקצועי</h1>
+                <div className="flex items-center gap-2">
+                  <Home className="text-primary" size={18} />
+                  <h1 className="text-base font-bold text-gray-800">הניסיון הראשון שלכם כמעצבים</h1>
                 </div>
                 <button
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
+                  className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
                   onClick={handleNewGame}
                 >
-                  <RotateCcw size={14} />
+                  <RotateCcw size={12} />
                   התחל מחדש
                 </button>
               </div>
@@ -71,7 +71,7 @@ function App() {
           </header>
         )}
 
-        <div className={currentScreen === 'design' ? 'h-[calc(100vh-4rem)]' : 'h-full'}>
+        <div className={currentScreen === 'design' ? 'h-[calc(100vh-3rem)]' : 'h-full'}>
           {renderCurrentScreen()}
         </div>
 

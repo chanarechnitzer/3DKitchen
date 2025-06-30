@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChefHat, Sparkles, Target, Ruler, Palette, ArrowLeft } from 'lucide-react';
+import { ChefHat, Target, ArrowLeft } from 'lucide-react';
 
 interface WelcomeScreenProps {
   onStartDesign: () => void;
@@ -7,16 +7,16 @@ interface WelcomeScreenProps {
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
   return (
-    <div className="h-full flex items-center justify-center p-4 overflow-y-auto">
+    <div className="h-screen flex items-center justify-center p-4 overflow-hidden">
       <div className="max-w-4xl mx-auto">
         {/* Hero Section */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-yellow-500 rounded-2xl mb-4 shadow-lg">
             <ChefHat className="text-white" size={32} />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-3 leading-tight">
-            מעצב המטבח
-            <span className="text-primary"> המקצועי</span>
+            הניסיון הראשון שלכם
+            <span className="text-primary"> כמעצבים</span>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
             למד ותרגל את עקרון המשולש הזהב בתכנון מטבחים - הכלי המקצועי לעיצוב מטבחים פונקציונליים ויעילים
@@ -27,7 +27,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-gray-100">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
-              <Sparkles className="text-white" size={20} />
+              <Target className="text-white" size={20} />
             </div>
             <h2 className="text-xl font-bold text-gray-900">מה זה המשולש הזהב?</h2>
           </div>
@@ -75,33 +75,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
                 </ul>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-3">
-              <Ruler className="text-white" size={20} />
-            </div>
-            <h3 className="font-bold text-gray-900 mb-1">מידות מדויקות</h3>
-            <p className="text-gray-600 text-sm">עבוד עם מידות אמיתיות וקבל משוב בזמן אמת על המרחקים</p>
-          </div>
-          
-          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-3">
-              <Target className="text-white" size={20} />
-            </div>
-            <h3 className="font-bold text-gray-900 mb-1">הצמדה חכמה</h3>
-            <p className="text-gray-600 text-sm">הרהיטים נצמדים אוטומטית לקירות ולמיקומים אופטימליים</p>
-          </div>
-          
-          <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-3">
-              <Palette className="text-white" size={20} />
-            </div>
-            <h3 className="font-bold text-gray-900 mb-1">התאמה אישית</h3>
-            <p className="text-gray-600 text-sm">בחר צבעים, חומרים וגימורים לפי הטעם האישי שלך</p>
           </div>
         </div>
 

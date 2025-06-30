@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoveHorizontal, AlertCircle, Eye, RotateCcw, Package } from 'lucide-react';
+import { MoveHorizontal, AlertCircle, Eye, Package } from 'lucide-react';
 import { useKitchen, KitchenItemType } from '../store/KitchenContext';
 
 const KitchenControls: React.FC = () => {
@@ -79,25 +79,25 @@ const KitchenControls: React.FC = () => {
   const placedCabinets = placedItems.filter(item => item.type === KitchenItemType.COUNTERTOP).length;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-          <Package className="text-white" size={20} />
+    <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 h-full flex flex-col">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+          <Package className="text-white" size={16} />
         </div>
-        <h2 className="text-xl font-bold text-gray-900">רכיבי מטבח</h2>
+        <h2 className="text-base font-bold text-gray-900">רכיבי מטבח</h2>
       </div>
       
       {Object.keys(groupedItems).length === 0 && (
-        <div className="text-center py-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Package className="text-white" size={24} />
+        <div className="text-center py-6 flex-1 flex flex-col justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Package className="text-white" size={20} />
           </div>
-          <p className="text-gray-600 font-medium">כל הרכיבים מוקמו במטבח!</p>
-          <p className="text-gray-500 text-sm mt-1">מעולה! המטבח שלך מוכן</p>
+          <p className="text-gray-600 font-medium text-sm">כל הרכיבים מוקמו במטבח!</p>
+          <p className="text-gray-500 text-xs mt-1">מעולה! המטבח שלך מוכן</p>
         </div>
       )}
       
-      <div className="space-y-3">
+      <div className="space-y-2 flex-1 overflow-y-auto">
         {Object.values(groupedItems).map(group => {
           const isCountertopLimitReached = group.type === KitchenItemType.COUNTERTOP && placedCabinets >= 10;
           const isSelected = selectedItem?.type === group.type;
@@ -105,7 +105,7 @@ const KitchenControls: React.FC = () => {
           return (
             <div 
               key={group.type}
-              className={`group relative border-2 rounded-xl p-4 transition-all duration-200 cursor-pointer ${
+              className={`group relative border-2 rounded-lg p-3 transition-all duration-200 cursor-pointer ${
                 isSelected 
                   ? 'border-primary bg-primary/5 shadow-lg' 
                   : (group.count === 0 || isCountertopLimitReached) 
@@ -116,26 +116,26 @@ const KitchenControls: React.FC = () => {
               title={isCountertopLimitReached ? 'הגעת למגבלת הארונות המותרת (10)' : group.count === 0 ? 'אין יחידות נותרות' : undefined}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 bg-gradient-to-br ${getItemColor(group.type)} rounded-xl flex items-center justify-center text-white text-xl shadow-lg`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 bg-gradient-to-br ${getItemColor(group.type)} rounded-lg flex items-center justify-center text-white text-lg shadow-lg`}>
                     {getItemIcon(group.type)}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{group.name}</h3>
+                    <h3 className="font-semibold text-gray-900 text-sm">{group.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-sm px-2 py-1 rounded-full ${
+                      <span className={`text-xs px-2 py-1 rounded-full ${
                         group.count > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
                         {group.count} יחידות
                       </span>
                       {isCountertopLimitReached && (
-                        <AlertCircle size={14} className="text-warning" />
+                        <AlertCircle size={12} className="text-warning" />
                       )}
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   {group.count > 0 && !isCountertopLimitReached && (
                     <>
                       <button
@@ -143,30 +143,25 @@ const KitchenControls: React.FC = () => {
                           e.stopPropagation();
                           setPreviewItem(previewItem === group.type ? null : group.type);
                         }}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                         title="תצוגה מקדימה"
                       >
-                        <Eye size={16} />
+                        <Eye size={14} />
                       </button>
                       <MoveHorizontal 
                         className={`text-gray-400 transition-colors ${
                           isSelected ? 'text-primary' : 'group-hover:text-gray-600'
                         }`} 
-                        size={18} 
+                        size={16} 
                       />
                     </>
                   )}
                 </div>
               </div>
               
-              {/* Dimensions */}
-              <div className="mt-3 text-xs text-gray-500">
-                {group.dimensions.width} × {group.dimensions.depth} × {group.dimensions.height} מטר
-              </div>
-              
               {isSelected && (
-                <div className="absolute inset-0 border-2 border-primary rounded-xl bg-primary/5 flex items-center justify-center">
-                  <div className="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium">
+                <div className="absolute inset-0 border-2 border-primary rounded-lg bg-primary/5 flex items-center justify-center">
+                  <div className="bg-primary text-white px-2 py-1 rounded-full text-xs font-medium">
                     נבחר - גרור למטבח
                   </div>
                 </div>
@@ -177,25 +172,25 @@ const KitchenControls: React.FC = () => {
       </div>
       
       {placedItems.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <div className="mt-4 border-t border-gray-200 pt-3">
+          <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             רכיבים במטבח ({placedItems.length})
           </h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="space-y-1 max-h-32 overflow-y-auto">
             {placedItems.map(item => (
               <div 
                 key={item.id}
-                className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200"
+                className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg border border-gray-200"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 bg-gradient-to-br ${getItemColor(item.type)} rounded-lg flex items-center justify-center text-white text-sm`}>
+                <div className="flex items-center gap-2">
+                  <div className={`w-6 h-6 bg-gradient-to-br ${getItemColor(item.type)} rounded-lg flex items-center justify-center text-white text-xs`}>
                     {getItemIcon(item.type)}
                   </div>
-                  <span className="font-medium text-gray-900">{item.name}</span>
+                  <span className="font-medium text-gray-900 text-xs">{item.name}</span>
                 </div>
                 <button 
-                  className="text-sm text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-lg transition-colors font-medium"
+                  className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium"
                   onClick={() => removeItem(item.id)}
                 >
                   הסר
