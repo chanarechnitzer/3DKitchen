@@ -39,7 +39,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // ✅ NEW: Advanced collision detection - prevents placing items inside each other
+  // ✅ FIXED: Improved collision detection - only blocks when items actually overlap
   const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
     if (!selectedItem) return null;
     
@@ -63,8 +63,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const placedHalfWidth = placedRotatedWidth / 2;
       const placedHalfDepth = placedRotatedDepth / 2;
       
-      // Check if bounding boxes overlap with small buffer
-      const buffer = 0.05; // 5cm buffer between items
+      // ✅ FIXED: Much smaller buffer - only prevent actual overlap, allow touching
+      const buffer = 0.01; // Only 1cm buffer - allows items to be adjacent
       const xOverlap = Math.abs(x - placedItem.position.x) < (itemHalfWidth + placedHalfWidth + buffer);
       const zOverlap = Math.abs(z - placedItem.position.z) < (itemHalfDepth + placedHalfDepth + buffer);
       
@@ -75,12 +75,13 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return null;
   };
 
-  // ✅ NEW: Smart snapping to walls AND other items
+  // ✅ IMPROVED: Smart snapping with better distance thresholds
   const getSnapPosition = (x: number, z: number) => {
     if (!selectedItem) return null;
     
     const snapDistance = 0.05; // Distance from walls
-    const itemSnapDistance = 0.02; // Distance for snapping to other items
+    const itemSnapDistance = 0.01; // ✅ FIXED: Smaller distance for item snapping - allows touching
+    const snapThreshold = 0.5; // ✅ IMPROVED: Larger threshold for easier snapping
     const halfWidth = kitchenDimensions.width / 2;
     const halfLength = kitchenDimensions.length / 2;
     const itemHalfWidth = selectedItem.dimensions.width / 2;
@@ -103,7 +104,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       // ✅ Snap to right side of placed item
       const rightSnapX = placedItem.position.x + placedHalfWidth + itemHalfWidth + itemSnapDistance;
-      if (Math.abs(x - rightSnapX) < 0.4 && Math.abs(z - placedItem.position.z) < 0.6) {
+      if (Math.abs(x - rightSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
         snapX = rightSnapX;
         snapZ = placedItem.position.z;
         rotation = 0; // Face forward when snapping to items
@@ -115,7 +116,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       // ✅ Snap to left side of placed item
       const leftSnapX = placedItem.position.x - placedHalfWidth - itemHalfWidth - itemSnapDistance;
-      if (Math.abs(x - leftSnapX) < 0.4 && Math.abs(z - placedItem.position.z) < 0.6) {
+      if (Math.abs(x - leftSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
         snapX = leftSnapX;
         snapZ = placedItem.position.z;
         rotation = 0; // Face forward when snapping to items
@@ -127,7 +128,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       // ✅ Snap to front of placed item
       const frontSnapZ = placedItem.position.z + placedHalfDepth + itemHalfDepth + itemSnapDistance;
-      if (Math.abs(z - frontSnapZ) < 0.4 && Math.abs(x - placedItem.position.x) < 0.6) {
+      if (Math.abs(z - frontSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
         snapX = placedItem.position.x;
         snapZ = frontSnapZ;
         rotation = 0; // Face forward when snapping to items
@@ -139,7 +140,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       // ✅ Snap to back of placed item
       const backSnapZ = placedItem.position.z - placedHalfDepth - itemHalfDepth - itemSnapDistance;
-      if (Math.abs(z - backSnapZ) < 0.4 && Math.abs(x - placedItem.position.x) < 0.6) {
+      if (Math.abs(z - backSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
         snapX = placedItem.position.x;
         snapZ = backSnapZ;
         rotation = 0; // Face forward when snapping to items
@@ -269,14 +270,18 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snap || validatedPos;
       const finalRotation = snap?.rotation !== undefined ? snap.rotation : itemRotation;
       
-      // ✅ Check for collisions with final position and rotation
-      const collision = checkCollisions(
-        finalPos.x, 
-        finalPos.z, 
-        selectedItem.dimensions.width, 
-        selectedItem.dimensions.depth,
-        finalRotation
-      );
+      // ✅ FIXED: Only check for collisions if NOT snapping to an item
+      // When snapping to items, we WANT them to be adjacent, so no collision warning
+      let collision = null;
+      if (!snap || !snap.snapType?.includes('נצמד')) {
+        collision = checkCollisions(
+          finalPos.x, 
+          finalPos.z, 
+          selectedItem.dimensions.width, 
+          selectedItem.dimensions.depth,
+          finalRotation
+        );
+      }
       setCollisionWarning(collision);
       
       const validation = getDragValidation(
@@ -472,7 +477,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         />
       </Canvas>
       
-      {/* ✅ Enhanced placement instructions with collision detection */}
+      {/* ✅ Enhanced placement instructions with improved collision detection */}
       {selectedItem && (
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 max-w-md mx-4 border border-gray-200">
           <div className="text-center space-y-4">
@@ -499,7 +504,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               </div>
             </div>
             
-            {/* ✅ Collision Warning */}
+            {/* ✅ Collision Warning - only shows for actual overlaps */}
             {collisionWarning && (
               <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-3 border border-red-200">
                 <p className="text-sm font-medium text-red-800 mb-1">
