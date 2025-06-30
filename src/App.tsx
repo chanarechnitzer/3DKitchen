@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import Rules from './components/Rules';
+import WelcomeScreen from './components/WelcomeScreen';
 import KitchenDesigner from './components/KitchenDesigner';
 import StartGameDialog from './components/StartGameDialog';
+import CustomizationPanel from './components/CustomizationPanel';
 import { KitchenProvider, useKitchen } from './store/KitchenContext';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Home } from 'lucide-react';
 
 function App() {
-  const [showRules, setShowRules] = useState(true);
-  const [gameStarted, setGameStarted] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'setup' | 'design' | 'customize'>('welcome');
   const [showStartDialog, setShowStartDialog] = useState(false);
   
-  const handleStartGame = () => {
+  const handleStartDesign = () => {
     setShowStartDialog(true);
   };
 
@@ -19,57 +19,59 @@ function App() {
   };
 
   const handleGameStart = (width: number, length: number) => {
-    setGameStarted(true);
+    setCurrentScreen('design');
     setShowStartDialog(false);
-    setShowRules(false);
   };
 
   const handleNewGame = () => {
     window.location.reload();
   };
 
-  const toggleRules = () => {
-    setShowRules(!showRules);
+  const handleCustomize = () => {
+    setCurrentScreen('customize');
+  };
+
+  const handleBackToDesign = () => {
+    setCurrentScreen('design');
+  };
+
+  const renderCurrentScreen = () => {
+    switch (currentScreen) {
+      case 'welcome':
+        return <WelcomeScreen onStartDesign={handleStartDesign} />;
+      case 'design':
+        return <KitchenDesigner onCustomize={handleCustomize} />;
+      case 'customize':
+        return <CustomizationPanel onBackToDesign={handleBackToDesign} />;
+      default:
+        return <WelcomeScreen onStartDesign={handleStartDesign} />;
+    }
   };
 
   return (
     <KitchenProvider>
-      <div className="min-h-screen bg-background">
-        {showRules ? (
-          <Rules onMinimize={toggleRules} />
-        ) : (
-          <div 
-            className="bg-primary text-white py-2 px-4 text-center shadow-sm cursor-pointer hover:bg-primary-dark transition-colors" 
-            onClick={toggleRules}
-          >
-            המשולש הזהב למטבח - לחץ להרחבה
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        {currentScreen === 'design' && (
+          <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
+            <div className="container mx-auto px-6 py-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <Home className="text-primary" size={24} />
+                  <h1 className="text-xl font-bold text-gray-800">מעצב המטבח המקצועי</h1>
+                </div>
+                <button
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
+                  onClick={handleNewGame}
+                >
+                  <RotateCcw size={16} />
+                  התחל מחדש
+                </button>
+              </div>
+            </div>
+          </header>
         )}
 
-        <div className="container mx-auto p-4">
-          <div className="flex justify-between items-center mb-8">
-            {!gameStarted && !showRules && (
-              <button 
-                className="px-6 py-3 text-lg font-medium text-white bg-primary rounded-lg hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform hover:scale-105 active:scale-95" 
-                onClick={handleStartGame}
-              >
-                התחל משחק
-              </button>
-            )}
-            
-            {gameStarted && (
-              <button
-                className="px-4 py-2 text-sm font-medium text-white bg-secondary rounded-lg hover:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-all duration-200 flex items-center gap-2"
-                onClick={handleNewGame}
-              >
-                <RotateCcw size={16} />
-                משחק חדש
-              </button>
-            )}
-          </div>
-
-          {gameStarted && <KitchenDesigner />}
-        </div>
+        {renderCurrentScreen()}
 
         {showStartDialog && (
           <StartGameDialog 
