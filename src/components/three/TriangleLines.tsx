@@ -6,9 +6,19 @@ import { KitchenItem, KitchenItemType } from '../../store/KitchenContext';
 interface TriangleLinesProps {
   placedItems: KitchenItem[];
   isValid: boolean;
+  showTriangle?: boolean; // Add prop to control when to show triangle
 }
 
-const TriangleLines: React.FC<TriangleLinesProps> = ({ placedItems, isValid }) => {
+const TriangleLines: React.FC<TriangleLinesProps> = ({ 
+  placedItems, 
+  isValid, 
+  showTriangle = false // Default to false - only show when explicitly requested
+}) => {
+  // CRITICAL: Only show triangle lines when explicitly requested (after user clicks finish)
+  if (!showTriangle) {
+    return null;
+  }
+
   // Find sink, stove, and refrigerator
   const sink = placedItems.find(item => item.type === KitchenItemType.SINK);
   const stove = placedItems.find(item => item.type === KitchenItemType.STOVE);

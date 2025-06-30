@@ -82,7 +82,11 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
             
             <div className="flex-1 relative bg-gradient-to-br from-slate-50 to-blue-50">
               <ErrorBoundary>
-                <KitchenScene windowPlacement={windowPlacement} />
+                {/* CRITICAL: Pass showTriangle prop - only show triangle after design phase is complete */}
+                <KitchenScene 
+                  windowPlacement={windowPlacement} 
+                  showTriangle={designPhaseComplete}
+                />
               </ErrorBoundary>
             </div>
           </div>

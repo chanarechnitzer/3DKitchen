@@ -11,9 +11,13 @@ import { useKitchen, WindowPlacement } from '../store/KitchenContext';
 
 interface KitchenSceneProps {
   windowPlacement: WindowPlacement;
+  showTriangle?: boolean; // Add prop to control triangle display
 }
 
-const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
+const KitchenScene: React.FC<KitchenSceneProps> = ({ 
+  windowPlacement, 
+  showTriangle = false // Default to false
+}) => {
   const { 
     kitchenDimensions, 
     placedItems, 
@@ -257,10 +261,12 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
           </>
         )}
         
-        {triangleValidation && (
+        {/* CRITICAL: Only show triangle when explicitly requested */}
+        {triangleValidation && showTriangle && (
           <TriangleLines 
             placedItems={placedItems} 
-            isValid={triangleValidation.isValid} 
+            isValid={triangleValidation.isValid}
+            showTriangle={showTriangle}
           />
         )}
         

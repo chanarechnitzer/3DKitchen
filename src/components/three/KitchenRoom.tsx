@@ -14,6 +14,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   const halfWidth = width / 2;
   const halfLength = length / 2;
   const [windowTexture, setWindowTexture] = useState<THREE.Texture | null>(null);
+  const [curtainTexture, setCurtainTexture] = useState<THREE.Texture | null>(null);
   const [textureError, setTextureError] = useState(false);
 
   // Get colors based on customization
@@ -55,83 +56,211 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     return isDarkFloor ? '#ffffff' : '#000000';
   };
 
-  // Create a canvas with the mountain view
+  // Create a beautiful mountain landscape view
   const createMountainViewCanvas = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 1024;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Sky gradient - beautiful blue sky
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.6);
+    skyGradient.addColorStop(0, '#87CEEB');
+    skyGradient.addColorStop(0.3, '#98D8E8');
+    skyGradient.addColorStop(0.7, '#B8E6F0');
+    skyGradient.addColorStop(1, '#E0F6FF');
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Sun
+    const sunGradient = ctx.createRadialGradient(
+      canvas.width * 0.8, canvas.height * 0.2, 0,
+      canvas.width * 0.8, canvas.height * 0.2, 80
+    );
+    sunGradient.addColorStop(0, '#FFE55C');
+    sunGradient.addColorStop(0.5, '#FFD700');
+    sunGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+    ctx.fillStyle = sunGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Fluffy clouds
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    const clouds = [
+      { x: 0.15, y: 0.15, size: 60 },
+      { x: 0.4, y: 0.1, size: 45 },
+      { x: 0.65, y: 0.25, size: 50 },
+      { x: 0.85, y: 0.05, size: 35 },
+    ];
+    
+    clouds.forEach(cloud => {
+      const x = canvas.width * cloud.x;
+      const y = canvas.height * cloud.y;
+      
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.arc(
+          x + (i - 2) * cloud.size * 0.4, 
+          y + Math.sin(i) * cloud.size * 0.2, 
+          cloud.size * (0.8 + Math.random() * 0.4), 
+          0, 
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+    });
+
+    // Distant mountains (background layer)
+    ctx.fillStyle = '#B8C6DB';
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height * 0.7);
+    ctx.lineTo(canvas.width * 0.2, canvas.height * 0.5);
+    ctx.lineTo(canvas.width * 0.4, canvas.height * 0.55);
+    ctx.lineTo(canvas.width * 0.6, canvas.height * 0.45);
+    ctx.lineTo(canvas.width * 0.8, canvas.height * 0.52);
+    ctx.lineTo(canvas.width, canvas.height * 0.48);
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.fill();
+
+    // Middle mountains
+    ctx.fillStyle = '#8FA2B7';
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height * 0.8);
+    ctx.lineTo(canvas.width * 0.25, canvas.height * 0.6);
+    ctx.lineTo(canvas.width * 0.5, canvas.height * 0.65);
+    ctx.lineTo(canvas.width * 0.75, canvas.height * 0.55);
+    ctx.lineTo(canvas.width, canvas.height * 0.62);
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.fill();
+
+    // Foreground mountains
+    ctx.fillStyle = '#4A6741';
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height);
+    ctx.lineTo(0, canvas.height * 0.75);
+    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.6);
+    ctx.lineTo(canvas.width * 0.7, canvas.height * 0.7);
+    ctx.lineTo(canvas.width, canvas.height * 0.65);
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.fill();
+
+    // Snow caps on peaks
+    ctx.fillStyle = '#FFFFFF';
+    const peaks = [
+      { x: 0.3, y: 0.6, width: 0.08 },
+      { x: 0.6, y: 0.45, width: 0.06 },
+    ];
+    
+    peaks.forEach(peak => {
+      ctx.beginPath();
+      ctx.moveTo(canvas.width * (peak.x - peak.width), canvas.height * (peak.y + 0.05));
+      ctx.lineTo(canvas.width * peak.x, canvas.height * peak.y);
+      ctx.lineTo(canvas.width * (peak.x + peak.width), canvas.height * (peak.y + 0.05));
+      ctx.lineTo(canvas.width * peak.x, canvas.height * (peak.y + 0.02));
+      ctx.fill();
+    });
+
+    // Trees in foreground
+    ctx.fillStyle = '#2D5A27';
+    const trees = [
+      { x: 0.1, y: 0.75, height: 0.15 },
+      { x: 0.15, y: 0.78, height: 0.12 },
+      { x: 0.85, y: 0.7, height: 0.18 },
+      { x: 0.9, y: 0.72, height: 0.14 },
+    ];
+    
+    trees.forEach(tree => {
+      const x = canvas.width * tree.x;
+      const y = canvas.height * tree.y;
+      const height = canvas.height * tree.height;
+      
+      // Tree trunk
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(x - 5, y, 10, height * 0.3);
+      
+      // Tree foliage
+      ctx.fillStyle = '#2D5A27';
+      ctx.beginPath();
+      ctx.arc(x, y - height * 0.2, height * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    return canvas;
+  };
+
+  // Create curtain texture
+  const createCurtainCanvas = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // Sky gradient
-    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.7);
-    skyGradient.addColorStop(0, '#4A90E2');
-    skyGradient.addColorStop(0.5, '#87CEEB');
-    skyGradient.addColorStop(1, '#E0F6FF');
-    ctx.fillStyle = skyGradient;
+    // Curtain gradient - elegant cream color
+    const curtainGradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+    curtainGradient.addColorStop(0, '#F5F5DC');
+    curtainGradient.addColorStop(0.1, '#FFFACD');
+    curtainGradient.addColorStop(0.2, '#F5F5DC');
+    curtainGradient.addColorStop(0.3, '#FFFACD');
+    curtainGradient.addColorStop(0.4, '#F5F5DC');
+    curtainGradient.addColorStop(0.5, '#FFFACD');
+    curtainGradient.addColorStop(0.6, '#F5F5DC');
+    curtainGradient.addColorStop(0.7, '#FFFACD');
+    curtainGradient.addColorStop(0.8, '#F5F5DC');
+    curtainGradient.addColorStop(0.9, '#FFFACD');
+    curtainGradient.addColorStop(1, '#F5F5DC');
+    
+    ctx.fillStyle = curtainGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Clouds
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    for (let i = 0; i < 8; i++) {
-      const x = canvas.width * Math.random();
-      const y = canvas.height * 0.2 * Math.random();
-      const size = 30 + Math.random() * 20;
-      
-      for (let j = 0; j < 3; j++) {
+    // Add curtain folds/pleats
+    ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < canvas.width; i += 40) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, canvas.height);
+      ctx.stroke();
+    }
+
+    // Add subtle pattern
+    ctx.fillStyle = 'rgba(139, 69, 19, 0.1)';
+    for (let y = 20; y < canvas.height; y += 40) {
+      for (let x = 20; x < canvas.width; x += 80) {
         ctx.beginPath();
-        ctx.arc(x + j * 15, y + Math.sin(j) * 5, size, 0, Math.PI * 2);
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
         ctx.fill();
       }
     }
-
-    // Background mountains
-    ctx.fillStyle = '#8BA9A5';
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height * 0.7);
-    ctx.lineTo(canvas.width * 0.2, canvas.height * 0.5);
-    ctx.lineTo(canvas.width * 0.5, canvas.height * 0.6);
-    ctx.lineTo(canvas.width * 0.8, canvas.height * 0.45);
-    ctx.lineTo(canvas.width, canvas.height * 0.55);
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(0, canvas.height);
-    ctx.fill();
-
-    // Foreground mountains
-    ctx.fillStyle = '#4B6455';
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height);
-    ctx.lineTo(0, canvas.height * 0.6);
-    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.4);
-    ctx.lineTo(canvas.width * 0.7, canvas.height * 0.65);
-    ctx.lineTo(canvas.width, canvas.height * 0.5);
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.fill();
-
-    // Snow caps
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.moveTo(canvas.width * 0.25, canvas.height * 0.45);
-    ctx.lineTo(canvas.width * 0.35, canvas.height * 0.4);
-    ctx.lineTo(canvas.width * 0.45, canvas.height * 0.43);
-    ctx.lineTo(canvas.width * 0.3, canvas.height * 0.48);
-    ctx.fill();
 
     return canvas;
   };
 
   useEffect(() => {
     try {
-      const canvas = createMountainViewCanvas();
-      if (canvas) {
-        const texture = new THREE.CanvasTexture(canvas);
+      // Create mountain view texture
+      const viewCanvas = createMountainViewCanvas();
+      if (viewCanvas) {
+        const texture = new THREE.CanvasTexture(viewCanvas);
         texture.minFilter = THREE.LinearFilter;
         texture.magFilter = THREE.LinearFilter;
         texture.needsUpdate = true;
         setWindowTexture(texture);
       }
+
+      // Create curtain texture
+      const curtainCanvas = createCurtainCanvas();
+      if (curtainCanvas) {
+        const texture = new THREE.CanvasTexture(curtainCanvas);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.needsUpdate = true;
+        setCurtainTexture(texture);
+      }
     } catch (error) {
-      console.error('Error creating window view:', error);
+      console.error('Error creating window textures:', error);
       setTextureError(true);
     }
   }, []);
@@ -251,8 +380,8 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   };
 
   const renderWindow = () => {
-    const windowWidth = 1.2;
-    const windowHeight = 1.2;
+    const windowWidth = 1.4;
+    const windowHeight = 1.4;
     const windowY = 1.4;
     const wallOffset = 0.05;
 
@@ -275,8 +404,15 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
     return (
       <group position={windowPosition} rotation={windowRotation}>
-        <mesh position={[0, 0, -0.02]}>
-          <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
+        {/* Window frame - dark wood */}
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[windowWidth, windowHeight, 0.08]} />
+          <meshStandardMaterial color="#2D1B14" />
+        </mesh>
+
+        {/* Beautiful mountain view */}
+        <mesh position={[0, 0, -0.03]}>
+          <planeGeometry args={[windowWidth - 0.15, windowHeight - 0.15]} />
           <meshBasicMaterial 
             map={windowTexture}
             side={THREE.DoubleSide}
@@ -285,31 +421,75 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        <mesh position={[0, 0, -0.01]}>
-          <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
+        {/* Glass effect */}
+        <mesh position={[0, 0, -0.02]}>
+          <planeGeometry args={[windowWidth - 0.15, windowHeight - 0.15]} />
           <meshPhysicalMaterial 
             transparent
-            opacity={0.2}
+            opacity={0.15}
             roughness={0}
-            metalness={0.2}
+            metalness={0.1}
             clearcoat={1}
-            clearcoatRoughness={0.1}
+            clearcoatRoughness={0.05}
             side={THREE.DoubleSide}
           />
         </mesh>
 
-        <mesh>
-          <boxGeometry args={[windowWidth, windowHeight, 0.05]} />
-          <meshStandardMaterial color="#1e293b" />
+        {/* Window cross frame */}
+        <mesh position={[0, 0, 0.01]}>
+          <boxGeometry args={[0.06, windowHeight - 0.1, 0.03]} />
+          <meshStandardMaterial color="#2D1B14" />
+        </mesh>
+        <mesh position={[0, 0, 0.01]}>
+          <boxGeometry args={[windowWidth - 0.1, 0.06, 0.03]} />
+          <meshStandardMaterial color="#2D1B14" />
         </mesh>
 
-        <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[0.05, windowHeight - 0.1, 0.02]} />
-          <meshStandardMaterial color="#1e293b" />
-        </mesh>
-        <mesh position={[0, 0, 0.01]}>
-          <boxGeometry args={[windowWidth - 0.1, 0.05, 0.02]} />
-          <meshStandardMaterial color="#1e293b" />
+        {/* Curtains - elegant and flowing */}
+        <group position={[0, 0, 0.05]}>
+          {/* Left curtain */}
+          <mesh position={[-windowWidth * 0.35, 0, 0]}>
+            <planeGeometry args={[windowWidth * 0.25, windowHeight - 0.1]} />
+            <meshStandardMaterial 
+              map={curtainTexture}
+              transparent
+              opacity={0.85}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+          
+          {/* Right curtain */}
+          <mesh position={[windowWidth * 0.35, 0, 0]}>
+            <planeGeometry args={[windowWidth * 0.25, windowHeight - 0.1]} />
+            <meshStandardMaterial 
+              map={curtainTexture}
+              transparent
+              opacity={0.85}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+
+          {/* Curtain rod */}
+          <mesh position={[0, windowHeight * 0.45, 0.02]}>
+            <cylinderGeometry args={[0.02, 0.02, windowWidth * 0.9, 16]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+
+          {/* Curtain rod ends */}
+          <mesh position={[-windowWidth * 0.45, windowHeight * 0.45, 0.02]}>
+            <sphereGeometry args={[0.04, 8, 8]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+          <mesh position={[windowWidth * 0.45, windowHeight * 0.45, 0.02]}>
+            <sphereGeometry args={[0.04, 8, 8]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+        </group>
+
+        {/* Window sill */}
+        <mesh position={[0, -windowHeight * 0.5 - 0.05, 0.04]}>
+          <boxGeometry args={[windowWidth + 0.1, 0.1, 0.15]} />
+          <meshStandardMaterial color="#F5F5DC" />
         </mesh>
       </group>
     );
@@ -383,7 +563,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* Window with view */}
+      {/* Beautiful window with mountain view and curtains */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}
