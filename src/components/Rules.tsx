@@ -9,7 +9,7 @@ const Rules: React.FC<RulesProps> = ({ onMinimize }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto my-8">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-primary">המשולש הזהב למטבח</h1>
+        <h1 className="text-2xl font-bold text-primary">משולש הזהב למטבח</h1>
         <button 
           onClick={onMinimize}
           className="text-gray-500 hover:text-gray-700"
@@ -45,7 +45,7 @@ const Rules: React.FC<RulesProps> = ({ onMinimize }) => {
         
         <div className="bg-blue-50 p-4 rounded-lg mt-4">
           <p className="font-medium">📌 המטרה שלך:</p>
-          <p>גרור את רכיבי המטבח למקומם בחלל התלת-ממדי ומקם אותם בהתאם לכלל המשולש הזהב.</p>
+          <p>גרור את רכיבי המטבח למקומם בחלל התלת-ממדי ומקם אותם בהתאם לכלל משולש הזהב.</p>
         </div>
       </div>
       

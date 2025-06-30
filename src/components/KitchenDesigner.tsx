@@ -153,7 +153,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-3">מעולה!</h2>
             <p className="text-gray-600 mb-4">
-              המטבח שלך עומד בכל הדרישות של המשולש הזהב. עכשיו אתה יכול להתאים אישית את הצבעים והחומרים.
+              המטבח שלך עומד בכל הדרישות של משולש הזהב. עכשיו אתה יכול להתאים אישית את הצבעים והחומרים.
             </p>
             <div className="flex gap-3">
               <button
