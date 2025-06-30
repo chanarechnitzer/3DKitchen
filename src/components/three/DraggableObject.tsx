@@ -11,13 +11,15 @@ interface DraggableObjectProps {
     depth: number;
     height: number;
   };
+  rotation?: number; // Add rotation prop
 }
 
 const DraggableObject: React.FC<DraggableObjectProps> = ({ 
   position, 
   type, 
   isPlaced, 
-  dimensions 
+  dimensions,
+  rotation = 0
 }) => {
   const { customization } = useKitchen();
 
@@ -92,15 +94,6 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               <meshStandardMaterial color={cabinetColor} transparent opacity={opacity} />
             </mesh>
             
-            {/* Sink */}
-            <mesh 
-              position={[0, baseHeight - 0.05, 0]} 
-              castShadow
-            >
-              <boxGeometry args={[dimensions.width - 0.1, 0.1, dimensions.depth - 0.1]} />
-              <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
-            </mesh>
-            
             {/* Countertop surface */}
             <mesh 
               position={[0, baseHeight + 0.025, 0]} 
@@ -108,6 +101,42 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <boxGeometry args={[dimensions.width, 0.05, dimensions.depth]} />
               <meshStandardMaterial color={countertopColor} transparent opacity={opacity} />
+            </mesh>
+            
+            {/* Sink bowl - realistic sink shape */}
+            <mesh 
+              position={[0, baseHeight - 0.1, 0]} 
+              castShadow
+            >
+              <cylinderGeometry args={[dimensions.width * 0.35, dimensions.width * 0.3, 0.15, 16]} />
+              <meshStandardMaterial color="#e5e7eb" transparent opacity={opacity} />
+            </mesh>
+            
+            {/* Sink interior */}
+            <mesh 
+              position={[0, baseHeight - 0.05, 0]} 
+              castShadow
+            >
+              <cylinderGeometry args={[dimensions.width * 0.32, dimensions.width * 0.27, 0.12, 16]} />
+              <meshStandardMaterial color="#f3f4f6" transparent opacity={opacity} />
+            </mesh>
+            
+            {/* Faucet base */}
+            <mesh 
+              position={[0, baseHeight + 0.08, -dimensions.depth * 0.25]} 
+              castShadow
+            >
+              <cylinderGeometry args={[0.03, 0.04, 0.1, 8]} />
+              <meshStandardMaterial color="#9ca3af" transparent opacity={opacity} />
+            </mesh>
+            
+            {/* Faucet spout */}
+            <mesh 
+              position={[0, baseHeight + 0.15, -dimensions.depth * 0.1]} 
+              castShadow
+            >
+              <boxGeometry args={[0.04, 0.02, 0.2]} />
+              <meshStandardMaterial color="#9ca3af" transparent opacity={opacity} />
             </mesh>
             
             {/* Cabinet handles */}
@@ -316,7 +345,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   };
   
   return (
-    <group position={position}>
+    <group position={position} rotation={[0, rotation, 0]}>
       {renderObject()}
     </group>
   );

@@ -28,46 +28,84 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
   const [dragValidation, setDragValidation] = useState<{ isValid: boolean; distances: { [key: string]: number } }>({ isValid: true, distances: {} });
   const [isDragging, setIsDragging] = useState(false);
   const [snapPosition, setSnapPosition] = useState<{ x: number, z: number } | null>(null);
+  const [itemRotation, setItemRotation] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // Snap to wall logic
+  // Enhanced snap to wall logic with rotation
   const getSnapPosition = (x: number, z: number) => {
     const snapDistance = 0.3; // Distance from wall to snap
     const halfWidth = kitchenDimensions.width / 2;
     const halfLength = kitchenDimensions.length / 2;
+    const itemHalfDepth = selectedItem ? selectedItem.dimensions.depth / 2 : 0.3;
     
     let snapX = x;
     let snapZ = z;
     let snapped = false;
+    let rotation = 0;
 
-    // Snap to walls
-    if (Math.abs(x - (-halfWidth + snapDistance)) < 0.5) {
-      snapX = -halfWidth + snapDistance;
+    // Snap to left wall (facing right)
+    if (Math.abs(x - (-halfWidth + snapDistance + itemHalfDepth)) < 0.5) {
+      snapX = -halfWidth + snapDistance + itemHalfDepth;
+      rotation = Math.PI / 2; // Face right
       snapped = true;
-    } else if (Math.abs(x - (halfWidth - snapDistance)) < 0.5) {
-      snapX = halfWidth - snapDistance;
+    } 
+    // Snap to right wall (facing left)
+    else if (Math.abs(x - (halfWidth - snapDistance - itemHalfDepth)) < 0.5) {
+      snapX = halfWidth - snapDistance - itemHalfDepth;
+      rotation = -Math.PI / 2; // Face left
       snapped = true;
     }
 
-    if (Math.abs(z - (-halfLength + snapDistance)) < 0.5) {
-      snapZ = -halfLength + snapDistance;
+    // Snap to back wall (facing forward)
+    if (Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < 0.5) {
+      snapZ = -halfLength + snapDistance + itemHalfDepth;
+      rotation = 0; // Face forward
       snapped = true;
-    } else if (Math.abs(z - (halfLength - snapDistance)) < 0.5) {
-      snapZ = halfLength - snapDistance;
+    } 
+    // Snap to front wall (facing back)
+    else if (Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < 0.5) {
+      snapZ = halfLength - snapDistance - itemHalfDepth;
+      rotation = Math.PI; // Face back
       snapped = true;
     }
 
-    return snapped ? { x: snapX, z: snapZ } : null;
+    return snapped ? { x: snapX, z: snapZ, rotation } : null;
+  };
+
+  // Validate position to prevent going into walls
+  const validatePosition = (x: number, z: number) => {
+    const halfWidth = kitchenDimensions.width / 2;
+    const halfLength = kitchenDimensions.length / 2;
+    const itemHalfWidth = selectedItem ? selectedItem.dimensions.width / 2 : 0.3;
+    const itemHalfDepth = selectedItem ? selectedItem.dimensions.depth / 2 : 0.3;
+    
+    // Prevent going into walls by keeping item boundaries inside room
+    const minX = -halfWidth + itemHalfWidth;
+    const maxX = halfWidth - itemHalfWidth;
+    const minZ = -halfLength + itemHalfDepth;
+    const maxZ = halfLength - itemHalfDepth;
+    
+    return {
+      x: Math.min(Math.max(minX, x), maxX),
+      z: Math.min(Math.max(minZ, z), maxZ)
+    };
   };
 
   useEffect(() => {
     if (selectedItem) {
-      const snap = getSnapPosition(position.x, position.z);
+      const validatedPos = validatePosition(position.x, position.z);
+      const snap = getSnapPosition(validatedPos.x, validatedPos.z);
       setSnapPosition(snap);
       
-      const finalPos = snap || position;
+      if (snap) {
+        setItemRotation(snap.rotation);
+      } else {
+        setItemRotation(0);
+      }
+      
+      const finalPos = snap || validatedPos;
       const validation = getDragValidation(
         new THREE.Vector3(finalPos.x, 0, finalPos.z),
         selectedItem.type
@@ -76,6 +114,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
     } else {
       setDragValidation({ isValid: true, distances: {} });
       setSnapPosition(null);
+      setItemRotation(0);
     }
   }, [position, selectedItem, getDragValidation]);
 
@@ -106,7 +145,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
 
   const handlePlaceItem = () => {
     if (selectedItem) {
-      const finalPos = snapPosition || position;
+      const finalPos = snapPosition || validatePosition(position.x, position.z);
       placeItem(
         selectedItem.id, 
         new THREE.Vector3(finalPos.x, 0, finalPos.z)
@@ -114,6 +153,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
       setSelectedItem(null);
       setIsDragging(false);
       setSnapPosition(null);
+      setItemRotation(0);
       
       // Haptic feedback for mobile
       if (navigator.vibrate) {
@@ -129,13 +169,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
     const worldPos = convertToWorldPosition(event.clientX, event.clientY);
     if (!worldPos) return;
 
-    const maxX = kitchenDimensions.width / 2 - 0.3;
-    const maxZ = kitchenDimensions.length / 2 - 0.3;
-    
-    const clampedX = Math.min(Math.max(-maxX, worldPos.x), maxX);
-    const clampedZ = Math.min(Math.max(-maxZ, worldPos.z), maxZ);
-    
-    setPosition({ x: clampedX, z: clampedZ });
+    const validatedPos = validatePosition(worldPos.x, worldPos.z);
+    setPosition({ x: validatedPos.x, z: validatedPos.z });
   };
 
   const handleTouchMove = (event: React.TouchEvent) => {
@@ -148,16 +183,11 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
     const worldPos = convertToWorldPosition(touch.clientX, touch.clientY);
     if (!worldPos) return;
 
-    const maxX = kitchenDimensions.width / 2 - 0.3;
-    const maxZ = kitchenDimensions.length / 2 - 0.3;
-    
-    const clampedX = Math.min(Math.max(-maxX, worldPos.x), maxX);
-    const clampedZ = Math.min(Math.max(-maxZ, worldPos.z), maxZ);
-    
-    setPosition({ x: clampedX, z: clampedZ });
+    const validatedPos = validatePosition(worldPos.x, worldPos.z);
+    setPosition({ x: validatedPos.x, z: validatedPos.z });
   };
 
-  const finalPosition = snapPosition || position;
+  const finalPosition = snapPosition || validatePosition(position.x, position.z);
 
   return (
     <div 
@@ -199,6 +229,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
             type={item.type}
             isPlaced={true}
             dimensions={item.dimensions}
+            rotation={item.rotation || 0}
           />
         ))}
         
@@ -209,6 +240,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({ windowPlacement }) => {
               type={selectedItem.type}
               isPlaced={false}
               dimensions={selectedItem.dimensions}
+              rotation={itemRotation}
             />
             <SnapGuides
               position={new THREE.Vector3(finalPosition.x, 0, finalPosition.z)}

@@ -36,6 +36,7 @@ export interface KitchenItem {
     depth: number;
     height: number;
   };
+  rotation?: number; // Add rotation property
 }
 
 // Triangle validation result
@@ -63,7 +64,7 @@ interface KitchenContextType {
   placedItems: KitchenItem[];
   selectedItem: KitchenItem | null;
   setSelectedItem: (item: KitchenItem | null) => void;
-  placeItem: (itemId: string, position: Vector3) => void;
+  placeItem: (itemId: string, position: Vector3, rotation?: number) => void;
   removeItem: (itemId: string) => void;
   triangleValidation: TriangleValidation | null;
   validateTriangle: () => void;
@@ -112,6 +113,7 @@ const initialKitchenItems: KitchenItem[] = [
     placed: false,
     name: 'כיור',
     dimensions: { width: 0.6, depth: 0.6, height: 0.85 },
+    rotation: 0,
   },
   {
     id: generateId('sink'),
@@ -120,6 +122,7 @@ const initialKitchenItems: KitchenItem[] = [
     placed: false,
     name: 'כיור נוסף',
     dimensions: { width: 0.6, depth: 0.6, height: 0.85 },
+    rotation: 0,
   },
   {
     id: generateId('stove'),
@@ -128,6 +131,7 @@ const initialKitchenItems: KitchenItem[] = [
     placed: false,
     name: 'כיריים',
     dimensions: { width: 0.6, depth: 0.6, height: 0.9 },
+    rotation: 0,
   },
   {
     id: generateId('oven'),
@@ -136,6 +140,7 @@ const initialKitchenItems: KitchenItem[] = [
     placed: false,
     name: 'תנור',
     dimensions: { width: 0.6, depth: 0.6, height: 0.6 },
+    rotation: 0,
   },
   {
     id: generateId('refrigerator'),
@@ -144,6 +149,7 @@ const initialKitchenItems: KitchenItem[] = [
     placed: false,
     name: 'מקרר',
     dimensions: { width: 0.8, depth: 0.7, height: 1.8 },
+    rotation: 0,
   },
   ...Array(10).fill(null).map(() => ({
     id: generateId('countertop'),
@@ -152,6 +158,7 @@ const initialKitchenItems: KitchenItem[] = [
     placed: false,
     name: 'משטח עם מגירות',
     dimensions: { width: 0.6, depth: 0.6, height: 0.85 },
+    rotation: 0,
   })),
 ];
 
@@ -253,14 +260,15 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // Place an item in the kitchen
-  const placeItem = (itemId: string, position: Vector3) => {
+  const placeItem = (itemId: string, position: Vector3, rotation: number = 0) => {
     const itemIndex = availableItems.findIndex(item => item.id === itemId);
     
     if (itemIndex !== -1) {
       const item = { 
         ...availableItems[itemIndex], 
         position: new Vector3(position.x, position.y, position.z),
-        placed: true 
+        placed: true,
+        rotation
       };
       
       if (item.type === KitchenItemType.COUNTERTOP) {
@@ -285,7 +293,8 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       const item = { 
         ...placedItems[itemIndex], 
         position: new Vector3(0, 0, 0),
-        placed: false 
+        placed: false,
+        rotation: 0
       };
       
       setPlacedItems(prev => prev.filter(item => item.id !== itemId));
