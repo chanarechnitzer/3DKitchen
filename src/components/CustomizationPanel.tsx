@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Palette, Sparkles, Play } from 'lucide-react';
+import { ArrowLeft, Palette, Sparkles, Play, Eye } from 'lucide-react';
+import { useKitchen } from '../store/KitchenContext';
 
 interface CustomizationPanelProps {
   onStartDesigning: () => void;
 }
 
 const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesigning }) => {
+  const { customization, updateCustomization } = useKitchen();
   const [selectedCategory, setSelectedCategory] = useState<'cabinets' | 'countertops' | 'walls' | 'floors'>('cabinets');
-  const [selectedFinishes, setSelectedFinishes] = useState({
-    cabinets: 'white',
-    countertops: 'granite',
-    walls: 'light',
-    floors: 'wood'
-  });
 
   const categories = [
     { id: 'cabinets', name: 'ארונות', icon: '🗄️' },
@@ -48,11 +44,8 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
     ],
   };
 
-  const handleFinishChange = (category: string, finishId: string) => {
-    setSelectedFinishes(prev => ({
-      ...prev,
-      [category]: finishId
-    }));
+  const handleFinishChange = (category: keyof typeof customization, finishId: string) => {
+    updateCustomization(category, finishId);
   };
 
   return (
@@ -117,20 +110,28 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
                       key={option.id}
                       onClick={() => handleFinishChange(selectedCategory, option.id)}
                       className={`group relative p-3 rounded-xl border-2 transition-all duration-200 ${
-                        selectedFinishes[selectedCategory] === option.id
-                          ? 'border-purple-500 bg-purple-50'
+                        customization[selectedCategory] === option.id
+                          ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className={`w-full h-16 rounded-lg mb-2 ${option.preview}`}></div>
+                      <div className={`w-full h-16 rounded-lg mb-2 ${option.preview} transition-all duration-200`}></div>
                       <h3 className="font-medium text-gray-900 text-sm">{option.name}</h3>
-                      {selectedFinishes[selectedCategory] === option.id && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                      {customization[selectedCategory] === option.id && (
+                        <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
                         </div>
                       )}
                     </button>
                   ))}
+                </div>
+                
+                {/* Live Preview Note */}
+                <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                  <div className="flex items-center gap-2 text-blue-700">
+                    <Eye size={16} />
+                    <span className="text-sm font-medium">השינויים יוחלו אוטומטית במטבח</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -138,30 +139,23 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
             {/* Preview */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 h-fit">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">תצוגה מקדימה</h2>
-                <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-4 h-48 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center mx-auto mb-2">
-                      <Palette className="text-white" size={20} />
-                    </div>
-                    <p className="text-gray-600 text-sm">
-                      תצוגה מקדימה של המטבח
-                      <br />
-                      עם הגימורים שנבחרו
-                    </p>
-                  </div>
-                </div>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">בחירות נוכחיות</h2>
                 
                 {/* Selected Finishes Summary */}
-                <div className="mt-4 space-y-2">
-                  <h3 className="font-medium text-gray-900 text-sm">גימורים נבחרים:</h3>
-                  {Object.entries(selectedFinishes).map(([category, finish]) => {
-                    const categoryName = categories.find(c => c.id === category)?.name;
-                    const finishName = finishOptions[category as keyof typeof finishOptions]?.find(f => f.id === finish)?.name;
+                <div className="space-y-3">
+                  {Object.entries(customization).map(([category, finish]) => {
+                    const categoryData = categories.find(c => c.id === category);
+                    const finishData = finishOptions[category as keyof typeof finishOptions]?.find(f => f.id === finish);
+                    
+                    if (!categoryData || !finishData) return null;
+                    
                     return (
-                      <div key={category} className="flex justify-between text-xs text-gray-600">
-                        <span>{categoryName}:</span>
-                        <span className="font-medium">{finishName}</span>
+                      <div key={category} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <div className={`w-8 h-8 rounded-lg ${finishData.preview} border border-gray-200`}></div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">{categoryData.name}</div>
+                          <div className="text-xs text-gray-600">{finishData.name}</div>
+                        </div>
                       </div>
                     );
                   })}
@@ -170,11 +164,15 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
                 {/* Start Designing Button */}
                 <button
                   onClick={onStartDesigning}
-                  className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl hover:shadow-lg transition-all duration-200"
+                  className="w-full mt-6 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl hover:shadow-lg transition-all duration-200"
                 >
                   <Play size={16} />
                   התחל לעצב
                 </button>
+                
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  תוכל לחזור ולשנות בכל עת
+                </p>
               </div>
             </div>
           </div>

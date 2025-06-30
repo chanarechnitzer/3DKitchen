@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { WindowPlacement } from '../../store/KitchenContext';
+import { WindowPlacement, useKitchen } from '../../store/KitchenContext';
 
 interface KitchenRoomProps {
   width: number;
@@ -10,24 +10,56 @@ interface KitchenRoomProps {
 }
 
 const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacement }) => {
+  const { customization } = useKitchen();
   const halfWidth = width / 2;
   const halfLength = length / 2;
   const [windowTexture, setWindowTexture] = useState<THREE.Texture | null>(null);
   const [textureError, setTextureError] = useState(false);
 
+  // Get colors based on customization
+  const getWallColor = () => {
+    switch (customization.walls) {
+      case 'light':
+        return '#F8FAFC';
+      case 'warm':
+        return '#FEF3E2';
+      case 'cool':
+        return '#EFF6FF';
+      case 'bold':
+        return '#1E293B';
+      default:
+        return '#F8FAFC';
+    }
+  };
+
+  const getFloorColor = () => {
+    switch (customization.floors) {
+      case 'wood':
+        return '#8B4513';
+      case 'tile':
+        return '#E2E8F0';
+      case 'stone':
+        return '#64748B';
+      case 'concrete':
+        return '#374151';
+      default:
+        return '#8B4513';
+    }
+  };
+
   // Create a canvas with the mountain view
   const createMountainViewCanvas = () => {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;  // Reduced for better performance
-    canvas.height = 512; // Square aspect ratio
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
     // Sky gradient
     const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.7);
-    skyGradient.addColorStop(0, '#4A90E2');   // Deeper blue at top
-    skyGradient.addColorStop(0.5, '#87CEEB'); // Light blue in middle
-    skyGradient.addColorStop(1, '#E0F6FF');   // Almost white at horizon
+    skyGradient.addColorStop(0, '#4A90E2');
+    skyGradient.addColorStop(0.5, '#87CEEB');
+    skyGradient.addColorStop(1, '#E0F6FF');
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -89,7 +121,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         texture.magFilter = THREE.LinearFilter;
         texture.needsUpdate = true;
         setWindowTexture(texture);
-        console.log('Window texture created successfully');
       }
     } catch (error) {
       console.error('Error creating window view:', error);
@@ -150,14 +181,12 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     const shelfHeight = 2.2;
     const shelfDepth = 0.3;
 
-    // Only place two plants in opposite corners
     const cornerPositions = [
-      [-halfWidth + 0.4, shelfHeight, -halfLength + shelfDepth], // Left back corner
-      [halfWidth - 0.4, shelfHeight, -halfLength + shelfDepth],  // Right back corner
+      [-halfWidth + 0.4, shelfHeight, -halfLength + shelfDepth],
+      [halfWidth - 0.4, shelfHeight, -halfLength + shelfDepth],
     ];
 
     cornerPositions.forEach((position, index) => {
-      // Skip if this position would interfere with the window
       if (windowPlacement === WindowPlacement.OPPOSITE && 
           position[0] > -width/6 && position[0] < width/6) {
         return;
@@ -171,16 +200,13 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         return;
       }
 
-      // Plant group
       plants.push(
         <group key={`plant-${index}`} position={position}>
-          {/* Plant pot */}
           <mesh castShadow>
             <cylinderGeometry args={[0.12, 0.08, 0.2, 16]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
           
-          {/* Plant leaves - create more natural-looking foliage */}
           <group position={[0, 0.15, 0]}>
             {[0, 1, 2].map((layer) => (
               <mesh 
@@ -200,7 +226,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         </group>
       );
 
-      // Shelf under plant
       plants.push(
         <mesh 
           key={`shelf-${index}`} 
@@ -216,8 +241,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   };
 
   const renderWindow = () => {
-    console.log('Rendering window, texture:', windowTexture);
-    
     const windowWidth = 1.2;
     const windowHeight = 1.2;
     const windowY = 1.4;
@@ -235,14 +258,13 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         windowPosition = [-halfWidth + wallOffset, windowY, 0];
         windowRotation = [0, Math.PI / 2, 0];
         break;
-      default: // OPPOSITE
+      default:
         windowPosition = [0, windowY, -halfLength + wallOffset];
         break;
     }
 
     return (
       <group position={windowPosition} rotation={windowRotation}>
-        {/* Mountain view */}
         <mesh position={[0, 0, -0.02]}>
           <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
           <meshBasicMaterial 
@@ -253,7 +275,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        {/* Glass */}
         <mesh position={[0, 0, -0.01]}>
           <planeGeometry args={[windowWidth - 0.1, windowHeight - 0.1]} />
           <meshPhysicalMaterial 
@@ -267,13 +288,11 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        {/* Frame */}
         <mesh>
           <boxGeometry args={[windowWidth, windowHeight, 0.05]} />
           <meshStandardMaterial color="#1e293b" />
         </mesh>
 
-        {/* Window dividers */}
         <mesh position={[0, 0, 0.01]}>
           <boxGeometry args={[0.05, windowHeight - 0.1, 0.02]} />
           <meshStandardMaterial color="#1e293b" />
@@ -286,12 +305,15 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
     );
   };
   
+  const wallColor = getWallColor();
+  const floorColor = getFloorColor();
+  
   return (
     <group className="room-fly-in">
-      {/* Floor */}
+      {/* Floor - uses floor customization */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[width, length]} />
-        <meshStandardMaterial color="#f3f4f6" />
+        <meshStandardMaterial color={floorColor} />
       </mesh>
 
       {/* Grid */}
@@ -311,41 +333,39 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
         <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
-      {/* Back wall */}
+      {/* Walls - use wall customization */}
       <mesh position={[0, 1.5, -halfLength]} receiveShadow>
         <boxGeometry args={[width, 3, 0.1]} />
-        <meshStandardMaterial color="#f8fafc" />
+        <meshStandardMaterial color={wallColor} />
       </mesh>
 
-      {/* Left wall */}
       <mesh
         position={[-halfWidth, 1.5, 0]}
         rotation={[0, Math.PI / 2, 0]}
         receiveShadow
       >
         <boxGeometry args={[length, 3, 0.1]} />
-        <meshStandardMaterial color="#f8fafc" />
+        <meshStandardMaterial color={wallColor} />
       </mesh>
 
-      {/* Right wall */}
       <mesh
         position={[halfWidth, 1.5, 0]}
         rotation={[0, -Math.PI / 2, 0]}
         receiveShadow
       >
         <boxGeometry args={[length, 3, 0.1]} />
-        <meshStandardMaterial color="#f8fafc" />
+        <meshStandardMaterial color={wallColor} />
       </mesh>
 
       {/* Front wall with door opening */}
       <group position={[0, 1.5, halfLength]}>
         <mesh position={[-width / 3, 0, 0]} receiveShadow>
           <boxGeometry args={[width / 3, 3, 0.1]} />
-          <meshStandardMaterial color="#f8fafc" />
+          <meshStandardMaterial color={wallColor} />
         </mesh>
         <mesh position={[width / 3, 0, 0]} receiveShadow>
           <boxGeometry args={[width / 3, 3, 0.1]} />
-          <meshStandardMaterial color="#f8fafc" />
+          <meshStandardMaterial color={wallColor} />
         </mesh>
       </group>
 

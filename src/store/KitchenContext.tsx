@@ -16,6 +16,14 @@ export enum WindowPlacement {
   OPPOSITE = 'opposite',
 }
 
+// Customization options
+export interface CustomizationOptions {
+  cabinets: string;
+  countertops: string;
+  walls: string;
+  floors: string;
+}
+
 // Kitchen item interface
 export interface KitchenItem {
   id: string;
@@ -48,6 +56,9 @@ interface KitchenContextType {
   setKitchenDimensions: (dimensions: { width: number; length: number }) => void;
   windowPlacement: WindowPlacement;
   setWindowPlacement: (placement: WindowPlacement) => void;
+  customization: CustomizationOptions;
+  setCustomization: (options: CustomizationOptions) => void;
+  updateCustomization: (category: keyof CustomizationOptions, value: string) => void;
   availableItems: KitchenItem[];
   placedItems: KitchenItem[];
   selectedItem: KitchenItem | null;
@@ -66,6 +77,14 @@ const defaultContext: KitchenContextType = {
   setKitchenDimensions: () => {},
   windowPlacement: WindowPlacement.OPPOSITE,
   setWindowPlacement: () => {},
+  customization: {
+    cabinets: 'white',
+    countertops: 'granite',
+    walls: 'light',
+    floors: 'wood'
+  },
+  setCustomization: () => {},
+  updateCustomization: () => {},
   availableItems: [],
   placedItems: [],
   selectedItem: null,
@@ -140,11 +159,25 @@ const initialKitchenItems: KitchenItem[] = [
 export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [kitchenDimensions, setKitchenDimensions] = useState({ width: 0, length: 0 });
   const [windowPlacement, setWindowPlacement] = useState<WindowPlacement>(WindowPlacement.OPPOSITE);
+  const [customization, setCustomization] = useState<CustomizationOptions>({
+    cabinets: 'white',
+    countertops: 'granite',
+    walls: 'light',
+    floors: 'wood'
+  });
   const [availableItems, setAvailableItems] = useState<KitchenItem[]>(initialKitchenItems);
   const [placedItems, setPlacedItems] = useState<KitchenItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<KitchenItem | null>(null);
   const [triangleValidation, setTriangleValidation] = useState<TriangleValidation | null>(null);
   const [gameCompleted, setGameCompleted] = useState(false);
+
+  // Update customization function
+  const updateCustomization = (category: keyof CustomizationOptions, value: string) => {
+    setCustomization(prev => ({
+      ...prev,
+      [category]: value
+    }));
+  };
 
   // Calculate distance between two positions
   const calculateDistance = (pos1: Vector3, pos2: Vector3): number => {
@@ -323,6 +356,9 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     setKitchenDimensions,
     windowPlacement,
     setWindowPlacement,
+    customization,
+    setCustomization,
+    updateCustomization,
     availableItems,
     placedItems,
     selectedItem,

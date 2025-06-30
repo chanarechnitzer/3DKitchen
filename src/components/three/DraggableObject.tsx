@@ -1,5 +1,6 @@
 import React from 'react';
 import { KitchenItemType } from '../../store/KitchenContext';
+import { useKitchen } from '../../store/KitchenContext';
 
 interface DraggableObjectProps {
   position: [number, number, number];
@@ -18,7 +19,9 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   isPlaced, 
   dimensions 
 }) => {
-  // Function to get color based on type
+  const { customization } = useKitchen();
+
+  // Function to get color based on type and customization
   const getColor = () => {
     switch (type) {
       case KitchenItemType.SINK:
@@ -30,9 +33,41 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
       case KitchenItemType.REFRIGERATOR:
         return '#93c5fd'; // Light blue for refrigerator
       case KitchenItemType.COUNTERTOP:
-        return '#a3a3a3'; // Gray for countertop
+        return getCabinetColor();
       default:
         return '#d4d4d4';
+    }
+  };
+
+  // Get cabinet color based on customization
+  const getCabinetColor = () => {
+    switch (customization.cabinets) {
+      case 'white':
+        return '#ffffff';
+      case 'wood':
+        return '#8B4513';
+      case 'gray':
+        return '#6B7280';
+      case 'navy':
+        return '#1E3A8A';
+      default:
+        return '#ffffff';
+    }
+  };
+
+  // Get countertop color based on customization
+  const getCountertopColor = () => {
+    switch (customization.countertops) {
+      case 'granite':
+        return '#2D3748';
+      case 'marble':
+        return '#F7FAFC';
+      case 'quartz':
+        return '#4A5568';
+      case 'wood':
+        return '#8B4513';
+      default:
+        return '#2D3748';
     }
   };
 
@@ -40,19 +75,21 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   const renderObject = () => {
     const baseHeight = dimensions.height;
     const opacity = isPlaced ? 1 : 0.7;
+    const cabinetColor = getCabinetColor();
+    const countertopColor = getCountertopColor();
     
     switch (type) {
       case KitchenItemType.SINK:
         return (
           <group>
-            {/* Sink base */}
+            {/* Sink base - uses cabinet customization */}
             <mesh 
               position={[0, baseHeight / 2, 0]} 
               castShadow 
               receiveShadow
             >
               <boxGeometry args={[dimensions.width, baseHeight, dimensions.depth]} />
-              <meshStandardMaterial color="#a3a3a3" transparent opacity={opacity} />
+              <meshStandardMaterial color={cabinetColor} transparent opacity={opacity} />
             </mesh>
             
             {/* Sink */}
@@ -62,6 +99,15 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <boxGeometry args={[dimensions.width - 0.1, 0.1, dimensions.depth - 0.1]} />
               <meshStandardMaterial color={getColor()} transparent opacity={opacity} />
+            </mesh>
+            
+            {/* Countertop surface */}
+            <mesh 
+              position={[0, baseHeight + 0.025, 0]} 
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width, 0.05, dimensions.depth]} />
+              <meshStandardMaterial color={countertopColor} transparent opacity={opacity} />
             </mesh>
           </group>
         );
@@ -200,23 +246,23 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
       case KitchenItemType.COUNTERTOP:
         return (
           <group>
-            {/* Countertop base */}
+            {/* Countertop base - uses cabinet customization */}
             <mesh 
               position={[0, baseHeight / 2, 0]} 
               castShadow 
               receiveShadow
             >
               <boxGeometry args={[dimensions.width, baseHeight, dimensions.depth]} />
-              <meshStandardMaterial color="#a3a3a3" transparent opacity={opacity} />
+              <meshStandardMaterial color={cabinetColor} transparent opacity={opacity} />
             </mesh>
             
-            {/* Countertop surface */}
+            {/* Countertop surface - uses countertop customization */}
             <mesh 
               position={[0, baseHeight, 0]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width, 0.05, dimensions.depth]} />
-              <meshStandardMaterial color="#f3f4f6" transparent opacity={opacity} />
+              <meshStandardMaterial color={countertopColor} transparent opacity={opacity} />
             </mesh>
             
             {/* Drawer handles */}
