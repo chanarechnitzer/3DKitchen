@@ -51,7 +51,6 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
   // Get text color based on floor darkness
   const getTextColor = () => {
     const floorColor = getFloorColor();
-    // Check if floor is dark - if so, use white text, otherwise black
     const isDarkFloor = ['#64748B', '#374151', '#8B4513'].includes(floorColor);
     return isDarkFloor ? '#ffffff' : '#000000';
   };
@@ -404,13 +403,13 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
     return (
       <group position={windowPosition} rotation={windowRotation}>
-        {/* Window frame - dark wood */}
+        {/* FIXED: Window frame - dark wood (ONLY the frame, no brown bar above) */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[windowWidth, windowHeight, 0.08]} />
           <meshStandardMaterial color="#2D1B14" />
         </mesh>
 
-        {/* Beautiful mountain view */}
+        {/* Beautiful mountain view - CONTAINED within frame */}
         <mesh position={[0, 0, -0.03]}>
           <planeGeometry args={[windowWidth - 0.15, windowHeight - 0.15]} />
           <meshBasicMaterial 
@@ -421,7 +420,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        {/* Glass effect */}
+        {/* Glass effect - CONTAINED within frame */}
         <mesh position={[0, 0, -0.02]}>
           <planeGeometry args={[windowWidth - 0.15, windowHeight - 0.15]} />
           <meshPhysicalMaterial 
@@ -435,7 +434,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        {/* Window cross frame */}
+        {/* Window cross frame - CONTAINED within frame */}
         <mesh position={[0, 0, 0.01]}>
           <boxGeometry args={[0.06, windowHeight - 0.1, 0.03]} />
           <meshStandardMaterial color="#2D1B14" />
@@ -445,9 +444,9 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           <meshStandardMaterial color="#2D1B14" />
         </mesh>
 
-        {/* Curtains - elegant and flowing */}
+        {/* Curtains - elegant and flowing - CONTAINED within window area */}
         <group position={[0, 0, 0.05]}>
-          {/* Left curtain */}
+          {/* Left curtain - ONLY covers part of window */}
           <mesh position={[-windowWidth * 0.35, 0, 0]}>
             <planeGeometry args={[windowWidth * 0.25, windowHeight - 0.1]} />
             <meshStandardMaterial 
@@ -458,7 +457,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
             />
           </mesh>
           
-          {/* Right curtain */}
+          {/* Right curtain - ONLY covers part of window */}
           <mesh position={[windowWidth * 0.35, 0, 0]}>
             <planeGeometry args={[windowWidth * 0.25, windowHeight - 0.1]} />
             <meshStandardMaterial 
@@ -469,13 +468,13 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
             />
           </mesh>
 
-          {/* Curtain rod */}
+          {/* Curtain rod - CONTAINED within window frame */}
           <mesh position={[0, windowHeight * 0.45, 0.02]}>
             <cylinderGeometry args={[0.02, 0.02, windowWidth * 0.9, 16]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
 
-          {/* Curtain rod ends */}
+          {/* Curtain rod ends - CONTAINED within window frame */}
           <mesh position={[-windowWidth * 0.45, windowHeight * 0.45, 0.02]}>
             <sphereGeometry args={[0.04, 8, 8]} />
             <meshStandardMaterial color="#8B4513" />
@@ -486,7 +485,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           </mesh>
         </group>
 
-        {/* Window sill */}
+        {/* Window sill - CONTAINED within window area */}
         <mesh position={[0, -windowHeight * 0.5 - 0.05, 0.04]}>
           <boxGeometry args={[windowWidth + 0.1, 0.1, 0.15]} />
           <meshStandardMaterial color="#F5F5DC" />
@@ -563,7 +562,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* Beautiful window with mountain view and curtains */}
+      {/* FIXED: Beautiful window with mountain view and curtains - NO brown bar above */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}

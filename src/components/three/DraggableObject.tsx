@@ -85,60 +85,91 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               <meshStandardMaterial color={countertopColor} transparent opacity={opacity} />
             </mesh>
             
-            {/* Sink bowl - realistic sink shape with stainless steel color */}
+            {/* IMPROVED: Realistic sink bowl with proper stainless steel finish */}
             <mesh 
-              position={[0, baseHeight - 0.1, 0]} 
+              position={[0, baseHeight - 0.08, 0]} 
               castShadow
             >
-              <cylinderGeometry args={[dimensions.width * 0.35, dimensions.width * 0.3, 0.15, 16]} />
+              <cylinderGeometry args={[dimensions.width * 0.35, dimensions.width * 0.3, 0.12, 20]} />
               <meshStandardMaterial 
                 color="#c0c0c0" 
-                metalness={0.8} 
+                metalness={0.9} 
+                roughness={0.15} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* IMPROVED: Sink interior - darker stainless steel with better depth */}
+            <mesh 
+              position={[0, baseHeight - 0.02, 0]} 
+              castShadow
+            >
+              <cylinderGeometry args={[dimensions.width * 0.32, dimensions.width * 0.27, 0.08, 20]} />
+              <meshStandardMaterial 
+                color="#a8a8a8" 
+                metalness={0.95} 
+                roughness={0.1} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* NEW: Sink drain - realistic detail */}
+            <mesh 
+              position={[0, baseHeight - 0.05, 0]} 
+              castShadow
+            >
+              <cylinderGeometry args={[0.03, 0.025, 0.02, 12]} />
+              <meshStandardMaterial 
+                color="#808080" 
+                metalness={0.9} 
                 roughness={0.2} 
                 transparent 
                 opacity={opacity} 
               />
             </mesh>
             
-            {/* Sink interior - darker stainless steel */}
+            {/* IMPROVED: Faucet base - more realistic chrome finish */}
             <mesh 
-              position={[0, baseHeight - 0.05, 0]} 
+              position={[0, baseHeight + 0.08, -dimensions.depth * 0.3]} 
               castShadow
             >
-              <cylinderGeometry args={[dimensions.width * 0.32, dimensions.width * 0.27, 0.12, 16]} />
+              <cylinderGeometry args={[0.04, 0.05, 0.12, 12]} />
               <meshStandardMaterial 
-                color="#a8a8a8" 
-                metalness={0.9} 
-                roughness={0.1} 
+                color="#f0f0f0" 
+                metalness={0.95} 
+                roughness={0.05} 
                 transparent 
                 opacity={opacity} 
               />
             </mesh>
             
-            {/* Faucet base - chrome finish */}
+            {/* IMPROVED: Faucet spout - curved and realistic */}
             <mesh 
-              position={[0, baseHeight + 0.08, -dimensions.depth * 0.25]} 
+              position={[0, baseHeight + 0.18, -dimensions.depth * 0.15]} 
               castShadow
+              rotation={[Math.PI / 6, 0, 0]}
             >
-              <cylinderGeometry args={[0.03, 0.04, 0.1, 8]} />
+              <cylinderGeometry args={[0.02, 0.025, 0.25, 12]} />
               <meshStandardMaterial 
-                color="#e5e5e5" 
-                metalness={0.9} 
-                roughness={0.1} 
+                color="#f0f0f0" 
+                metalness={0.95} 
+                roughness={0.05} 
                 transparent 
                 opacity={opacity} 
               />
             </mesh>
             
-            {/* Faucet spout - chrome finish */}
+            {/* NEW: Faucet handle - realistic detail */}
             <mesh 
-              position={[0, baseHeight + 0.15, -dimensions.depth * 0.1]} 
+              position={[0.08, baseHeight + 0.15, -dimensions.depth * 0.3]} 
               castShadow
             >
-              <boxGeometry args={[0.04, 0.02, 0.2]} />
+              <cylinderGeometry args={[0.015, 0.02, 0.06, 8]} />
               <meshStandardMaterial 
-                color="#e5e5e5" 
-                metalness={0.9} 
+                color="#e0e0e0" 
+                metalness={0.8} 
                 roughness={0.1} 
                 transparent 
                 opacity={opacity} 
@@ -243,13 +274,35 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               <meshStandardMaterial color="#111827" transparent opacity={opacity} />
             </mesh>
             
+            {/* Oven window */}
+            <mesh 
+              position={[0, baseHeight * 0.6, dimensions.depth / 2 + 0.02]} 
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width - 0.2, baseHeight * 0.4, 0.01]} />
+              <meshStandardMaterial 
+                color="#333333" 
+                transparent 
+                opacity={opacity * 0.8} 
+              />
+            </mesh>
+            
             {/* Oven handle */}
             <mesh 
-              position={[0, baseHeight / 2, dimensions.depth / 2 + 0.03]} 
+              position={[0, baseHeight * 0.3, dimensions.depth / 2 + 0.03]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width - 0.3, 0.05, 0.02]} />
               <meshStandardMaterial color="#fb923c" transparent opacity={opacity} />
+            </mesh>
+            
+            {/* Control panel */}
+            <mesh 
+              position={[0, baseHeight - 0.05, dimensions.depth / 2 + 0.02]} 
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width - 0.1, 0.08, 0.01]} />
+              <meshStandardMaterial color="#374151" transparent opacity={opacity} />
             </mesh>
           </group>
         );

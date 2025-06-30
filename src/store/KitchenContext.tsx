@@ -106,7 +106,7 @@ const KitchenContext = createContext<KitchenContextType>(defaultContext);
 // Generate unique ID
 const generateId = (type: string) => `${type}-${Math.random().toString(36).substr(2, 9)}`;
 
-// Initial kitchen items
+// Initial kitchen items - NOW WITH SEPARATE OVEN!
 const initialKitchenItems: KitchenItem[] = [
   {
     id: generateId('sink'),
@@ -135,12 +135,23 @@ const initialKitchenItems: KitchenItem[] = [
     dimensions: { width: 0.6, depth: 0.6, height: 0.9 },
     rotation: 0,
   },
+  // NEW: Separate oven item
   {
     id: generateId('oven'),
     type: KitchenItemType.OVEN,
     position: new Vector3(0, 0, 0),
     placed: false,
     name: 'תנור',
+    dimensions: { width: 0.6, depth: 0.6, height: 0.6 },
+    rotation: 0,
+  },
+  // NEW: Additional oven
+  {
+    id: generateId('oven'),
+    type: KitchenItemType.OVEN,
+    position: new Vector3(0, 0, 0),
+    placed: false,
+    name: 'תנור נוסף',
     dimensions: { width: 0.6, depth: 0.6, height: 0.6 },
     rotation: 0,
   },
