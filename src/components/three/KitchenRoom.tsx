@@ -434,7 +434,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           />
         </mesh>
 
-        {/* ✅ REMOVED: Window cross frame completely - NO MORE CROSS! */}
+        {/* ✅ COMPLETELY REMOVED: Window cross frame - NO MORE CROSS AT ALL! */}
 
         {/* ✅ FIXED: Curtains - elegant and flowing - CONTAINED within window area */}
         <group position={[0, 0, 0.05]}>
@@ -554,7 +554,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* ✅ FIXED: Beautiful window - NO cross frame! Clean and simple */}
+      {/* ✅ PERFECT: Beautiful window - NO cross frame! Clean and simple */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}
