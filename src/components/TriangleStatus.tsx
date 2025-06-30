@@ -5,9 +5,14 @@ import { TriangleValidation } from '../store/KitchenContext';
 interface TriangleStatusProps {
   validation: TriangleValidation;
   isComplete: boolean;
+  designPhaseComplete?: boolean; // Add this prop to control when to show completion
 }
 
-const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete }) => {
+const TriangleStatus: React.FC<TriangleStatusProps> = ({ 
+  validation, 
+  isComplete, 
+  designPhaseComplete = false 
+}) => {
   const { isValid, sides, violations, isComplete: triangleComplete } = validation;
   
   const formatDistance = (distance: number) => {
@@ -19,7 +24,8 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
   };
 
   const getValidationMessage = () => {
-    if (isComplete) {
+    // Only show completion message if design phase is actually complete AND user clicked finish
+    if (isComplete && designPhaseComplete) {
       return (
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-3 mb-3">
           <div className="flex items-center gap-2 mb-2">
@@ -49,49 +55,64 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
       );
     }
 
-    if (triangleComplete && !isValid && violations && violations.length > 0) {
-      return (
-        <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-3 mb-3">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center">
-              <X className="text-white" size={14} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-red-800">נדרש תיקון</h3>
-              <p className="text-red-700 text-xs">המשולש הזהב זקוק להתאמות</p>
-            </div>
-          </div>
-          <ul className="space-y-1">
-            {violations.map((violation, index) => (
-              <li key={index} className="flex items-center gap-1 text-xs text-red-700">
-                <AlertCircle size={10} className="text-red-600" />
-                {violation}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-2 p-2 bg-red-100 rounded-lg">
-            <p className="text-xs text-red-800 font-medium">
-              💡 טיפ: גרור את הרכיבים למיקומים חדשים כדי לתקן את המרחקים
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    if (triangleComplete && !isValid) {
-      return (
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-3 mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-              <AlertCircle className="text-white" size={14} />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-yellow-800">כמעט מושלם!</h3>
-              <p className="text-yellow-700 text-xs">בדוק את המרחקים בין הרכיבים</p>
+    // Show validation status only when triangle is complete but design phase is not finished
+    if (triangleComplete && !designPhaseComplete) {
+      if (isValid) {
+        return (
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-3 mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                <Target className="text-white" size={14} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-blue-800">המשולש תקין! ✅</h3>
+                <p className="text-blue-700 text-xs">לחץ על "סיימתי לעצב" כדי לסיים</p>
+              </div>
             </div>
           </div>
-        </div>
-      );
+        );
+      } else if (violations && violations.length > 0) {
+        return (
+          <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-3 mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center">
+                <X className="text-white" size={14} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-red-800">נדרש תיקון</h3>
+                <p className="text-red-700 text-xs">המשולש הזהב זקוק להתאמות</p>
+              </div>
+            </div>
+            <ul className="space-y-1">
+              {violations.map((violation, index) => (
+                <li key={index} className="flex items-center gap-1 text-xs text-red-700">
+                  <AlertCircle size={10} className="text-red-600" />
+                  {violation}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2 p-2 bg-red-100 rounded-lg">
+              <p className="text-xs text-red-800 font-medium">
+                💡 טיפ: גרור את הרכיבים למיקומים חדשים כדי לתקן את המרחקים
+              </p>
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-3 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <AlertCircle className="text-white" size={14} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-yellow-800">כמעט מושלם!</h3>
+                <p className="text-yellow-700 text-xs">בדוק את המרחקים בין הרכיבים</p>
+              </div>
+            </div>
+          </div>
+        );
+      }
     }
 
     return null;
@@ -99,12 +120,12 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({ validation, isComplete 
 
   return (
     <div className={`bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden ${
-      isComplete ? 'ring-2 ring-primary ring-opacity-50' : ''
+      isComplete && designPhaseComplete ? 'ring-2 ring-primary ring-opacity-50' : ''
     }`}>
       <div className="bg-gradient-to-r from-primary/10 to-yellow-500/10 px-3 py-2 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-gradient-to-br from-primary to-yellow-500 rounded-lg flex items-center justify-center">
-            {isComplete ? <Zap className="text-white" size={12} /> : <Target className="text-white" size={12} />}
+            {isComplete && designPhaseComplete ? <Zap className="text-white" size={12} /> : <Target className="text-white" size={12} />}
           </div>
           <div>
             <h2 className="text-sm font-bold text-gray-900">המשולש הזהב</h2>

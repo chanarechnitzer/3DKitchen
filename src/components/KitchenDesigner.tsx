@@ -100,12 +100,13 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
             </div>
           </div>
           
-          {/* Triangle Status */}
+          {/* Triangle Status - Pass designPhaseComplete prop */}
           {triangleValidation && (
             <div className="flex-shrink-0">
               <TriangleStatus 
                 validation={triangleValidation} 
                 isComplete={gameCompleted}
+                designPhaseComplete={designPhaseComplete}
               />
             </div>
           )}
