@@ -31,7 +31,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const [position, setPosition] = useState({ x: 0, z: 0 });
   const [dragValidation, setDragValidation] = useState<{ isValid: boolean; distances: { [key: string]: number } }>({ isValid: true, distances: {} });
   const [isDragging, setIsDragging] = useState(false);
-  const [snapPosition, setSnapPosition] = useState<{ x: number, z: number } | null>(null);
+  const [snapPosition, setSnapPosition] = useState<{ x: number, z: number, rotation?: number, snapType?: string } | null>(null);
   const [itemRotation, setItemRotation] = useState(0);
   const [showRotationHint, setShowRotationHint] = useState(false);
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
@@ -39,18 +39,34 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // NEW: Check for collisions with other items
-  const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number) => {
-    const itemHalfWidth = itemWidth / 2;
-    const itemHalfDepth = itemDepth / 2;
+  // ✅ NEW: Advanced collision detection - prevents placing items inside each other
+  const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
+    if (!selectedItem) return null;
+    
+    // Calculate rotated dimensions
+    const rotatedWidth = Math.abs(Math.cos(rotation)) * itemWidth + Math.abs(Math.sin(rotation)) * itemDepth;
+    const rotatedDepth = Math.abs(Math.sin(rotation)) * itemWidth + Math.abs(Math.cos(rotation)) * itemDepth;
+    
+    const itemHalfWidth = rotatedWidth / 2;
+    const itemHalfDepth = rotatedDepth / 2;
     
     for (const placedItem of placedItems) {
-      const placedHalfWidth = placedItem.dimensions.width / 2;
-      const placedHalfDepth = placedItem.dimensions.depth / 2;
+      // Skip self if editing existing item
+      if (placedItem.id === selectedItem.id) continue;
       
-      // Check if bounding boxes overlap
-      const xOverlap = Math.abs(x - placedItem.position.x) < (itemHalfWidth + placedHalfWidth);
-      const zOverlap = Math.abs(z - placedItem.position.z) < (itemHalfDepth + placedHalfDepth);
+      const placedRotation = placedItem.rotation || 0;
+      const placedRotatedWidth = Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.width + 
+                                 Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.depth;
+      const placedRotatedDepth = Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.width + 
+                                 Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.depth;
+      
+      const placedHalfWidth = placedRotatedWidth / 2;
+      const placedHalfDepth = placedRotatedDepth / 2;
+      
+      // Check if bounding boxes overlap with small buffer
+      const buffer = 0.05; // 5cm buffer between items
+      const xOverlap = Math.abs(x - placedItem.position.x) < (itemHalfWidth + placedHalfWidth + buffer);
+      const zOverlap = Math.abs(z - placedItem.position.z) < (itemHalfDepth + placedHalfDepth + buffer);
       
       if (xOverlap && zOverlap) {
         return placedItem.name; // Return the name of the colliding item
@@ -59,11 +75,11 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return null;
   };
 
-  // NEW: Smart snapping to walls AND other items
+  // ✅ NEW: Smart snapping to walls AND other items
   const getSnapPosition = (x: number, z: number) => {
     if (!selectedItem) return null;
     
-    const snapDistance = 0.05;
+    const snapDistance = 0.05; // Distance from walls
     const itemSnapDistance = 0.02; // Distance for snapping to other items
     const halfWidth = kitchenDimensions.width / 2;
     const halfLength = kitchenDimensions.length / 2;
@@ -77,117 +93,124 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     let rotation = 0;
     let snapType = '';
 
-    // First, check for snapping to other items
+    // ✅ PRIORITY 1: Check for snapping to other items (highest priority)
     for (const placedItem of placedItems) {
+      // Skip self if editing existing item
+      if (placedItem.id === selectedItem.id) continue;
+      
       const placedHalfWidth = placedItem.dimensions.width / 2;
       const placedHalfDepth = placedItem.dimensions.depth / 2;
       
-      // Snap to right side of placed item
+      // ✅ Snap to right side of placed item
       const rightSnapX = placedItem.position.x + placedHalfWidth + itemHalfWidth + itemSnapDistance;
-      if (Math.abs(x - rightSnapX) < 0.3 && Math.abs(z - placedItem.position.z) < 0.5) {
+      if (Math.abs(x - rightSnapX) < 0.4 && Math.abs(z - placedItem.position.z) < 0.6) {
         snapX = rightSnapX;
         snapZ = placedItem.position.z;
+        rotation = 0; // Face forward when snapping to items
         snapped = true;
-        snapType = `נצמד ל${placedItem.name}`;
+        snapType = `נצמד ימינה ל${placedItem.name}`;
         setShowRotationHint(false);
         break;
       }
       
-      // Snap to left side of placed item
+      // ✅ Snap to left side of placed item
       const leftSnapX = placedItem.position.x - placedHalfWidth - itemHalfWidth - itemSnapDistance;
-      if (Math.abs(x - leftSnapX) < 0.3 && Math.abs(z - placedItem.position.z) < 0.5) {
+      if (Math.abs(x - leftSnapX) < 0.4 && Math.abs(z - placedItem.position.z) < 0.6) {
         snapX = leftSnapX;
         snapZ = placedItem.position.z;
+        rotation = 0; // Face forward when snapping to items
         snapped = true;
-        snapType = `נצמד ל${placedItem.name}`;
+        snapType = `נצמד שמאלה ל${placedItem.name}`;
         setShowRotationHint(false);
         break;
       }
       
-      // Snap to front of placed item
+      // ✅ Snap to front of placed item
       const frontSnapZ = placedItem.position.z + placedHalfDepth + itemHalfDepth + itemSnapDistance;
-      if (Math.abs(z - frontSnapZ) < 0.3 && Math.abs(x - placedItem.position.x) < 0.5) {
+      if (Math.abs(z - frontSnapZ) < 0.4 && Math.abs(x - placedItem.position.x) < 0.6) {
         snapX = placedItem.position.x;
         snapZ = frontSnapZ;
+        rotation = 0; // Face forward when snapping to items
         snapped = true;
-        snapType = `נצמד ל${placedItem.name}`;
+        snapType = `נצמד קדימה ל${placedItem.name}`;
         setShowRotationHint(false);
         break;
       }
       
-      // Snap to back of placed item
+      // ✅ Snap to back of placed item
       const backSnapZ = placedItem.position.z - placedHalfDepth - itemHalfDepth - itemSnapDistance;
-      if (Math.abs(z - backSnapZ) < 0.3 && Math.abs(x - placedItem.position.x) < 0.5) {
+      if (Math.abs(z - backSnapZ) < 0.4 && Math.abs(x - placedItem.position.x) < 0.6) {
         snapX = placedItem.position.x;
         snapZ = backSnapZ;
+        rotation = 0; // Face forward when snapping to items
         snapped = true;
-        snapType = `נצמד ל${placedItem.name}`;
+        snapType = `נצמד אחורה ל${placedItem.name}`;
         setShowRotationHint(false);
         break;
       }
     }
 
-    // If not snapped to items, check wall snapping
+    // ✅ PRIORITY 2: If not snapped to items, check wall snapping
     if (!snapped) {
       const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfDepth)) < cornerThreshold;
       const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfDepth)) < cornerThreshold;
       const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
       const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
-      // Corner snapping with rotation options
+      // ✅ Corner snapping with rotation options
       if (isNearLeftWall && isNearBackWall) {
         snapX = -halfWidth + snapDistance + itemHalfDepth;
         snapZ = -halfLength + snapDistance + itemHalfDepth;
-        rotation = itemRotation;
+        rotation = itemRotation; // User controls rotation in corners
         snapped = true;
-        snapType = 'פינה שמאל-אחור';
+        snapType = '🔄 פינה שמאל-אחור';
         setShowRotationHint(true);
       } else if (isNearRightWall && isNearBackWall) {
         snapX = halfWidth - snapDistance - itemHalfDepth;
         snapZ = -halfLength + snapDistance + itemHalfDepth;
-        rotation = itemRotation;
+        rotation = itemRotation; // User controls rotation in corners
         snapped = true;
-        snapType = 'פינה ימין-אחור';
+        snapType = '🔄 פינה ימין-אחור';
         setShowRotationHint(true);
       } else if (isNearLeftWall && isNearFrontWall) {
         snapX = -halfWidth + snapDistance + itemHalfDepth;
         snapZ = halfLength - snapDistance - itemHalfDepth;
-        rotation = itemRotation;
+        rotation = itemRotation; // User controls rotation in corners
         snapped = true;
-        snapType = 'פינה שמאל-קדמי';
+        snapType = '🔄 פינה שמאל-קדמי';
         setShowRotationHint(true);
       } else if (isNearRightWall && isNearFrontWall) {
         snapX = halfWidth - snapDistance - itemHalfDepth;
         snapZ = halfLength - snapDistance - itemHalfDepth;
-        rotation = itemRotation;
+        rotation = itemRotation; // User controls rotation in corners
         snapped = true;
-        snapType = 'פינה ימין-קדמי';
+        snapType = '🔄 פינה ימין-קדמי';
         setShowRotationHint(true);
       }
-      // Wall snapping (not corners)
+      // ✅ Wall snapping (not corners) - automatic rotation
       else if (isNearLeftWall) {
         snapX = -halfWidth + snapDistance + itemHalfDepth;
-        rotation = Math.PI / 2;
+        rotation = Math.PI / 2; // Face right
         snapped = true;
-        snapType = 'קיר שמאל';
+        snapType = '🧲 קיר שמאל';
         setShowRotationHint(false);
       } else if (isNearRightWall) {
         snapX = halfWidth - snapDistance - itemHalfDepth;
-        rotation = -Math.PI / 2;
+        rotation = -Math.PI / 2; // Face left
         snapped = true;
-        snapType = 'קיר ימין';
+        snapType = '🧲 קיר ימין';
         setShowRotationHint(false);
       } else if (isNearBackWall) {
         snapZ = -halfLength + snapDistance + itemHalfDepth;
-        rotation = 0;
+        rotation = 0; // Face forward
         snapped = true;
-        snapType = 'קיר אחורי';
+        snapType = '🧲 קיר אחורי';
         setShowRotationHint(false);
       } else if (isNearFrontWall) {
         snapZ = halfLength - snapDistance - itemHalfDepth;
-        rotation = Math.PI;
+        rotation = Math.PI; // Face backward
         snapped = true;
-        snapType = 'קיר קדמי';
+        snapType = '🧲 קיר קדמי';
         setShowRotationHint(false);
       } else {
         setShowRotationHint(false);
@@ -197,7 +220,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return snapped ? { x: snapX, z: snapZ, rotation, snapType } : null;
   };
 
-  // Handle rotation toggle for corner positions
+  // ✅ Handle rotation toggle for corner positions
   const handleRotationToggle = () => {
     if (showRotationHint) {
       const currentRotation = itemRotation;
@@ -211,7 +234,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     }
   };
 
-  // Validate position to prevent going into walls
+  // ✅ Validate position to prevent going into walls
   const validatePosition = (x: number, z: number) => {
     if (!selectedItem) return { x, z };
     
@@ -238,19 +261,21 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const snap = getSnapPosition(validatedPos.x, validatedPos.z);
       setSnapPosition(snap);
       
-      // Only update rotation if not in corner (let user control corner rotation)
-      if (snap && !showRotationHint) {
+      // ✅ Only update rotation if not in corner (let user control corner rotation)
+      if (snap && !showRotationHint && snap.rotation !== undefined) {
         setItemRotation(snap.rotation);
       }
       
       const finalPos = snap || validatedPos;
+      const finalRotation = snap?.rotation !== undefined ? snap.rotation : itemRotation;
       
-      // Check for collisions
+      // ✅ Check for collisions with final position and rotation
       const collision = checkCollisions(
         finalPos.x, 
         finalPos.z, 
         selectedItem.dimensions.width, 
-        selectedItem.dimensions.depth
+        selectedItem.dimensions.depth,
+        finalRotation
       );
       setCollisionWarning(collision);
       
@@ -274,7 +299,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     }
   }, [isDragging]);
 
-  // Add keyboard listener for rotation
+  // ✅ Add keyboard listener for rotation
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if ((event.key === 'r' || event.key === 'R' || event.key === 'ר') && showRotationHint) {
@@ -308,13 +333,16 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return worldPosRef.current.clone();
   };
 
+  // ✅ Handle placing item - only if no collision
   const handlePlaceItem = () => {
     if (selectedItem && !collisionWarning) {
       const finalPos = snapPosition || validatePosition(position.x, position.z);
+      const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
+      
       placeItem(
         selectedItem.id, 
         new THREE.Vector3(finalPos.x, 0, finalPos.z),
-        itemRotation
+        finalRotation
       );
       setSelectedItem(null);
       setIsDragging(false);
@@ -323,6 +351,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       setShowRotationHint(false);
       setCollisionWarning(null);
       
+      // ✅ Haptic feedback for mobile
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
@@ -355,6 +384,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   };
 
   const finalPosition = snapPosition || validatePosition(position.x, position.z);
+  const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
 
   return (
     <div 
@@ -407,7 +437,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               type={selectedItem.type}
               isPlaced={false}
               dimensions={selectedItem.dimensions}
-              rotation={itemRotation}
+              rotation={finalRotation}
             />
             <SnapGuides
               position={new THREE.Vector3(finalPosition.x, 0, finalPosition.z)}
@@ -442,7 +472,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         />
       </Canvas>
       
-      {/* Placement Instructions with collision detection */}
+      {/* ✅ Enhanced placement instructions with collision detection */}
       {selectedItem && (
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 max-w-md mx-4 border border-gray-200">
           <div className="text-center space-y-4">
@@ -462,14 +492,14 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
                   {collisionWarning 
                     ? `⚠️ חוסם את ${collisionWarning}` 
                     : snapPosition 
-                      ? `🧲 ${snapPosition.snapType || 'נצמד'}` 
+                      ? `${snapPosition.snapType || '🧲 נצמד'}` 
                       : 'גרור למיקום הרצוי'
                   }
                 </p>
               </div>
             </div>
             
-            {/* Collision Warning */}
+            {/* ✅ Collision Warning */}
             {collisionWarning && (
               <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-3 border border-red-200">
                 <p className="text-sm font-medium text-red-800 mb-1">
@@ -481,7 +511,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               </div>
             )}
             
-            {/* Rotation hint for corners */}
+            {/* ✅ Rotation hint for corners */}
             {showRotationHint && !collisionWarning && (
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-3 border border-blue-200">
                 <p className="text-sm font-medium text-blue-800 mb-1">

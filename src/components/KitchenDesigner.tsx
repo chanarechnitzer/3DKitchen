@@ -6,7 +6,7 @@ import ItemPreview from './ItemPreview';
 import Confetti from './Confetti';
 import ErrorBoundary from './ErrorBoundary';
 import { useKitchen } from '../store/KitchenContext';
-import { Palette, CheckCircle, Lightbulb, ArrowRight, Edit3 } from 'lucide-react';
+import { Palette, CheckCircle, Lightbulb, ArrowRight, Edit3, RotateCcw } from 'lucide-react';
 
 interface KitchenDesignerProps {
   onBackToCustomize: () => void;
@@ -60,7 +60,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
     }
   };
 
-  // NEW: Handle going back to editing mode
+  // ✅ NEW: Handle going back to editing mode - allows user to move items after finishing
   const handleBackToEditing = () => {
     setDesignPhaseComplete(false);
     setGameCompleted(false);
@@ -157,7 +157,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
               </button>
             )}
 
-            {/* Show message after design phase is complete but triangle is invalid */}
+            {/* ✅ NEW: Show message and options after design phase is complete but triangle is invalid */}
             {designPhaseComplete && !gameCompleted && triangleValidation && !triangleValidation.isValid && (
               <div className="w-full space-y-2">
                 <div className="p-3 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200 text-center">
@@ -169,13 +169,13 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
                   </p>
                 </div>
                 
-                {/* NEW: Back to editing button */}
+                {/* ✅ NEW: Back to editing button - allows moving items */}
                 <button
                   onClick={handleBackToEditing}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                 >
                   <Edit3 size={16} />
-                  חזור לעריכה
+                  חזור לעריכה (הסר והזז רכיבים)
                 </button>
                 
                 {/* Try again button */}
@@ -189,16 +189,38 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
               </div>
             )}
 
-            {/* Back to Customization Button - Only show after successful completion */}
-            {gameCompleted && triangleValidation?.isValid && (
-              <button
-                onClick={onBackToCustomize}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              >
-                <Palette size={16} />
-                <span>התאם אישית</span>
-                <ArrowRight size={14} />
-              </button>
+            {/* ✅ NEW: Show options when design is complete and triangle is valid */}
+            {designPhaseComplete && gameCompleted && triangleValidation?.isValid && (
+              <div className="w-full space-y-2">
+                {/* Success message */}
+                <div className="p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200 text-center">
+                  <p className="text-sm font-medium text-green-800 mb-1">
+                    🎉 מושלם! המשולש הזהב תקין
+                  </p>
+                  <p className="text-xs text-green-600">
+                    עכשיו תוכל להתאים אישית את הצבעים
+                  </p>
+                </div>
+
+                {/* Back to editing option */}
+                <button
+                  onClick={handleBackToEditing}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <RotateCcw size={14} />
+                  עדכן עיצוב
+                </button>
+
+                {/* Back to Customization Button */}
+                <button
+                  onClick={onBackToCustomize}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  <Palette size={16} />
+                  <span>התאם אישית</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
             )}
           </div>
         </div>
