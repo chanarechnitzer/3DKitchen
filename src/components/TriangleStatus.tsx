@@ -55,68 +55,60 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({
       );
     }
 
-    // Show validation status only when triangle is complete but design phase is not finished
-    if (triangleComplete && !designPhaseComplete) {
-      if (isValid) {
-        return (
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-3 mb-3">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                <Target className="text-white" size={14} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-blue-800">המשולש תקין! ✅</h3>
-                <p className="text-blue-700 text-xs">לחץ על "סיימתי לעצב" כדי לסיים</p>
-              </div>
+    // Show error message only when design phase is complete but triangle is invalid
+    if (triangleComplete && designPhaseComplete && !isValid && violations && violations.length > 0) {
+      return (
+        <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-3 mb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center">
+              <X className="text-white" size={14} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-red-800">נדרש תיקון</h3>
+              <p className="text-red-700 text-xs">המשולש הזהב זקוק להתאמות</p>
             </div>
           </div>
-        );
-      } else if (violations && violations.length > 0) {
-        return (
-          <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-3 mb-3">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center">
-                <X className="text-white" size={14} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-red-800">נדרש תיקון</h3>
-                <p className="text-red-700 text-xs">המשולש הזהב זקוק להתאמות</p>
-              </div>
+          <ul className="space-y-1">
+            {violations.map((violation, index) => (
+              <li key={index} className="flex items-center gap-1 text-xs text-red-700">
+                <AlertCircle size={10} className="text-red-600" />
+                {violation}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 p-2 bg-red-100 rounded-lg">
+            <p className="text-xs text-red-800 font-medium">
+              💡 טיפ: גרור את הרכיבים למיקומים חדשים כדי לתקן את המרחקים
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Show general error message when design phase is complete but triangle is invalid (without specific violations)
+    if (triangleComplete && designPhaseComplete && !isValid) {
+      return (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-3 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+              <AlertCircle className="text-white" size={14} />
             </div>
-            <ul className="space-y-1">
-              {violations.map((violation, index) => (
-                <li key={index} className="flex items-center gap-1 text-xs text-red-700">
-                  <AlertCircle size={10} className="text-red-600" />
-                  {violation}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-2 p-2 bg-red-100 rounded-lg">
-              <p className="text-xs text-red-800 font-medium">
-                💡 טיפ: גרור את הרכיבים למיקומים חדשים כדי לתקן את המרחקים
-              </p>
+            <div>
+              <h3 className="text-sm font-bold text-yellow-800">כמעט מושלם!</h3>
+              <p className="text-yellow-700 text-xs">בדוק את המרחקים בין הרכיבים</p>
             </div>
           </div>
-        );
-      } else {
-        return (
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-3 mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                <AlertCircle className="text-white" size={14} />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-yellow-800">כמעט מושלם!</h3>
-                <p className="text-yellow-700 text-xs">בדוק את המרחקים בין הרכיבים</p>
-              </div>
-            </div>
-          </div>
-        );
-      }
+        </div>
+      );
     }
 
     return null;
   };
+
+  // CRITICAL: Only show the full triangle status panel AFTER user clicks "finish designing"
+  if (!designPhaseComplete) {
+    return null; // Don't show anything until user clicks the finish button
+  }
 
   return (
     <div className={`bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden ${
@@ -129,7 +121,7 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-bold text-gray-900">המשולש הזהב</h2>
-            <p className="text-xs text-gray-600">מדידת יעילות המטבח</p>
+            <p className="text-xs text-gray-600">תוצאות הבדיקה</p>
           </div>
         </div>
       </div>
