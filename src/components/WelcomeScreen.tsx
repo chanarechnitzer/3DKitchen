@@ -58,19 +58,19 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
             <div className="flex items-start gap-3">
               <Target className="text-primary mt-1" size={18} />
               <div>
-                <h4 className="font-bold text-gray-900 mb-2">חוקי המשולש הזהב:</h4>
-                <ul className="space-y-1 text-gray-700 text-sm">
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                    כל צלע במשולש חייבת להיות <strong>ארוכה מ-1.2 מטר</strong> (למניעת צפיפות)
+                <h4 className="font-bold text-gray-900 mb-2">🎯 חוקי משולש הזהב</h4>
+                <ul className="space-y-2 text-gray-700 text-sm">
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2"></div>
+                    <span>🔹 כל צלע במשולש צריכה להיות <strong>יותר מ־1.2 מטר</strong> – כדי שלא תרגישו צפוף מדי.</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                    כל צלע במשולש חייבת להיות <strong>קצרה מ-5 מטר</strong> (ליעילות בעבודה)
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2"></div>
+                    <span>🔹 כל צלע צריכה להיות <strong>פחות מ־5 מטר</strong> – כדי שלא תרגישו שאתם רצים מרתון בין הכיור למקרר.</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                    המשולש לא צריך להיות חסום על ידי רהיטים או קירות
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2"></div>
+                    <span>🔹 ושימו לב: <strong>המשולש חייב להישאר פתוח ונגיש!</strong><br />לא חוסמים אותו עם רהיטים, קירות או מקרר באמצע.</span>
                   </li>
                 </ul>
               </div>
