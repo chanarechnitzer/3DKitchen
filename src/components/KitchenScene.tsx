@@ -75,7 +75,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return null;
   };
 
-  // ✅ FIXED: Smart snapping with proper wall-facing rotation
+  // ✅ FIXED: Enhanced snapping - prioritize walls for countertops, allow both item and wall snapping
   const getSnapPosition = (x: number, z: number) => {
     if (!selectedItem) return null;
     
@@ -94,125 +94,15 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     let rotation = 0;
     let snapType = '';
 
-    // ✅ PRIORITY 1: Check for snapping to other items (highest priority)
-    for (const placedItem of placedItems) {
-      // Skip self if editing existing item
-      if (placedItem.id === selectedItem.id) continue;
-      
-      const placedHalfWidth = placedItem.dimensions.width / 2;
-      const placedHalfDepth = placedItem.dimensions.depth / 2;
-      
-      // ✅ FIXED: When snapping to items, face AWAY from walls, not the item
-      // Snap to right side of placed item
-      const rightSnapX = placedItem.position.x + placedHalfWidth + itemHalfWidth + itemSnapDistance;
-      if (Math.abs(x - rightSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
-        snapX = rightSnapX;
-        snapZ = placedItem.position.z;
-        
-        // ✅ FIXED: Face away from nearest wall, not the item
-        const distanceToRightWall = halfWidth - snapX;
-        const distanceToLeftWall = snapX + halfWidth;
-        const distanceToBackWall = halfLength + snapZ;
-        const distanceToFrontWall = halfLength - snapZ;
-        
-        const minDistance = Math.min(distanceToRightWall, distanceToLeftWall, distanceToBackWall, distanceToFrontWall);
-        
-        if (minDistance === distanceToRightWall) rotation = -Math.PI / 2; // Face left (away from right wall)
-        else if (minDistance === distanceToLeftWall) rotation = Math.PI / 2; // Face right (away from left wall)
-        else if (minDistance === distanceToBackWall) rotation = 0; // Face forward (away from back wall)
-        else rotation = Math.PI; // Face backward (away from front wall)
-        
-        snapped = true;
-        snapType = `נצמד ימינה ל${placedItem.name}`;
-        setShowRotationHint(false);
-        break;
-      }
-      
-      // Snap to left side of placed item
-      const leftSnapX = placedItem.position.x - placedHalfWidth - itemHalfWidth - itemSnapDistance;
-      if (Math.abs(x - leftSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
-        snapX = leftSnapX;
-        snapZ = placedItem.position.z;
-        
-        // ✅ FIXED: Face away from nearest wall
-        const distanceToRightWall = halfWidth - snapX;
-        const distanceToLeftWall = snapX + halfWidth;
-        const distanceToBackWall = halfLength + snapZ;
-        const distanceToFrontWall = halfLength - snapZ;
-        
-        const minDistance = Math.min(distanceToRightWall, distanceToLeftWall, distanceToBackWall, distanceToFrontWall);
-        
-        if (minDistance === distanceToRightWall) rotation = -Math.PI / 2; // Face left
-        else if (minDistance === distanceToLeftWall) rotation = Math.PI / 2; // Face right
-        else if (minDistance === distanceToBackWall) rotation = 0; // Face forward
-        else rotation = Math.PI; // Face backward
-        
-        snapped = true;
-        snapType = `נצמד שמאלה ל${placedItem.name}`;
-        setShowRotationHint(false);
-        break;
-      }
-      
-      // Snap to front of placed item
-      const frontSnapZ = placedItem.position.z + placedHalfDepth + itemHalfDepth + itemSnapDistance;
-      if (Math.abs(z - frontSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
-        snapX = placedItem.position.x;
-        snapZ = frontSnapZ;
-        
-        // ✅ FIXED: Face away from nearest wall
-        const distanceToRightWall = halfWidth - snapX;
-        const distanceToLeftWall = snapX + halfWidth;
-        const distanceToBackWall = halfLength + snapZ;
-        const distanceToFrontWall = halfLength - snapZ;
-        
-        const minDistance = Math.min(distanceToRightWall, distanceToLeftWall, distanceToBackWall, distanceToFrontWall);
-        
-        if (minDistance === distanceToRightWall) rotation = -Math.PI / 2; // Face left
-        else if (minDistance === distanceToLeftWall) rotation = Math.PI / 2; // Face right
-        else if (minDistance === distanceToBackWall) rotation = 0; // Face forward
-        else rotation = Math.PI; // Face backward
-        
-        snapped = true;
-        snapType = `נצמד קדימה ל${placedItem.name}`;
-        setShowRotationHint(false);
-        break;
-      }
-      
-      // Snap to back of placed item
-      const backSnapZ = placedItem.position.z - placedHalfDepth - itemHalfDepth - itemSnapDistance;
-      if (Math.abs(z - backSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
-        snapX = placedItem.position.x;
-        snapZ = backSnapZ;
-        
-        // ✅ FIXED: Face away from nearest wall
-        const distanceToRightWall = halfWidth - snapX;
-        const distanceToLeftWall = snapX + halfWidth;
-        const distanceToBackWall = halfLength + snapZ;
-        const distanceToFrontWall = halfLength - snapZ;
-        
-        const minDistance = Math.min(distanceToRightWall, distanceToLeftWall, distanceToBackWall, distanceToFrontWall);
-        
-        if (minDistance === distanceToRightWall) rotation = -Math.PI / 2; // Face left
-        else if (minDistance === distanceToLeftWall) rotation = Math.PI / 2; // Face right
-        else if (minDistance === distanceToBackWall) rotation = 0; // Face forward
-        else rotation = Math.PI; // Face backward
-        
-        snapped = true;
-        snapType = `נצמד אחורה ל${placedItem.name}`;
-        setShowRotationHint(false);
-        break;
-      }
-    }
+    // ✅ NEW: Check wall proximity first for countertops
+    const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < cornerThreshold;
+    const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfWidth)) < cornerThreshold;
+    const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
+    const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
-    // ✅ PRIORITY 2: If not snapped to items, check wall snapping
-    if (!snapped) {
-      // ✅ FIXED: Use itemHalfWidth for wall distance calculation (not itemHalfDepth)
-      const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < cornerThreshold;
-      const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfWidth)) < cornerThreshold;
-      const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
-      const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
-
-      // ✅ Corner snapping with rotation options
+    // ✅ PRIORITY 1: For countertops, prioritize wall snapping even when near other items
+    if (selectedItem.type === 'countertop') {
+      // Corner snapping with rotation options
       if (isNearLeftWall && isNearBackWall) {
         snapX = -halfWidth + snapDistance + itemHalfWidth;
         snapZ = -halfLength + snapDistance + itemHalfDepth;
@@ -242,7 +132,179 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         snapType = '🔄 פינה ימין-קדמי';
         setShowRotationHint(true);
       }
-      // ✅ Wall snapping (not corners) - automatic rotation to face away from wall
+      // Wall snapping (not corners) - automatic rotation to face away from wall
+      else if (isNearLeftWall) {
+        snapX = -halfWidth + snapDistance + itemHalfWidth;
+        rotation = Math.PI / 2; // Face right (away from left wall)
+        snapped = true;
+        snapType = '🧲 קיר שמאל';
+        setShowRotationHint(false);
+      } else if (isNearRightWall) {
+        snapX = halfWidth - snapDistance - itemHalfWidth;
+        rotation = -Math.PI / 2; // Face left (away from right wall)
+        snapped = true;
+        snapType = '🧲 קיר ימין';
+        setShowRotationHint(false);
+      } else if (isNearBackWall) {
+        snapZ = -halfLength + snapDistance + itemHalfDepth;
+        rotation = 0; // Face forward (away from back wall)
+        snapped = true;
+        snapType = '🧲 קיר אחורי';
+        setShowRotationHint(false);
+      } else if (isNearFrontWall) {
+        snapZ = halfLength - snapDistance - itemHalfDepth;
+        rotation = Math.PI; // Face backward (away from front wall)
+        snapped = true;
+        snapType = '🧲 קיר קדמי';
+        setShowRotationHint(false);
+      }
+    }
+
+    // ✅ PRIORITY 2: If not snapped to walls (or not a countertop), check item snapping
+    if (!snapped) {
+      for (const placedItem of placedItems) {
+        // Skip self if editing existing item
+        if (placedItem.id === selectedItem.id) continue;
+        
+        const placedHalfWidth = placedItem.dimensions.width / 2;
+        const placedHalfDepth = placedItem.dimensions.depth / 2;
+        
+        // ✅ FIXED: When snapping to items, face AWAY from walls, not the item
+        // Snap to right side of placed item
+        const rightSnapX = placedItem.position.x + placedHalfWidth + itemHalfWidth + itemSnapDistance;
+        if (Math.abs(x - rightSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
+          snapX = rightSnapX;
+          snapZ = placedItem.position.z;
+          
+          // ✅ FIXED: Face away from nearest wall, not the item
+          const distanceToRightWall = halfWidth - snapX;
+          const distanceToLeftWall = snapX + halfWidth;
+          const distanceToBackWall = halfLength + snapZ;
+          const distanceToFrontWall = halfLength - snapZ;
+          
+          const minDistance = Math.min(distanceToRightWall, distanceToLeftWall, distanceToBackWall, distanceToFrontWall);
+          
+          if (minDistance === distanceToRightWall) rotation = -Math.PI / 2; // Face left (away from right wall)
+          else if (minDistance === distanceToLeftWall) rotation = Math.PI / 2; // Face right (away from left wall)
+          else if (minDistance === distanceToBackWall) rotation = 0; // Face forward (away from back wall)
+          else rotation = Math.PI; // Face backward (away from front wall)
+          
+          snapped = true;
+          snapType = `נצמד ימינה ל${placedItem.name}`;
+          setShowRotationHint(false);
+          break;
+        }
+        
+        // Snap to left side of placed item
+        const leftSnapX = placedItem.position.x - placedHalfWidth - itemHalfWidth - itemSnapDistance;
+        if (Math.abs(x - leftSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
+          snapX = leftSnapX;
+          snapZ = placedItem.position.z;
+          
+          // ✅ FIXED: Face away from nearest wall
+          const distanceToRightWall = halfWidth - snapX;
+          const distanceToLeftWall = snapX + halfWidth;
+          const distanceToBackWall = halfLength + snapZ;
+          const distanceToFrontWall = halfLength - snapZ;
+          
+          const minDistance = Math.min(distanceToRightWall, distanceToLeftWall, distanceToBackWall, distanceToFrontWall);
+          
+          if (minDistance === distanceToRightWall) rotation = -Math.PI / 2; // Face left
+          else if (minDistance === distanceToLeftWall) rotation = Math.PI / 2; // Face right
+          else if (minDistance === distanceToBackWall) rotation = 0; // Face forward
+          else rotation = Math.PI; // Face backward
+          
+          snapped = true;
+          snapType = `נצמד שמאלה ל${placedItem.name}`;
+          setShowRotationHint(false);
+          break;
+        }
+        
+        // Snap to front of placed item
+        const frontSnapZ = placedItem.position.z + placedHalfDepth + itemHalfDepth + itemSnapDistance;
+        if (Math.abs(z - frontSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
+          snapX = placedItem.position.x;
+          snapZ = frontSnapZ;
+          
+          // ✅ FIXED: Face away from nearest wall
+          const distanceToRightWall = halfWidth - snapX;
+          const distanceToLeftWall = snapX + halfWidth;
+          const distanceToBackWall = halfLength + snapZ;
+          const distanceToFrontWall = halfLength - snapZ;
+          
+          const minDistance = Math.min(distanceToRightWall, distanceToLeftWall, distanceToBackWall, distanceToFrontWall);
+          
+          if (minDistance === distanceToRightWall) rotation = -Math.PI / 2; // Face left
+          else if (minDistance === distanceToLeftWall) rotation = Math.PI / 2; // Face right
+          else if (minDistance === distanceToBackWall) rotation = 0; // Face forward
+          else rotation = Math.PI; // Face backward
+          
+          snapped = true;
+          snapType = `נצמד קדימה ל${placedItem.name}`;
+          setShowRotationHint(false);
+          break;
+        }
+        
+        // Snap to back of placed item
+        const backSnapZ = placedItem.position.z - placedHalfDepth - itemHalfDepth - itemSnapDistance;
+        if (Math.abs(z - backSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
+          snapX = placedItem.position.x;
+          snapZ = backSnapZ;
+          
+          // ✅ FIXED: Face away from nearest wall
+          const distanceToRightWall = halfWidth - snapX;
+          const distanceToLeftWall = snapX + halfWidth;
+          const distanceToBackWall = halfLength + snapZ;
+          const distanceToFrontWall = halfLength - snapZ;
+          
+          const minDistance = Math.min(distanceToRightWall, distanceToLeftWall, distanceToBackWall, distanceToFrontWall);
+          
+          if (minDistance === distanceToRightWall) rotation = -Math.PI / 2; // Face left
+          else if (minDistance === distanceToLeftWall) rotation = Math.PI / 2; // Face right
+          else if (minDistance === distanceToBackWall) rotation = 0; // Face forward
+          else rotation = Math.PI; // Face backward
+          
+          snapped = true;
+          snapType = `נצמד אחורה ל${placedItem.name}`;
+          setShowRotationHint(false);
+          break;
+        }
+      }
+    }
+
+    // ✅ PRIORITY 3: If still not snapped and not a countertop, check wall snapping for other items
+    if (!snapped && selectedItem.type !== 'countertop') {
+      // Corner snapping with rotation options
+      if (isNearLeftWall && isNearBackWall) {
+        snapX = -halfWidth + snapDistance + itemHalfWidth;
+        snapZ = -halfLength + snapDistance + itemHalfDepth;
+        rotation = itemRotation; // User controls rotation in corners
+        snapped = true;
+        snapType = '🔄 פינה שמאל-אחור';
+        setShowRotationHint(true);
+      } else if (isNearRightWall && isNearBackWall) {
+        snapX = halfWidth - snapDistance - itemHalfWidth;
+        snapZ = -halfLength + snapDistance + itemHalfDepth;
+        rotation = itemRotation; // User controls rotation in corners
+        snapped = true;
+        snapType = '🔄 פינה ימין-אחור';
+        setShowRotationHint(true);
+      } else if (isNearLeftWall && isNearFrontWall) {
+        snapX = -halfWidth + snapDistance + itemHalfWidth;
+        snapZ = halfLength - snapDistance - itemHalfDepth;
+        rotation = itemRotation; // User controls rotation in corners
+        snapped = true;
+        snapType = '🔄 פינה שמאל-קדמי';
+        setShowRotationHint(true);
+      } else if (isNearRightWall && isNearFrontWall) {
+        snapX = halfWidth - snapDistance - itemHalfWidth;
+        snapZ = halfLength - snapDistance - itemHalfDepth;
+        rotation = itemRotation; // User controls rotation in corners
+        snapped = true;
+        snapType = '🔄 פינה ימין-קדמי';
+        setShowRotationHint(true);
+      }
+      // Wall snapping (not corners) - automatic rotation to face away from wall
       else if (isNearLeftWall) {
         snapX = -halfWidth + snapDistance + itemHalfWidth;
         rotation = Math.PI / 2; // Face right (away from left wall)
@@ -270,6 +332,11 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       } else {
         setShowRotationHint(false);
       }
+    }
+
+    // ✅ If no snapping occurred, reset rotation hint
+    if (!snapped) {
+      setShowRotationHint(false);
     }
 
     return snapped ? { x: snapX, z: snapZ, rotation, snapType } : null;
