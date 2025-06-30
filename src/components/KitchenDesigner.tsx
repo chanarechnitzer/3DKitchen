@@ -26,18 +26,13 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
   const [designPhaseComplete, setDesignPhaseComplete] = useState(false);
 
   useEffect(() => {
-    if (gameCompleted && !showCompletionDialog) {
-      setTimeout(() => setShowCompletionDialog(true), 1000);
-    }
-  }, [gameCompleted, showCompletionDialog]);
-
-  useEffect(() => {
     document.title = gameCompleted 
       ? '🎉 מעולה! המטבח שלך מושלם!' 
       : 'מעצב המטבח המקצועי';
   }, [gameCompleted]);
 
-  const hasEssentialItems = () => {
+  // Check if all three essential triangle items are placed
+  const hasTriangleItems = () => {
     const sink = placedItems.find(item => item.type === 'sink');
     const stove = placedItems.find(item => item.type === 'stove');
     const refrigerator = placedItems.find(item => item.type === 'refrigerator');
@@ -46,6 +41,10 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
 
   const handleFinishDesigning = () => {
     setDesignPhaseComplete(true);
+    // Show completion dialog only when user clicks finish button
+    if (triangleValidation?.isValid) {
+      setTimeout(() => setShowCompletionDialog(true), 500);
+    }
   };
 
   return (
@@ -110,8 +109,8 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           
           {/* Action Buttons */}
           <div className="flex-shrink-0 space-y-2">
-            {/* Finish Designing Button */}
-            {hasEssentialItems() && !designPhaseComplete && (
+            {/* Finish Designing Button - Only show when triangle items are placed */}
+            {hasTriangleItems() && !designPhaseComplete && (
               <button
                 onClick={handleFinishDesigning}
                 className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -122,7 +121,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
             )}
 
             {/* Back to Customization Button */}
-            {(designPhaseComplete || gameCompleted) && (
+            {designPhaseComplete && (
               <button
                 onClick={onBackToCustomize}
                 className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -144,8 +143,8 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         />
       )}
       
-      {/* Completion Dialog */}
-      {showCompletionDialog && gameCompleted && (
+      {/* Completion Dialog - Only show when user finishes designing */}
+      {showCompletionDialog && designPhaseComplete && triangleValidation?.isValid && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center">
             <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -177,7 +176,8 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         </div>
       )}
       
-      {gameCompleted && <Confetti />}
+      {/* Confetti only shows when game is actually completed */}
+      {designPhaseComplete && triangleValidation?.isValid && <Confetti />}
     </div>
   );
 };
