@@ -40,12 +40,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
             <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
               <div className="text-2xl mb-1">💧</div>
               <h3 className="font-bold text-gray-900 mb-1 text-sm">אזור המים</h3>
-              <p className="text-gray-600 text-xs">כיור ומדיח כלים</p>
+              <p className="text-gray-600 text-xs">כיור</p>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-red-50 to-red-100 rounded-xl">
               <div className="text-2xl mb-1">🔥</div>
               <h3 className="font-bold text-gray-900 mb-1 text-sm">אזור החום</h3>
-              <p className="text-gray-600 text-xs">כיריים ותנור</p>
+              <p className="text-gray-600 text-xs">כיריים</p>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-xl">
               <div className="text-2xl mb-1">❄️</div>
