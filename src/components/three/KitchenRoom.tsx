@@ -380,8 +380,9 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
   const renderWindow = () => {
     const windowWidth = 1.4;
-    const windowHeight = 1.4;
-    const windowY = 1.4;
+    const windowHeight = 1.2; // ✅ REDUCED: Smaller window height
+    // ✅ FIXED: Window starts ABOVE kitchen units (countertops are 0.85m + 0.05m countertop = 0.9m)
+    const windowY = 1.8; // ✅ RAISED: Window center now at 1.8m (bottom at ~1.2m, well above 0.9m countertops)
     const wallOffset = 0.05;
 
     let windowPosition: [number, number, number];
@@ -459,17 +460,17 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
           </mesh>
 
           {/* Curtain rod - CONTAINED within window frame - SMALLER and INSIDE */}
-          <mesh position={[0, windowHeight * 0.35, 0.02]}>
+          <mesh position={[0, windowHeight * 0.4, 0.02]}>
             <cylinderGeometry args={[0.012, 0.012, windowWidth * 0.7, 16]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
 
           {/* Curtain rod ends - CONTAINED within window frame - SMALLER */}
-          <mesh position={[-windowWidth * 0.35, windowHeight * 0.35, 0.02]}>
+          <mesh position={[-windowWidth * 0.35, windowHeight * 0.4, 0.02]}>
             <sphereGeometry args={[0.025, 8, 8]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
-          <mesh position={[windowWidth * 0.35, windowHeight * 0.35, 0.02]}>
+          <mesh position={[windowWidth * 0.35, windowHeight * 0.4, 0.02]}>
             <sphereGeometry args={[0.025, 8, 8]} />
             <meshStandardMaterial color="#8B4513" />
           </mesh>
@@ -552,7 +553,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* Beautiful window - NO cross frame! Clean and simple */}
+      {/* ✅ FIXED: Window positioned ABOVE kitchen units */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}
