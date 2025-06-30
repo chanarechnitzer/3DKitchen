@@ -38,51 +38,52 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
-  // Enhanced snap to wall logic with smart rotation
+  // FIXED: Enhanced snap to wall logic with proper corner detection
   const getSnapPosition = (x: number, z: number) => {
     const snapDistance = 0.05;
     const halfWidth = kitchenDimensions.width / 2;
     const halfLength = kitchenDimensions.length / 2;
     const itemHalfDepth = selectedItem ? selectedItem.dimensions.depth / 2 : 0.3;
+    const cornerThreshold = 0.8; // Increased threshold for better corner detection
     
     let snapX = x;
     let snapZ = z;
     let snapped = false;
     let rotation = 0;
 
-    // Check for corner positions first (priority)
-    const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfDepth)) < 0.5;
-    const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfDepth)) < 0.5;
-    const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < 0.5;
-    const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < 0.5;
+    // FIXED: Better corner detection logic
+    const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfDepth)) < cornerThreshold;
+    const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfDepth)) < cornerThreshold;
+    const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
+    const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
-    // Corner snapping with rotation options
+    // FIXED: Corner snapping with rotation options - better logic
     if (isNearLeftWall && isNearBackWall) {
       // Left-back corner
       snapX = -halfWidth + snapDistance + itemHalfDepth;
       snapZ = -halfLength + snapDistance + itemHalfDepth;
-      rotation = Math.PI / 2; // Face right (can be toggled)
+      rotation = itemRotation; // Keep current rotation, allow user to change
       snapped = true;
       setShowRotationHint(true);
     } else if (isNearRightWall && isNearBackWall) {
       // Right-back corner
       snapX = halfWidth - snapDistance - itemHalfDepth;
       snapZ = -halfLength + snapDistance + itemHalfDepth;
-      rotation = 0; // Face forward (can be toggled)
+      rotation = itemRotation; // Keep current rotation, allow user to change
       snapped = true;
       setShowRotationHint(true);
     } else if (isNearLeftWall && isNearFrontWall) {
       // Left-front corner
       snapX = -halfWidth + snapDistance + itemHalfDepth;
       snapZ = halfLength - snapDistance - itemHalfDepth;
-      rotation = Math.PI; // Face back (can be toggled)
+      rotation = itemRotation; // Keep current rotation, allow user to change
       snapped = true;
       setShowRotationHint(true);
     } else if (isNearRightWall && isNearFrontWall) {
       // Right-front corner
       snapX = halfWidth - snapDistance - itemHalfDepth;
       snapZ = halfLength - snapDistance - itemHalfDepth;
-      rotation = -Math.PI / 2; // Face left (can be toggled)
+      rotation = itemRotation; // Keep current rotation, allow user to change
       snapped = true;
       setShowRotationHint(true);
     }
@@ -114,9 +115,9 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return snapped ? { x: snapX, z: snapZ, rotation } : null;
   };
 
-  // Handle rotation toggle for corner positions
+  // FIXED: Handle rotation toggle for corner positions
   const handleRotationToggle = () => {
-    if (snapPosition && showRotationHint) {
+    if (showRotationHint) {
       const currentRotation = itemRotation;
       let newRotation = currentRotation + Math.PI / 2;
       
@@ -126,6 +127,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       }
       
       setItemRotation(newRotation);
+      console.log('Rotation changed to:', newRotation * 180 / Math.PI, 'degrees');
     }
   };
 
@@ -154,11 +156,9 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const snap = getSnapPosition(validatedPos.x, validatedPos.z);
       setSnapPosition(snap);
       
-      if (snap) {
+      // FIXED: Only update rotation if not in corner (let user control corner rotation)
+      if (snap && !showRotationHint) {
         setItemRotation(snap.rotation);
-      } else {
-        setItemRotation(0);
-        setShowRotationHint(false);
       }
       
       const finalPos = snap || validatedPos;
@@ -173,7 +173,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       setItemRotation(0);
       setShowRotationHint(false);
     }
-  }, [position, selectedItem, getDragValidation]);
+  }, [position, selectedItem, getDragValidation, itemRotation]);
 
   useEffect(() => {
     if (controlsRef.current) {
@@ -181,10 +181,11 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     }
   }, [isDragging]);
 
-  // Add keyboard listener for rotation
+  // FIXED: Add keyboard listener for rotation
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === 'r' || event.key === 'R' || event.key === 'ר') {
+      if ((event.key === 'r' || event.key === 'R' || event.key === 'ר') && showRotationHint) {
+        event.preventDefault();
         handleRotationToggle();
       }
     };
@@ -347,7 +348,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         />
       </Canvas>
       
-      {/* Placement Instructions */}
+      {/* FIXED: Placement Instructions with working rotation */}
       {selectedItem && (
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 max-w-md mx-4 border border-gray-200">
           <div className="text-center space-y-4">
@@ -365,20 +366,23 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               </div>
             </div>
             
-            {/* Rotation hint for corners */}
+            {/* FIXED: Rotation hint for corners - now working! */}
             {showRotationHint && (
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-3 border border-blue-200">
                 <p className="text-sm font-medium text-blue-800 mb-1">
                   🔄 פינה זוהתה!
                 </p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-blue-600 mb-2">
                   לחץ R או לחץ כאן כדי לסובב את החזית
                 </p>
                 <button
-                  onClick={handleRotationToggle}
-                  className="mt-2 px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRotationToggle();
+                  }}
+                  className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                 >
-                  🔄 סובב חזית
+                  🔄 סובב חזית ({Math.round(itemRotation * 180 / Math.PI)}°)
                 </button>
               </div>
             )}

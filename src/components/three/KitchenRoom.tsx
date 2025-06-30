@@ -403,7 +403,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
 
     return (
       <group position={windowPosition} rotation={windowRotation}>
-        {/* FIXED: Window frame - dark wood (ONLY the frame, no brown bar above) */}
+        {/* FIXED: Window frame - ONLY the frame, NO brown bar above! */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[windowWidth, windowHeight, 0.08]} />
           <meshStandardMaterial color="#2D1B14" />
@@ -562,7 +562,7 @@ const KitchenRoom: React.FC<KitchenRoomProps> = ({ width, length, windowPlacemen
       {/* Plants and shelves */}
       {renderPlants()}
 
-      {/* FIXED: Beautiful window with mountain view and curtains - NO brown bar above */}
+      {/* FIXED: Beautiful window - NO brown bar above! */}
       {renderWindow()}
 
       {/* Measurement markers with adaptive color */}
