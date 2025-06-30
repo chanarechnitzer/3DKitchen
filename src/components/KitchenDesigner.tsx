@@ -6,13 +6,13 @@ import ItemPreview from './ItemPreview';
 import Confetti from './Confetti';
 import ErrorBoundary from './ErrorBoundary';
 import { useKitchen } from '../store/KitchenContext';
-import { Palette, CheckCircle, Lightbulb } from 'lucide-react';
+import { Palette, CheckCircle, Lightbulb, ArrowRight } from 'lucide-react';
 
 interface KitchenDesignerProps {
-  onCustomize: () => void;
+  onBackToCustomize: () => void;
 }
 
-const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onCustomize }) => {
+const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) => {
   const { 
     gameCompleted, 
     triangleValidation,
@@ -23,6 +23,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onCustomize }) => {
   } = useKitchen();
   
   const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [designPhaseComplete, setDesignPhaseComplete] = useState(false);
 
   useEffect(() => {
     if (gameCompleted && !showCompletionDialog) {
@@ -43,13 +44,17 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onCustomize }) => {
     return sink && stove && refrigerator;
   };
 
+  const handleFinishDesigning = () => {
+    setDesignPhaseComplete(true);
+  };
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+    <div className="h-full overflow-hidden">
+      <div className="h-full grid grid-cols-1 xl:grid-cols-4 gap-4 p-4">
         {/* Main Design Area */}
-        <div className="xl:col-span-3">
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+        <div className="xl:col-span-3 flex flex-col">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex-1 flex flex-col">
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gradient-to-br from-primary to-yellow-500 rounded-lg flex items-center justify-center">
@@ -63,7 +68,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onCustomize }) => {
               </div>
             </div>
             
-            <div className="h-[600px] lg:h-[700px] relative bg-gradient-to-br from-slate-50 to-blue-50">
+            <div className="flex-1 relative bg-gradient-to-br from-slate-50 to-blue-50">
               <ErrorBoundary>
                 <KitchenScene windowPlacement={windowPlacement} />
               </ErrorBoundary>
@@ -72,43 +77,62 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onCustomize }) => {
         </div>
         
         {/* Side Panel */}
-        <div className="xl:col-span-1 space-y-6">
+        <div className="xl:col-span-1 flex flex-col gap-4 overflow-y-auto">
           {/* Kitchen Info */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">פרטי המטבח</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 flex-shrink-0">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">פרטי המטבח</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 text-center">
                 <p className="text-sm text-gray-600 mb-1">רוחב</p>
-                <p className="text-xl font-bold text-gray-900">{kitchenDimensions.width}מ'</p>
+                <p className="text-lg font-bold text-gray-900">{kitchenDimensions.width}מ'</p>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 text-center">
                 <p className="text-sm text-gray-600 mb-1">אורך</p>
-                <p className="text-xl font-bold text-gray-900">{kitchenDimensions.length}מ'</p>
+                <p className="text-lg font-bold text-gray-900">{kitchenDimensions.length}מ'</p>
               </div>
             </div>
           </div>
           
           {/* Triangle Status */}
           {triangleValidation && (
-            <TriangleStatus 
-              validation={triangleValidation} 
-              isComplete={gameCompleted}
-            />
+            <div className="flex-shrink-0">
+              <TriangleStatus 
+                validation={triangleValidation} 
+                isComplete={gameCompleted}
+              />
+            </div>
           )}
           
           {/* Kitchen Controls */}
-          <KitchenControls />
+          <div className="flex-1 min-h-0">
+            <KitchenControls />
+          </div>
           
-          {/* Completion Button */}
-          {hasEssentialItems() && gameCompleted && (
-            <button
-              onClick={onCustomize}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-            >
-              <Palette size={20} />
-              <span>התאם אישית</span>
-            </button>
-          )}
+          {/* Action Buttons */}
+          <div className="flex-shrink-0 space-y-3">
+            {/* Finish Designing Button */}
+            {hasEssentialItems() && !designPhaseComplete && (
+              <button
+                onClick={handleFinishDesigning}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-lg font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                <CheckCircle size={20} />
+                <span>סיימתי לעצב</span>
+              </button>
+            )}
+
+            {/* Back to Customization Button */}
+            {(designPhaseComplete || gameCompleted) && (
+              <button
+                onClick={onBackToCustomize}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-lg font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                <Palette size={20} />
+                <span>התאם אישית</span>
+                <ArrowRight size={16} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
       
@@ -123,27 +147,27 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onCustomize }) => {
       {/* Completion Dialog */}
       {showCompletionDialog && gameCompleted && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="text-white" size={32} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">מעולה!</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">מעולה!</h2>
+            <p className="text-gray-600 mb-4">
               המטבח שלך עומד בכל הדרישות של המשולש הזהב. עכשיו אתה יכול להתאים אישית את הצבעים והחומרים.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCompletionDialog(false)}
-                className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                className="flex-1 px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
               >
                 המשך עיצוב
               </button>
               <button
                 onClick={() => {
                   setShowCompletionDialog(false);
-                  onCustomize();
+                  onBackToCustomize();
                 }}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl hover:shadow-lg transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl hover:shadow-lg transition-all"
               >
                 <Palette size={16} />
                 התאם אישית

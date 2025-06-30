@@ -7,7 +7,7 @@ import { KitchenProvider, useKitchen } from './store/KitchenContext';
 import { RotateCcw, Home } from 'lucide-react';
 
 function App() {
-  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'setup' | 'design' | 'customize'>('welcome');
+  const [currentScreen, setCurrentScreen] = useState<'welcome' | 'setup' | 'customize' | 'design'>('welcome');
   const [showStartDialog, setShowStartDialog] = useState(false);
   
   const handleStartDesign = () => {
@@ -19,7 +19,7 @@ function App() {
   };
 
   const handleGameStart = (width: number, length: number) => {
-    setCurrentScreen('design');
+    setCurrentScreen('customize');
     setShowStartDialog(false);
   };
 
@@ -27,22 +27,22 @@ function App() {
     window.location.reload();
   };
 
-  const handleCustomize = () => {
-    setCurrentScreen('customize');
+  const handleStartDesigning = () => {
+    setCurrentScreen('design');
   };
 
-  const handleBackToDesign = () => {
-    setCurrentScreen('design');
+  const handleBackToCustomize = () => {
+    setCurrentScreen('customize');
   };
 
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'welcome':
         return <WelcomeScreen onStartDesign={handleStartDesign} />;
-      case 'design':
-        return <KitchenDesigner onCustomize={handleCustomize} />;
       case 'customize':
-        return <CustomizationPanel onBackToDesign={handleBackToDesign} />;
+        return <CustomizationPanel onStartDesigning={handleStartDesigning} />;
+      case 'design':
+        return <KitchenDesigner onBackToCustomize={handleBackToCustomize} />;
       default:
         return <WelcomeScreen onStartDesign={handleStartDesign} />;
     }
@@ -50,20 +50,20 @@ function App() {
 
   return (
     <KitchenProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {currentScreen === 'design' && (
-          <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
-            <div className="container mx-auto px-6 py-4">
-              <div className="flex justify-between items-center">
+          <header className="bg-white/90 backdrop-blur-sm border-b border-gray-200 h-16 flex-shrink-0">
+            <div className="container mx-auto px-6 h-full">
+              <div className="flex justify-between items-center h-full">
                 <div className="flex items-center gap-3">
-                  <Home className="text-primary" size={24} />
-                  <h1 className="text-xl font-bold text-gray-800">מעצב המטבח המקצועי</h1>
+                  <Home className="text-primary" size={20} />
+                  <h1 className="text-lg font-bold text-gray-800">מעצב המטבח המקצועי</h1>
                 </div>
                 <button
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
                   onClick={handleNewGame}
                 >
-                  <RotateCcw size={16} />
+                  <RotateCcw size={14} />
                   התחל מחדש
                 </button>
               </div>
@@ -71,7 +71,9 @@ function App() {
           </header>
         )}
 
-        {renderCurrentScreen()}
+        <div className={currentScreen === 'design' ? 'h-[calc(100vh-4rem)]' : 'h-full'}>
+          {renderCurrentScreen()}
+        </div>
 
         {showStartDialog && (
           <StartGameDialog 

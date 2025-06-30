@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ArrowRight, Palette, Sparkles, Download, Share2 } from 'lucide-react';
+import { ArrowLeft, Palette, Sparkles, Play } from 'lucide-react';
 
 interface CustomizationPanelProps {
-  onBackToDesign: () => void;
+  onStartDesigning: () => void;
 }
 
-const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onBackToDesign }) => {
+const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesigning }) => {
   const [selectedCategory, setSelectedCategory] = useState<'cabinets' | 'countertops' | 'walls' | 'floors'>('cabinets');
   const [selectedFinishes, setSelectedFinishes] = useState({
     cabinets: 'white',
@@ -55,141 +55,126 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onBackToDesign 
     }));
   };
 
-  const handleSave = () => {
-    // Here you would typically save the customization
-    alert('העיצוב נשמר בהצלחה! 🎉');
-  };
-
-  const handleShare = () => {
-    // Here you would typically implement sharing functionality
-    alert('קישור לעיצוב הועתק ללוח! 📋');
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100">
+    <div className="h-full bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 overflow-hidden">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <button
-              onClick={onBackToDesign}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
-            >
-              <ArrowRight size={16} />
-              חזור לעיצוב
-            </button>
+      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 h-16 flex-shrink-0">
+        <div className="container mx-auto px-6 h-full">
+          <div className="flex justify-between items-center h-full">
             <div className="flex items-center gap-3">
-              <Palette className="text-purple-600" size={24} />
-              <h1 className="text-xl font-bold text-gray-800">התאמה אישית</h1>
+              <Palette className="text-purple-600" size={20} />
+              <h1 className="text-lg font-bold text-gray-800">התאמה אישית</h1>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
-              >
-                <Share2 size={16} />
-                שתף
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:shadow-lg transition-all duration-200"
-              >
-                <Download size={16} />
-                שמור
-              </button>
-            </div>
+            <button
+              onClick={onStartDesigning}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-500 to-green-600 rounded-lg hover:shadow-lg transition-all duration-200"
+            >
+              <Play size={16} />
+              התחל לעצב
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Category Selection */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Sparkles className="text-purple-600" size={20} />
-                קטגוריות
-              </h2>
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id as any)}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all duration-200 ${
-                      selectedCategory === category.id
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className="text-xl">{category.icon}</span>
-                    <span className="font-medium">{category.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Finish Options */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900 mb-6">
-                בחר גימור עבור {categories.find(c => c.id === selectedCategory)?.name}
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                {finishOptions[selectedCategory]?.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => handleFinishChange(selectedCategory, option.id)}
-                    className={`group relative p-4 rounded-xl border-2 transition-all duration-200 ${
-                      selectedFinishes[selectedCategory] === option.id
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className={`w-full h-20 rounded-lg mb-3 ${option.preview}`}></div>
-                    <h3 className="font-medium text-gray-900">{option.name}</h3>
-                    {selectedFinishes[selectedCategory] === option.id && (
-                      <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Preview */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 sticky top-24">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">תצוגה מקדימה</h2>
-              <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-4 h-64 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <Palette className="text-white" size={24} />
-                  </div>
-                  <p className="text-gray-600 text-sm">
-                    תצוגה מקדימה של המטבח
-                    <br />
-                    עם הגימורים שנבחרו
-                  </p>
+      <div className="h-[calc(100%-4rem)] overflow-y-auto">
+        <div className="container mx-auto p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+            {/* Category Selection */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 h-fit">
+                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Sparkles className="text-purple-600" size={18} />
+                  קטגוריות
+                </h2>
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id as any)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
+                        selectedCategory === category.id
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span className="text-lg">{category.icon}</span>
+                      <span className="font-medium">{category.name}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
-              
-              {/* Selected Finishes Summary */}
-              <div className="mt-4 space-y-2">
-                <h3 className="font-medium text-gray-900 text-sm">גימורים נבחרים:</h3>
-                {Object.entries(selectedFinishes).map(([category, finish]) => {
-                  const categoryName = categories.find(c => c.id === category)?.name;
-                  const finishName = finishOptions[category as keyof typeof finishOptions]?.find(f => f.id === finish)?.name;
-                  return (
-                    <div key={category} className="flex justify-between text-xs text-gray-600">
-                      <span>{categoryName}:</span>
-                      <span className="font-medium">{finishName}</span>
+            </div>
+
+            {/* Finish Options */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 h-fit">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">
+                  בחר גימור עבור {categories.find(c => c.id === selectedCategory)?.name}
+                </h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {finishOptions[selectedCategory]?.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleFinishChange(selectedCategory, option.id)}
+                      className={`group relative p-3 rounded-xl border-2 transition-all duration-200 ${
+                        selectedFinishes[selectedCategory] === option.id
+                          ? 'border-purple-500 bg-purple-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`w-full h-16 rounded-lg mb-2 ${option.preview}`}></div>
+                      <h3 className="font-medium text-gray-900 text-sm">{option.name}</h3>
+                      {selectedFinishes[selectedCategory] === option.id && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 h-fit">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">תצוגה מקדימה</h2>
+                <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl p-4 h-48 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center mx-auto mb-2">
+                      <Palette className="text-white" size={20} />
                     </div>
-                  );
-                })}
+                    <p className="text-gray-600 text-sm">
+                      תצוגה מקדימה של המטבח
+                      <br />
+                      עם הגימורים שנבחרו
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Selected Finishes Summary */}
+                <div className="mt-4 space-y-2">
+                  <h3 className="font-medium text-gray-900 text-sm">גימורים נבחרים:</h3>
+                  {Object.entries(selectedFinishes).map(([category, finish]) => {
+                    const categoryName = categories.find(c => c.id === category)?.name;
+                    const finishName = finishOptions[category as keyof typeof finishOptions]?.find(f => f.id === finish)?.name;
+                    return (
+                      <div key={category} className="flex justify-between text-xs text-gray-600">
+                        <span>{categoryName}:</span>
+                        <span className="font-medium">{finishName}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Start Designing Button */}
+                <button
+                  onClick={onStartDesigning}
+                  className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl hover:shadow-lg transition-all duration-200"
+                >
+                  <Play size={16} />
+                  התחל לעצב
+                </button>
               </div>
             </div>
           </div>
