@@ -36,7 +36,7 @@ export interface KitchenItem {
     depth: number;
     height: number;
   };
-  rotation?: number; // Add rotation property
+  rotation?: number;
 }
 
 // Triangle validation result
@@ -69,7 +69,7 @@ interface KitchenContextType {
   triangleValidation: TriangleValidation | null;
   validateTriangle: () => void;
   gameCompleted: boolean;
-  setGameCompleted: (completed: boolean) => void; // Add manual control
+  setGameCompleted: (completed: boolean) => void;
   getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
 }
 
@@ -283,7 +283,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       setAvailableItems(prev => prev.filter(item => item.id !== itemId));
       setPlacedItems(prev => [...prev, item]);
       
-      // Only validate triangle, NEVER auto-complete the game
+      // CRITICAL: Only validate triangle, NEVER auto-complete the game
       setTimeout(validateTriangle, 100);
     }
   };
@@ -310,7 +310,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Validate the kitchen triangle - but NEVER auto-complete the game
+  // Validate the kitchen triangle - NEVER auto-complete the game
   const validateTriangle = () => {
     const sinks = placedItems.filter(item => item.type === KitchenItemType.SINK);
     const stove = placedItems.find(item => item.type === KitchenItemType.STOVE);
@@ -357,11 +357,12 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       };
       
       setTriangleValidation(validation);
-      // REMOVED: setGameCompleted(isValid); - Game only completes when user clicks finish button
+      // CRITICAL: NEVER auto-complete the game here!
+      // Game completion is ONLY controlled by user clicking the finish button
     } else {
       // Reset validation if components are missing
       setTriangleValidation(null);
-      // REMOVED: setGameCompleted(false); - Game completion is only controlled by user action
+      // CRITICAL: NEVER auto-complete the game here either!
     }
   };
 
