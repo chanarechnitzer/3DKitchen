@@ -21,24 +21,6 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
 }) => {
   const { customization } = useKitchen();
 
-  // Function to get color based on type and customization
-  const getColor = () => {
-    switch (type) {
-      case KitchenItemType.SINK:
-        return '#60a5fa'; // Blue for sink
-      case KitchenItemType.STOVE:
-        return '#f87171'; // Red for stove
-      case KitchenItemType.OVEN:
-        return '#fb923c'; // Orange for oven
-      case KitchenItemType.REFRIGERATOR:
-        return '#93c5fd'; // Light blue for refrigerator
-      case KitchenItemType.COUNTERTOP:
-        return getCabinetColor();
-      default:
-        return '#d4d4d4';
-    }
-  };
-
   // Get cabinet color based on customization
   const getCabinetColor = () => {
     switch (customization.cabinets) {
@@ -68,6 +50,24 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
         return '#8B4513';
       default:
         return '#2D3748';
+    }
+  };
+
+  // Function to get color based on type and customization
+  const getColor = () => {
+    switch (type) {
+      case KitchenItemType.SINK:
+        return '#60a5fa'; // Blue for sink
+      case KitchenItemType.STOVE:
+        return '#f87171'; // Red for stove
+      case KitchenItemType.OVEN:
+        return '#fb923c'; // Orange for oven
+      case KitchenItemType.REFRIGERATOR:
+        return '#93c5fd'; // Light blue for refrigerator
+      case KitchenItemType.COUNTERTOP:
+        return getCabinetColor();
+      default:
+        return '#d4d4d4';
     }
   };
 
@@ -108,6 +108,23 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <boxGeometry args={[dimensions.width, 0.05, dimensions.depth]} />
               <meshStandardMaterial color={countertopColor} transparent opacity={opacity} />
+            </mesh>
+            
+            {/* Cabinet handles */}
+            <mesh 
+              position={[0, baseHeight * 0.3, dimensions.depth / 2 + 0.01]} 
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width * 0.5, 0.03, 0.02]} />
+              <meshStandardMaterial color="#9ca3af" transparent opacity={opacity} />
+            </mesh>
+            
+            <mesh 
+              position={[0, baseHeight * 0.6, dimensions.depth / 2 + 0.01]} 
+              castShadow
+            >
+              <boxGeometry args={[dimensions.width * 0.5, 0.03, 0.02]} />
+              <meshStandardMaterial color="#9ca3af" transparent opacity={opacity} />
             </mesh>
           </group>
         );

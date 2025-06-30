@@ -49,13 +49,13 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-100 overflow-hidden">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 h-16 flex-shrink-0">
-        <div className="container mx-auto px-6 h-full">
+      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200 h-14 flex-shrink-0">
+        <div className="container mx-auto px-4 h-full">
           <div className="flex justify-between items-center h-full">
             <div className="flex items-center gap-3">
-              <Palette className="text-purple-600" size={20} />
+              <Palette className="text-purple-600" size={18} />
               <h1 className="text-lg font-bold text-gray-800">התאמה אישית</h1>
             </div>
             <button
@@ -69,14 +69,14 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
         </div>
       </div>
 
-      <div className="h-[calc(100%-4rem)] overflow-y-auto">
-        <div className="container mx-auto p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+      <div className="h-[calc(100vh-3.5rem)] overflow-hidden">
+        <div className="container mx-auto p-3 h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 h-full">
             {/* Category Selection */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 h-fit">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Sparkles className="text-purple-600" size={18} />
+              <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 h-fit">
+                <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Sparkles className="text-purple-600" size={16} />
                   קטגוריות
                 </h2>
                 <div className="space-y-2">
@@ -84,14 +84,14 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id as any)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
+                      className={`w-full flex items-center gap-3 p-2 rounded-lg transition-all duration-200 ${
                         selectedCategory === category.id
                           ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
                           : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <span className="text-lg">{category.icon}</span>
-                      <span className="font-medium">{category.name}</span>
+                      <span className="text-base">{category.icon}</span>
+                      <span className="font-medium text-sm">{category.name}</span>
                     </button>
                   ))}
                 </div>
@@ -100,26 +100,26 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
 
             {/* Finish Options */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 h-fit">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">
+              <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 h-fit">
+                <h2 className="text-base font-bold text-gray-900 mb-3">
                   בחר גימור עבור {categories.find(c => c.id === selectedCategory)?.name}
                 </h2>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   {finishOptions[selectedCategory]?.map((option) => (
                     <button
                       key={option.id}
                       onClick={() => handleFinishChange(selectedCategory, option.id)}
-                      className={`group relative p-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`group relative p-2 rounded-lg border-2 transition-all duration-200 ${
                         customization[selectedCategory] === option.id
                           ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className={`w-full h-16 rounded-lg mb-2 ${option.preview} transition-all duration-200`}></div>
-                      <h3 className="font-medium text-gray-900 text-sm">{option.name}</h3>
+                      <div className={`w-full h-12 rounded-lg mb-2 ${option.preview} transition-all duration-200`}></div>
+                      <h3 className="font-medium text-gray-900 text-xs">{option.name}</h3>
                       {customization[selectedCategory] === option.id && (
-                        <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        <div className="absolute top-1 right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                          <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                         </div>
                       )}
                     </button>
@@ -127,10 +127,10 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
                 </div>
                 
                 {/* Live Preview Note */}
-                <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                   <div className="flex items-center gap-2 text-blue-700">
-                    <Eye size={16} />
-                    <span className="text-sm font-medium">השינויים יוחלו אוטומטית במטבח</span>
+                    <Eye size={14} />
+                    <span className="text-xs font-medium">השינויים יחולו אוטומטית במטבח</span>
                   </div>
                 </div>
               </div>
@@ -138,11 +138,11 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
 
             {/* Preview */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 h-fit">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">בחירות נוכחיות</h2>
+              <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 h-fit">
+                <h2 className="text-base font-bold text-gray-900 mb-3">בחירות נוכחיות</h2>
                 
                 {/* Selected Finishes Summary */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {Object.entries(customization).map(([category, finish]) => {
                     const categoryData = categories.find(c => c.id === category);
                     const finishData = finishOptions[category as keyof typeof finishOptions]?.find(f => f.id === finish);
@@ -150,10 +150,10 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
                     if (!categoryData || !finishData) return null;
                     
                     return (
-                      <div key={category} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                        <div className={`w-8 h-8 rounded-lg ${finishData.preview} border border-gray-200`}></div>
+                      <div key={category} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                        <div className={`w-6 h-6 rounded-lg ${finishData.preview} border border-gray-200`}></div>
                         <div className="flex-1">
-                          <div className="text-sm font-medium text-gray-900">{categoryData.name}</div>
+                          <div className="text-xs font-medium text-gray-900">{categoryData.name}</div>
                           <div className="text-xs text-gray-600">{finishData.name}</div>
                         </div>
                       </div>
@@ -164,9 +164,9 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({ onStartDesignin
                 {/* Start Designing Button */}
                 <button
                   onClick={onStartDesigning}
-                  className="w-full mt-6 flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl hover:shadow-lg transition-all duration-200"
+                  className="w-full mt-4 flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-lg hover:shadow-lg transition-all duration-200"
                 >
-                  <Play size={16} />
+                  <Play size={14} />
                   התחל לעצב
                 </button>
                 

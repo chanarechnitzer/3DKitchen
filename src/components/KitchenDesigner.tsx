@@ -49,20 +49,20 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
   };
 
   return (
-    <div className="h-full overflow-hidden">
-      <div className="h-full grid grid-cols-1 xl:grid-cols-4 gap-4 p-4">
+    <div className="h-screen overflow-hidden">
+      <div className="h-full grid grid-cols-1 xl:grid-cols-4 gap-3 p-3">
         {/* Main Design Area */}
         <div className="xl:col-span-3 flex flex-col">
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex-1 flex flex-col">
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200 flex-shrink-0">
+          <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 flex-1 flex flex-col">
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-3 py-2 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-primary to-yellow-500 rounded-lg flex items-center justify-center">
-                    <Lightbulb className="text-white" size={16} />
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-br from-primary to-yellow-500 rounded-lg flex items-center justify-center">
+                    <Lightbulb className="text-white" size={14} />
                   </div>
-                  <h2 className="text-lg font-bold text-gray-900">אזור העיצוב</h2>
+                  <h2 className="text-base font-bold text-gray-900">אזור העיצוב</h2>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-xs text-gray-600">
                   {kitchenDimensions.width} × {kitchenDimensions.length} מטר
                 </div>
               </div>
@@ -77,18 +77,18 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
         </div>
         
         {/* Side Panel */}
-        <div className="xl:col-span-1 flex flex-col gap-4 overflow-y-auto">
+        <div className="xl:col-span-1 flex flex-col gap-3 overflow-y-auto max-h-screen">
           {/* Kitchen Info */}
-          <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100 flex-shrink-0">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">פרטי המטבח</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 text-center">
-                <p className="text-sm text-gray-600 mb-1">רוחב</p>
-                <p className="text-lg font-bold text-gray-900">{kitchenDimensions.width}מ'</p>
+          <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 flex-shrink-0">
+            <h3 className="text-base font-bold text-gray-900 mb-2">פרטי המטבח</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-2 text-center">
+                <p className="text-xs text-gray-600 mb-1">רוחב</p>
+                <p className="text-sm font-bold text-gray-900">{kitchenDimensions.width}מ'</p>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 text-center">
-                <p className="text-sm text-gray-600 mb-1">אורך</p>
-                <p className="text-lg font-bold text-gray-900">{kitchenDimensions.length}מ'</p>
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-2 text-center">
+                <p className="text-xs text-gray-600 mb-1">אורך</p>
+                <p className="text-sm font-bold text-gray-900">{kitchenDimensions.length}מ'</p>
               </div>
             </div>
           </div>
@@ -109,14 +109,14 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           </div>
           
           {/* Action Buttons */}
-          <div className="flex-shrink-0 space-y-3">
+          <div className="flex-shrink-0 space-y-2">
             {/* Finish Designing Button */}
             {hasEssentialItems() && !designPhaseComplete && (
               <button
                 onClick={handleFinishDesigning}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-lg font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
               >
-                <CheckCircle size={20} />
+                <CheckCircle size={16} />
                 <span>סיימתי לעצב</span>
               </button>
             )}
@@ -125,11 +125,11 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
             {(designPhaseComplete || gameCompleted) && (
               <button
                 onClick={onBackToCustomize}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 text-lg font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
               >
-                <Palette size={20} />
+                <Palette size={16} />
                 <span>התאם אישית</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={14} />
               </button>
             )}
           </div>
