@@ -34,7 +34,7 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-green-800">מושלם! 🎉</h3>
-              <p className="text-green-700 text-xs">המטבח שלך עומד בכל דרישות המשולש הזהב</p>
+              <p className="text-green-700 text-xs">המטבח שלך עומד בכל דרישות משולש הזהב</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
