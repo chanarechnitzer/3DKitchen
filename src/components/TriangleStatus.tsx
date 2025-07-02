@@ -120,7 +120,7 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({
             {isComplete && designPhaseComplete ? <Zap className="text-white" size={12} /> : <Target className="text-white" size={12} />}
           </div>
           <div>
-            <h2 className="text-sm font-bold text-gray-900">המשולש הזהב</h2>
+            <h2 className="text-sm font-bold text-gray-900">משולש הזהב</h2>
             <p className="text-xs text-gray-600">תוצאות הבדיקה</p>
           </div>
         </div>
