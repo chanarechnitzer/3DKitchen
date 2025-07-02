@@ -19,7 +19,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onStartDesign }) => {
             <span className="text-primary"> כמעצבים</span>
           </h1>
           <p className="text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            למד ותרגל את עקרון משולש הזהב בתכנון מטבחים - הכלי המקצועי לעיצוב מטבחים פונקציונליים ויעילים
+            ללמוד ולתרגל את עקרון משולש הזהב בתכנון מטבחים - הכלי המקצועי לעיצוב מטבחים פונקציונליים ויעילים
           </p>
         </div>
 
