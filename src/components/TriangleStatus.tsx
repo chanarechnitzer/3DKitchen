@@ -203,7 +203,7 @@ const TriangleStatus: React.FC<TriangleStatusProps> = ({
         <div className="mt-3 p-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200">
           <div className="flex items-center gap-1 mb-1">
             <Target className="text-gray-600" size={12} />
-            <span className="font-medium text-gray-900 text-xs">כללי המשולש הזהב</span>
+            <span className="font-medium text-gray-900 text-xs">כללי משולש הזהב</span>
           </div>
           <div className="text-xs text-gray-700 space-y-1">
             <p>• כל מרחק חייב להיות <strong>ארוך מ-1.2 מטר</strong> (למניעת צפיפות)</p>
