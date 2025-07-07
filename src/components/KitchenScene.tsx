@@ -95,18 +95,34 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const placedHalfWidth = placedRotatedWidth / 2;
       const placedHalfDepth = placedRotatedDepth / 2;
       
-      // ✅ FIXED: Allow sinks to be placed adjacent to each other
-      let buffer = 0.01; // Only 1cm buffer - allows items to be adjacent
+      // ✅ FIXED: Smart collision detection based on item types
+      let buffer = 0.01; // Default small buffer
       
-      // ✅ NEW: Special case for sinks - allow them to be placed right next to each other
+      // ✅ NEW: Allow specific item combinations to be placed adjacent
       if (selectedItem.type === 'sink' && placedItem.type === 'sink') {
         buffer = -0.05; // Negative buffer allows slight overlap for sinks
+      }
+      
+      // ✅ NEW: Allow countertops to be placed adjacent to any item
+      if (selectedItem.type === 'countertop') {
+        buffer = -0.02; // Small negative buffer allows countertops to be adjacent
+      }
+      
+      // ✅ NEW: Allow ovens to be placed on top of each other (handled separately)
+      if (selectedItem.type === 'oven' && placedItem.type === 'oven') {
+        buffer = -0.1; // Allow ovens to overlap for stacking
       }
       
       const xOverlap = Math.abs(x - placedItem.position.x) < (itemHalfWidth + placedHalfWidth + buffer);
       const zOverlap = Math.abs(z - placedItem.position.z) < (itemHalfDepth + placedHalfDepth + buffer);
       
       if (xOverlap && zOverlap) {
+        // ✅ NEW: Don't show collision for allowed adjacent placements
+        if (selectedItem.type === 'countertop' || 
+            (selectedItem.type === 'sink' && placedItem.type === 'sink') ||
+            (selectedItem.type === 'oven' && placedItem.type === 'oven')) {
+          continue; // Skip this collision - it's allowed
+        }
         return placedItem.name; // Return the name of the colliding item
       }
     }
