@@ -24,34 +24,63 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   // Calculate available space for filling
   const calculateFillWidth = () => {
-    const tolerance = 0.1; // 10cm tolerance for wall detection
+    const tolerance = 0.15; // 15cm tolerance for wall detection
     const halfKitchenWidth = kitchenDimensions.width / 2;
     const halfKitchenLength = kitchenDimensions.length / 2;
     
     // Determine which wall the cabinet is against
-    const isAgainstLeftWall = Math.abs(position.x + halfKitchenWidth) < tolerance;
-    const isAgainstRightWall = Math.abs(position.x - halfKitchenWidth) < tolerance;
-    const isAgainstBackWall = Math.abs(position.z + halfKitchenLength) < tolerance;
-    const isAgainstFrontWall = Math.abs(position.z - halfKitchenLength) < tolerance;
+    const distanceToLeftWall = Math.abs(position.x + halfKitchenWidth);
+    const distanceToRightWall = Math.abs(position.x - halfKitchenWidth);
+    const distanceToBackWall = Math.abs(position.z + halfKitchenLength);
+    const distanceToFrontWall = Math.abs(position.z - halfKitchenLength);
+    
+    const isAgainstLeftWall = distanceToLeftWall < tolerance;
+    const isAgainstRightWall = distanceToRightWall < tolerance;
+    const isAgainstBackWall = distanceToBackWall < tolerance;
+    const isAgainstFrontWall = distanceToFrontWall < tolerance;
+    
+    console.log('Cabinet position:', position);
+    console.log('Kitchen dimensions:', kitchenDimensions);
+    console.log('Wall distances:', {
+      left: distanceToLeftWall,
+      right: distanceToRightWall,
+      back: distanceToBackWall,
+      front: distanceToFrontWall
+    });
+    console.log('Against walls:', {
+      left: isAgainstLeftWall,
+      right: isAgainstRightWall,
+      back: isAgainstBackWall,
+      front: isAgainstFrontWall
+    });
     
     if (!isAgainstLeftWall && !isAgainstRightWall && !isAgainstBackWall && !isAgainstFrontWall) {
+      console.log('Not against any wall, returning default size');
       return 0.6; // Not against a wall, keep default size
     }
     
-    // Find other items on the same wall
+    // Find other items on the same wall with more generous tolerance
+    const wallTolerance = 0.2; // 20cm tolerance for finding items on same wall
     const sameWallItems = placedItems.filter(item => {
       if (item.id === cabinetId) return false; // Exclude self
       
-      if (isAgainstLeftWall && Math.abs(item.position.x + halfKitchenWidth) < tolerance) return true;
-      if (isAgainstRightWall && Math.abs(item.position.x - halfKitchenWidth) < tolerance) return true;
-      if (isAgainstBackWall && Math.abs(item.position.z + halfKitchenLength) < tolerance) return true;
-      if (isAgainstFrontWall && Math.abs(item.position.z - halfKitchenLength) < tolerance) return true;
+      if (isAgainstLeftWall && Math.abs(item.position.x + halfKitchenWidth) < wallTolerance) return true;
+      if (isAgainstRightWall && Math.abs(item.position.x - halfKitchenWidth) < wallTolerance) return true;
+      if (isAgainstBackWall && Math.abs(item.position.z + halfKitchenLength) < wallTolerance) return true;
+      if (isAgainstFrontWall && Math.abs(item.position.z - halfKitchenLength) < wallTolerance) return true;
       
       return false;
     });
     
+    console.log('Same wall items:', sameWallItems.map(item => ({
+      name: item.name,
+      position: item.position,
+      dimensions: item.dimensions
+    })));
+    
     if (sameWallItems.length === 0) {
       // No other items on the same wall, fill the entire wall
+      console.log('No items on same wall, filling entire wall');
       if (isAgainstLeftWall || isAgainstRightWall) {
         return kitchenDimensions.length - 0.2; // Leave 10cm margin on each side
       } else {
@@ -64,8 +93,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     if (isAgainstLeftWall || isAgainstRightWall) {
       // Working along the Z axis
-      const itemsOnLeft = sameWallItems.filter(item => item.position.z < position.z);
-      const itemsOnRight = sameWallItems.filter(item => item.position.z > position.z);
+      const itemsOnLeft = sameWallItems.filter(item => item.position.z < position.z - 0.1);
+      const itemsOnRight = sameWallItems.filter(item => item.position.z > position.z + 0.1);
       
       leftBoundary = itemsOnLeft.length > 0 
         ? Math.max(...itemsOnLeft.map(item => item.position.z + item.dimensions.depth / 2))
@@ -76,8 +105,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         : halfKitchenLength - 0.1;
     } else {
       // Working along the X axis
-      const itemsOnLeft = sameWallItems.filter(item => item.position.x < position.x);
-      const itemsOnRight = sameWallItems.filter(item => item.position.x > position.x);
+      const itemsOnLeft = sameWallItems.filter(item => item.position.x < position.x - 0.1);
+      const itemsOnRight = sameWallItems.filter(item => item.position.x > position.x + 0.1);
       
       leftBoundary = itemsOnLeft.length > 0
         ? Math.max(...itemsOnLeft.map(item => item.position.x + item.dimensions.width / 2))
@@ -89,6 +118,14 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     }
     
     const availableSpace = rightBoundary - leftBoundary;
+    
+    console.log('Boundary calculation:', {
+      leftBoundary,
+      rightBoundary,
+      availableSpace,
+      finalWidth: Math.max(0.3, Math.min(availableSpace - 0.05, 4.0))
+    });
+    
     return Math.max(0.3, Math.min(availableSpace - 0.05, 4.0)); // Min 30cm, max 4m, with 5cm buffer
   };
 
@@ -219,10 +256,17 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
               <div className="font-medium text-gray-900">מלא את החלל</div>
               <div className="text-sm text-gray-600">
                 {fillWidth > 0.6 
-                  ? `ימלא ${fillWidth.toFixed(1)} מטר (בין הרכיבים הקיימים)`
-                  : 'אין מספיק מקום למילוי'
+                  ? `ימלא ${fillWidth.toFixed(1)} מטר`
+                  : fillWidth >= 0.3
+                    ? `ימלא ${fillWidth.toFixed(1)} מטר (מינימום)`
+                    : 'אין מספיק מקום למילוי'
                 }
               </div>
+              {fillWidth < 0.6 && fillWidth >= 0.3 && (
+                <div className="text-xs text-yellow-600 mt-1">
+                  ⚠️ מקום מוגבל - ארון קטן מהסטנדרט
+                </div>
+              )}
             </div>
             <Maximize2 className="text-gray-400" size={20} />
           </label>
@@ -237,7 +281,12 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           </button>
           <button 
             onClick={handleConfirm}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-primary to-yellow-500 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            disabled={selectedOption === 'fill' && fillWidth < 0.3}
+            className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
+              selectedOption === 'fill' && fillWidth < 0.3
+                ? 'text-gray-500 bg-gray-200 cursor-not-allowed'
+                : 'text-white bg-gradient-to-r from-primary to-yellow-500 hover:shadow-lg transform hover:scale-105'
+            }`}
           >
             <Check size={16} />
             אישור
