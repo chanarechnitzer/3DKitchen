@@ -1,6 +1,3 @@
-Here's the fixed version with all closing brackets properly added:
-
-```jsx
 import React, { useState } from 'react';
 import { MoveHorizontal, AlertCircle, Eye, Package } from 'lucide-react';
 import { useKitchen, KitchenItemType } from '../store/KitchenContext';
@@ -99,7 +96,7 @@ const KitchenControls: React.FC = () => {
         <h2 className="text-base font-bold text-gray-900">רכיבי מטבח</h2>
       </div>
       
-      {/* ✅ NEW: Show item options when item is selected */}
+      {/* Show item options when item is selected */}
       {selectedItem && (
         <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-yellow-500/10 rounded-xl border-2 border-primary/30 shadow-lg">
           <div className="flex items-center gap-3 mb-3">
@@ -154,7 +151,7 @@ const KitchenControls: React.FC = () => {
         </div>
       )}
       
-      {/* ✅ NEW: Cabinet Options Dialog */}
+      {/* Cabinet Options Dialog */}
       {showCabinetDialog && selectedItem && (
         <CabinetOptionsDialog
           onClose={() => setShowCabinetDialog(false)}
@@ -174,7 +171,7 @@ const KitchenControls: React.FC = () => {
         />
       )}
       
-      {/* ✅ NEW: Oven Stack Dialog */}
+      {/* Oven Stack Dialog */}
       {showOvenDialog && baseOvenForStack && (
         <OvenStackDialog
           onClose={() => {
@@ -283,9 +280,85 @@ const KitchenControls: React.FC = () => {
           );
         })}
       </div>
+      
+      {placedItems.length > 0 && (
+        <div className="mt-4 border-t border-gray-200 pt-3">
+          <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            רכיבים במטבח ({placedItems.length})
+          </h3>
+          
+          <div className="mb-2 p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+            <p className="text-xs text-green-700 font-medium text-center">
+              💡 לחץ על "אפשרויות" לשינוי גודל או "הסר" להזזה
+            </p>
+          </div>
+          
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {placedItems.map(item => (
+              <div 
+                key={item.id}
+                className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg border border-gray-200"
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`w-6 h-6 bg-gradient-to-br ${getItemColor(item.type)} rounded-lg flex items-center justify-center text-white text-xs`}>
+                    {getItemIcon(item.type)}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-900 text-xs">{item.name}</span>
+                    {item.type === 'countertop' && (
+                      <div className="text-xs text-gray-500">
+                        {(item.dimensions.width * 100).toFixed(0)} ס"מ רוחב
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  {item.type === 'countertop' && (
+                    <button 
+                      className="text-xs text-primary hover:text-primary-dark hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors font-medium"
+                      onClick={() => {
+                        setSelectedCabinetId(item.id);
+                        setShowCabinetDialog(true);
+                      }}
+                      title="שנה גודל ארון"
+                    >
+                      🔧
+                    </button>
+                  )}
+                  <button 
+                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium"
+                    onClick={() => removeItem(item.id)}
+                    title="הסר רכיב כדי למקם אותו במקום אחר"
+                  >
+                    הסר
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Cabinet Options Dialog for placed items */}
+      {showCabinetDialog && selectedCabinetId && !selectedItem && (
+        <CabinetOptionsDialog
+          onClose={() => {
+            setShowCabinetDialog(false);
+            setSelectedCabinetId(null);
+          }}
+          onConfirm={(width) => {
+            if (selectedCabinetId) {
+              updateCabinetSize(selectedCabinetId, width);
+            }
+            setShowCabinetDialog(false);
+            setSelectedCabinetId(null);
+          }}
+          defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
+        />
+      )}
     </div>
   );
 };
 
 export default KitchenControls;
-```
