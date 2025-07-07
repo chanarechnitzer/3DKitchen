@@ -854,13 +854,21 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           onConfirm={(option, customWidth) => {
             if (!selectedItem || !pendingCabinetPlacement) return;
             
+            console.log('🎯 Cabinet placement confirmed with option:', option);
+            console.log('📍 Placement position:', pendingCabinetPlacement.position);
+            console.log('📏 Custom width:', customWidth);
+            
             let finalWidth = selectedItem.dimensions.width;
             
             if (option === 'custom' && customWidth) {
               finalWidth = customWidth;
+              console.log('🔧 Using custom width:', finalWidth);
             } else if (option === 'fill' && customWidth) {
               finalWidth = customWidth;
+              console.log('📐 Using fill width:', finalWidth);
             }
+            
+            console.log('✅ Final cabinet width:', finalWidth);
             
             // עדכן את מידות הפריט ברשימת הפריטים הזמינים לפני ההנחה
             setAvailableItems(prev => prev.map(item => 
@@ -869,12 +877,16 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
                 : item
             ));
             
+            console.log('🔄 Updated available items with new width');
+            
             // הנח את הפריט עם המידות המעודכנות
             placeItem(
               selectedItem.id,
               new THREE.Vector3(pendingCabinetPlacement.position.x, 0, pendingCabinetPlacement.position.z),
               pendingCabinetPlacement.rotation
             );
+            
+            console.log('✅ Item placed successfully');
             
             setSelectedItem(null);
             setIsDragging(false);

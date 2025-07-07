@@ -158,12 +158,18 @@ const KitchenControls: React.FC = () => {
           onConfirm={(option, customWidth) => {
             let finalWidth = selectedItem.dimensions.width;
             
+            console.log('🎯 Cabinet option selected:', option);
+            console.log('📏 Current width:', finalWidth);
+            
             if (option === 'custom' && customWidth) {
               finalWidth = customWidth;
+              console.log('🔧 Using custom width:', finalWidth);
             } else if (option === 'fill' && customWidth) {
               finalWidth = customWidth;
+              console.log('📐 Using fill width:', finalWidth);
             }
-            // option === 'keep' uses current width
+            
+            console.log('✅ Final width to apply:', finalWidth);
             
             if (finalWidth !== selectedItem.dimensions.width) {
               const updatedItem = {
@@ -174,6 +180,7 @@ const KitchenControls: React.FC = () => {
                 }
               };
               setSelectedItem(updatedItem);
+              console.log('🔄 Updated selected item with new width');
             }
             setShowCabinetDialog(false);
           }}
@@ -363,14 +370,20 @@ const KitchenControls: React.FC = () => {
           onConfirm={(option, customWidth) => {
             if (selectedCabinetId) {
               const currentItem = placedItems.find(item => item.id === selectedCabinetId);
+              console.log('🎯 Updating placed cabinet:', currentItem?.name);
+              console.log('📏 Current item width:', currentItem?.dimensions.width);
+              
               let finalWidth = currentItem?.dimensions.width || 0.6;
               
               if (option === 'custom' && customWidth) {
                 finalWidth = customWidth;
+                console.log('🔧 Using custom width:', finalWidth);
               } else if (option === 'fill' && customWidth) {
                 finalWidth = customWidth;
+                console.log('📐 Using fill width:', finalWidth);
               }
               
+              console.log('✅ Final width to apply:', finalWidth);
               updateCabinetSize(selectedCabinetId, finalWidth);
             }
             setShowCabinetDialog(false);
