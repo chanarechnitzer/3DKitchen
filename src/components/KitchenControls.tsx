@@ -154,19 +154,32 @@ const KitchenControls: React.FC = () => {
       {showCabinetDialog && selectedItem && (
         <CabinetOptionsDialog
           onClose={() => setShowCabinetDialog(false)}
-          onConfirm={(width) => {
-            // Update the selected item's width before placing
-            const updatedItem = {
-              ...selectedItem,
-              dimensions: {
-                ...selectedItem.dimensions,
-                width: width
-              }
-            };
-            setSelectedItem(updatedItem);
+          onConfirm={(option, customWidth) => {
+            let finalWidth = selectedItem.dimensions.width;
+            
+            if (option === 'custom' && customWidth) {
+              finalWidth = customWidth;
+            } else if (option === 'fill' && customWidth) {
+              finalWidth = customWidth;
+            }
+            // option === 'keep' uses current width
+            
+            if (finalWidth !== selectedItem.dimensions.width) {
+              const updatedItem = {
+                ...selectedItem,
+                dimensions: {
+                  ...selectedItem.dimensions,
+                  width: finalWidth
+                }
+              };
+              setSelectedItem(updatedItem);
+            }
             setShowCabinetDialog(false);
           }}
           defaultWidth={selectedItem.dimensions.width}
+          placedItems={placedItems}
+          position={selectedItem ? { x: 0, z: 0 } : undefined}
+          kitchenDimensions={{ width: 6, length: 6 }}
         />
       )}
       
@@ -346,14 +359,27 @@ const KitchenControls: React.FC = () => {
             setShowCabinetDialog(false);
             setSelectedCabinetId(null);
           }}
-          onConfirm={(width) => {
+          onConfirm={(option, customWidth) => {
             if (selectedCabinetId) {
-              updateCabinetSize(selectedCabinetId, width);
+              const currentItem = placedItems.find(item => item.id === selectedCabinetId);
+              let finalWidth = currentItem?.dimensions.width || 0.6;
+              
+              if (option === 'custom' && customWidth) {
+                finalWidth = customWidth;
+              } else if (option === 'fill' && customWidth) {
+                finalWidth = customWidth;
+              }
+              // option === 'keep' uses current width
+              
+              updateCabinetSize(selectedCabinetId, finalWidth);
             }
             setShowCabinetDialog(false);
             setSelectedCabinetId(null);
           }}
           defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
+          placedItems={placedItems}
+          position={placedItems.find(item => item.id === selectedCabinetId)?.position}
+          kitchenDimensions={{ width: 6, length: 6 }}
         />
       )}
     </div>

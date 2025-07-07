@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
-import { X, Ruler, Check } from 'lucide-react';
+import { X, Ruler, Check, Maximize2, Settings } from 'lucide-react';
 
 interface CabinetOptionsDialogProps {
   onClose: () => void;
-  onConfirm: (width: number) => void;
+  onConfirm: (option: 'keep' | 'custom' | 'fill', customWidth?: number) => void;
   defaultWidth: number;
+  placedItems?: any[];
+  position?: { x: number; z: number };
+  kitchenDimensions?: { width: number; length: number };
 }
 
 const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({ 
   onClose, 
   onConfirm, 
-  defaultWidth 
+  defaultWidth,
+  placedItems = [],
+  position,
+  kitchenDimensions
 }) => {
-  const [selectedWidth, setSelectedWidth] = useState(defaultWidth);
+  const [selectedOption, setSelectedOption] = useState<'keep' | 'custom' | 'fill'>('keep');
+  const [customWidth, setCustomWidth] = useState(defaultWidth);
 
   const widthOptions = [
     { value: 0.3, label: '30 ס"מ', desc: 'צר - למקומות קטנים' },
@@ -24,8 +31,43 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     { value: 1.2, label: '120 ס"מ', desc: 'ארון גדול' },
   ];
 
+  // Calculate available space for fill option
+  const calculateFillWidth = () => {
+    if (!position || !kitchenDimensions) return defaultWidth;
+    
+    // Find nearest items on left and right
+    let leftBoundary = -kitchenDimensions.width / 2 + 0.05; // Wall
+    let rightBoundary = kitchenDimensions.width / 2 - 0.05; // Wall
+    
+    placedItems.forEach(item => {
+      const itemLeft = item.position.x - item.dimensions.width / 2;
+      const itemRight = item.position.x + item.dimensions.width / 2;
+      
+      // Check if item is on the same Z line (approximately)
+      if (Math.abs(item.position.z - position.z) < 0.3) {
+        if (itemRight < position.x && itemRight > leftBoundary) {
+          leftBoundary = itemRight + 0.01; // Small gap
+        }
+        if (itemLeft > position.x && itemLeft < rightBoundary) {
+          rightBoundary = itemLeft - 0.01; // Small gap
+        }
+      }
+    });
+    
+    const availableWidth = rightBoundary - leftBoundary;
+    return Math.max(0.3, Math.min(2.0, availableWidth)); // Min 30cm, max 200cm
+  };
+
+  const fillWidth = calculateFillWidth();
+
   const handleConfirm = () => {
-    onConfirm(selectedWidth);
+    if (selectedOption === 'custom') {
+      onConfirm(selectedOption, customWidth);
+    } else if (selectedOption === 'fill') {
+      onConfirm(selectedOption, fillWidth);
+    } else {
+      onConfirm(selectedOption);
+    }
   };
 
   return (
@@ -37,9 +79,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center">
-              <Ruler className="text-white" size={20} />
+              <Settings className="text-white" size={20} />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">בחר רוחב ארון</h2>
+            <h2 className="text-xl font-bold text-gray-900">אפשרויות ארון</h2>
           </div>
           <button 
             onClick={onClose}
@@ -51,38 +93,113 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         </div>
         
         <p className="text-gray-600 mb-6">
-          בחר את הרוחב המתאים לארון המטבח שלך
+          בחר את האפשרות המתאימה לארון המטבח שלך
         </p>
         
         <div className="space-y-3 mb-6">
-          {widthOptions.map((option) => (
-            <label
-              key={option.value}
-              className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                selectedWidth === option.value
-                  ? 'border-primary bg-primary/5 shadow-lg'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <input
-                type="radio"
-                name="width"
-                value={option.value}
-                checked={selectedWidth === option.value}
-                onChange={(e) => setSelectedWidth(parseFloat(e.target.value))}
-                className="text-primary focus:ring-primary"
-              />
-              <div className="flex-1">
-                <div className="font-semibold text-gray-900">{option.label}</div>
-                <div className="text-sm text-gray-600">{option.desc}</div>
+          {/* Option 1: Keep current size */}
+          <label
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              selectedOption === 'keep'
+                ? 'border-primary bg-primary/5 shadow-lg'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="option"
+              checked={selectedOption === 'keep'}
+              onChange={() => setSelectedOption('keep')}
+              className="text-primary focus:ring-primary"
+            />
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900 flex items-center gap-2">
+                <Check size={16} className="text-green-600" />
+                שמור על המידה הנוכחית
               </div>
-              {selectedWidth === option.value && (
-                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                  <Check size={14} className="text-white" />
+              <div className="text-sm text-gray-600">
+                {(defaultWidth * 100).toFixed(0)} ס"מ רוחב
+              </div>
+            </div>
+          </label>
+
+          {/* Option 2: Custom size */}
+          <label
+            className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              selectedOption === 'custom'
+                ? 'border-primary bg-primary/5 shadow-lg'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="option"
+              checked={selectedOption === 'custom'}
+              onChange={() => setSelectedOption('custom')}
+              className="mt-1 text-primary focus:ring-primary"
+            />
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900 flex items-center gap-2 mb-2">
+                <Ruler size={16} className="text-blue-600" />
+                בחר מידה מותאמת אישית
+              </div>
+              
+              {selectedOption === 'custom' && (
+                <div className="grid grid-cols-2 gap-2">
+                  {widthOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex flex-col p-2 rounded-lg border cursor-pointer transition-all text-center ${
+                        customWidth === option.value
+                          ? 'border-primary bg-primary/10'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="customWidth"
+                        value={option.value}
+                        checked={customWidth === option.value}
+                        onChange={(e) => setCustomWidth(parseFloat(e.target.value))}
+                        className="sr-only"
+                      />
+                      <div className="font-medium text-xs">{option.label}</div>
+                      <div className="text-xs text-gray-500">{option.desc}</div>
+                    </label>
+                  ))}
                 </div>
               )}
-            </label>
-          ))}
+            </div>
+          </label>
+
+          {/* Option 3: Fill available space */}
+          <label
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              selectedOption === 'fill'
+                ? 'border-primary bg-primary/5 shadow-lg'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="option"
+              checked={selectedOption === 'fill'}
+              onChange={() => setSelectedOption('fill')}
+              className="text-primary focus:ring-primary"
+            />
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900 flex items-center gap-2">
+                <Maximize2 size={16} className="text-purple-600" />
+                מלא את כל השטח הזמין
+              </div>
+              <div className="text-sm text-gray-600">
+                {(fillWidth * 100).toFixed(0)} ס"מ רוחב (בין רכיבים/קירות)
+              </div>
+              <div className="text-xs text-purple-600 mt-1">
+                💡 ימלא אוטומטית את השטח בין הרכיבים הקיימים
+              </div>
+            </div>
+          </label>
         </div>
         
         <div className="flex gap-3">
