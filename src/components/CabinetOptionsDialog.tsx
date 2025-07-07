@@ -35,27 +35,32 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const calculateFillWidth = () => {
     if (!position || !kitchenDimensions) return defaultWidth;
     
-    // Find nearest items on left and right
-    let leftBoundary = -kitchenDimensions.width / 2 + 0.05; // Wall
-    let rightBoundary = kitchenDimensions.width / 2 - 0.05; // Wall
+    // ✅ FIXED: Proper boundary calculation
+    const halfWidth = kitchenDimensions.width / 2;
+    const halfLength = kitchenDimensions.length / 2;
+    const snapDistance = 0.05;
+    
+    let leftBoundary = -halfWidth + snapDistance;
+    let rightBoundary = halfWidth - snapDistance;
     
     placedItems?.forEach(item => {
       const itemLeft = item.position.x - item.dimensions.width / 2;
       const itemRight = item.position.x + item.dimensions.width / 2;
       
-      // Check if item is on the same Z line (approximately)
-      if (Math.abs(item.position.z - position.z) < 0.3) {
+      // ✅ FIXED: Better proximity check for same row
+      if (Math.abs(item.position.z - position.z) < 0.5) {
         if (itemRight < position.x && itemRight > leftBoundary) {
-          leftBoundary = itemRight + 0.01; // Small gap
+          leftBoundary = itemRight + 0.02; // Small gap between items
         }
         if (itemLeft > position.x && itemLeft < rightBoundary) {
-          rightBoundary = itemLeft - 0.01; // Small gap
+          rightBoundary = itemLeft - 0.02; // Small gap between items
         }
       }
     });
     
     const availableWidth = rightBoundary - leftBoundary;
-    return Math.max(0.3, Math.min(2.0, availableWidth)); // Min 30cm, max 200cm
+    // ✅ FIXED: Proper min/max constraints
+    return Math.max(0.3, Math.min(1.5, availableWidth)); // Min 30cm, max 150cm
   };
 
   const fillWidth = calculateFillWidth();
