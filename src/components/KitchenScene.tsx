@@ -30,6 +30,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     triangleValidation,
     getDragValidation,
     updateOvenStack,
+    setAvailableItems,
   } = useKitchen();
   
   const [position, setPosition] = useState({ x: 0, z: 0 });
