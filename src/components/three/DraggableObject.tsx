@@ -143,25 +143,35 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
       case KitchenItemType.OVEN:
         return (
           <group position={[x, y, z]} rotation={[0, rotation, 0]}>
-            {/* Oven body */}
+            {/* Built-in oven cavity */}
             <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, height, depth]} />
-              <meshStandardMaterial color="#2D3748" />
+              <meshStandardMaterial color={getCabinetColor()} />
             </mesh>
-            {/* Oven door */}
-            <mesh position={[0, height * 0.6, depth * 0.48]} castShadow>
-              <boxGeometry args={[width * 0.9, height * 0.7, 0.05]} />
+            {/* Oven insert */}
+            <mesh position={[0, height * 0.5, depth * 0.3]} castShadow>
+              <boxGeometry args={[width * 0.85, height * 0.8, depth * 0.4]} />
               <meshStandardMaterial color="#1a1a1a" />
             </mesh>
+            {/* Oven door */}
+            <mesh position={[0, height * 0.5, depth * 0.48]} castShadow>
+              <boxGeometry args={[width * 0.8, height * 0.7, 0.05]} />
+              <meshStandardMaterial color="#2D3748" />
+            </mesh>
             {/* Oven window */}
-            <mesh position={[0, height * 0.6, depth * 0.51]} castShadow>
-              <boxGeometry args={[width * 0.6, height * 0.4, 0.02]} />
+            <mesh position={[0, height * 0.55, depth * 0.51]} castShadow>
+              <boxGeometry args={[width * 0.5, height * 0.4, 0.02]} />
               <meshStandardMaterial color="#333333" transparent opacity={0.8} />
             </mesh>
             {/* Door handle */}
-            <mesh position={[width * 0.3, height * 0.6, depth * 0.52]} castShadow>
+            <mesh position={[width * 0.25, height * 0.5, depth * 0.52]} castShadow>
               <boxGeometry args={[0.15, 0.02, 0.02]} />
               <meshStandardMaterial color="#C0C0C0" />
+            </mesh>
+            {/* Control panel */}
+            <mesh position={[0, height * 0.15, depth * 0.48]} castShadow>
+              <boxGeometry args={[width * 0.6, 0.08, 0.02]} />
+              <meshStandardMaterial color="#1a1a1a" />
             </mesh>
           </group>
         );
@@ -169,35 +179,65 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
       case KitchenItemType.REFRIGERATOR:
         return (
           <group position={[x, y, z]} rotation={[0, rotation, 0]}>
-            {/* Main body */}
+            {/* Main body - modern stainless steel look */}
             <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, height, depth]} />
-              <meshStandardMaterial color="#F8F9FA" />
+              <meshStandardMaterial 
+                color="#E8E9EA" 
+                metalness={0.3}
+                roughness={0.4}
+              />
             </mesh>
-            {/* Upper door */}
-            <mesh position={[width * 0.48, height * 0.75, 0]} castShadow>
-              <boxGeometry args={[0.05, height * 0.45, depth * 0.95]} />
-              <meshStandardMaterial color="#E9ECEF" />
+            {/* Freezer door (top) */}
+            <mesh position={[width * 0.47, height * 0.8, 0]} castShadow>
+              <boxGeometry args={[0.06, height * 0.35, depth * 0.95]} />
+              <meshStandardMaterial 
+                color="#D6D8DB" 
+                metalness={0.4}
+                roughness={0.3}
+              />
             </mesh>
-            {/* Lower door */}
-            <mesh position={[width * 0.48, height * 0.25, 0]} castShadow>
-              <boxGeometry args={[0.05, height * 0.45, depth * 0.95]} />
-              <meshStandardMaterial color="#E9ECEF" />
+            {/* Main fridge door (bottom) */}
+            <mesh position={[width * 0.47, height * 0.4, 0]} castShadow>
+              <boxGeometry args={[0.06, height * 0.6, depth * 0.95]} />
+              <meshStandardMaterial 
+                color="#D6D8DB" 
+                metalness={0.4}
+                roughness={0.3}
+              />
             </mesh>
-            {/* Upper handle */}
-            <mesh position={[width * 0.52, height * 0.85, 0]} castShadow>
-              <boxGeometry args={[0.02, 0.15, 0.02]} />
-              <meshStandardMaterial color="#6C757D" />
+            {/* Freezer handle */}
+            <mesh position={[width * 0.52, height * 0.9, depth * 0.2]} castShadow>
+              <boxGeometry args={[0.02, 0.2, 0.03]} />
+              <meshStandardMaterial 
+                color="#8E9196" 
+                metalness={0.8}
+                roughness={0.2}
+              />
             </mesh>
-            {/* Lower handle */}
-            <mesh position={[width * 0.52, height * 0.35, 0]} castShadow>
-              <boxGeometry args={[0.02, 0.15, 0.02]} />
-              <meshStandardMaterial color="#6C757D" />
+            {/* Main door handle */}
+            <mesh position={[width * 0.52, height * 0.5, depth * 0.2]} castShadow>
+              <boxGeometry args={[0.02, 0.3, 0.03]} />
+              <meshStandardMaterial 
+                color="#8E9196" 
+                metalness={0.8}
+                roughness={0.2}
+              />
             </mesh>
-            {/* Freezer compartment line */}
-            <mesh position={[0, height * 0.5, depth * 0.48]} castShadow>
-              <boxGeometry args={[width * 0.9, 0.01, 0.01]} />
-              <meshStandardMaterial color="#DEE2E6" />
+            {/* Door seals */}
+            <mesh position={[width * 0.45, height * 0.625, 0]} castShadow>
+              <boxGeometry args={[0.02, 0.02, depth * 0.9]} />
+              <meshStandardMaterial color="#4A4A4A" />
+            </mesh>
+            {/* Brand logo area */}
+            <mesh position={[0, height * 0.85, depth * 0.48]} castShadow>
+              <boxGeometry args={[width * 0.3, 0.08, 0.01]} />
+              <meshStandardMaterial color="#C0C0C0" />
+            </mesh>
+            {/* Water/ice dispenser */}
+            <mesh position={[0, height * 0.7, depth * 0.48]} castShadow>
+              <boxGeometry args={[width * 0.2, 0.15, 0.02]} />
+              <meshStandardMaterial color="#1a1a1a" />
             </mesh>
           </group>
         );

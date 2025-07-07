@@ -155,19 +155,35 @@ const KitchenControls: React.FC = () => {
       {showCabinetDialog && selectedItem && (
         <CabinetOptionsDialog
           onClose={() => setShowCabinetDialog(false)}
-          onConfirm={(width) => {
-            // Update the selected item's width before placing
-            const updatedItem = {
-              ...selectedItem,
-              dimensions: {
-                ...selectedItem.dimensions,
-                width: width
-              }
-            };
-            setSelectedItem(updatedItem);
+          onConfirm={(option, width) => {
+            if (option === 'fill') {
+              // Calculate available space and create filling cabinet
+              const fillWidth = width || 1.2; // Default fill width
+              const updatedItem = {
+                ...selectedItem,
+                dimensions: {
+                  ...selectedItem.dimensions,
+                  width: fillWidth
+                }
+              };
+              setSelectedItem(updatedItem);
+            } else if (option === 'custom' && width) {
+              // Update with custom width
+              const updatedItem = {
+                ...selectedItem,
+                dimensions: {
+                  ...selectedItem.dimensions,
+                  width: width
+                }
+              };
+              setSelectedItem(updatedItem);
+            }
+            // For 'keep' option, no changes needed
             setShowCabinetDialog(false);
           }}
           defaultWidth={selectedItem.dimensions.width}
+          availableSpace={2.4} // Example available space
+          hasAdjacentItems={true} // Example - has adjacent items
         />
       )}
       
@@ -347,14 +363,17 @@ const KitchenControls: React.FC = () => {
             setShowCabinetDialog(false);
             setSelectedCabinetId(null);
           }}
-          onConfirm={(width) => {
-            if (selectedCabinetId) {
-              updateCabinetSize(selectedCabinetId, width);
+          onConfirm={(option, width) => {
+            if (selectedCabinetId && option !== 'keep') {
+              const finalWidth = option === 'fill' ? (width || 1.2) : (width || 0.6);
+              updateCabinetSize(selectedCabinetId, finalWidth);
             }
             setShowCabinetDialog(false);
             setSelectedCabinetId(null);
           }}
           defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
+          availableSpace={1.8} // Example available space for placed items
+          hasAdjacentItems={true}
         />
       )}
     </div>

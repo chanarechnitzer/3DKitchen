@@ -3,16 +3,21 @@ import { X, Ruler, Check } from 'lucide-react';
 
 interface CabinetOptionsDialogProps {
   onClose: () => void;
-  onConfirm: (width: number) => void;
+  onConfirm: (option: 'keep' | 'custom' | 'fill', width?: number) => void;
   defaultWidth: number;
+  availableSpace?: number; // Space available to fill
+  hasAdjacentItems?: boolean; // Whether there are adjacent items to fill between
 }
 
 const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({ 
   onClose, 
   onConfirm, 
-  defaultWidth 
+  defaultWidth,
+  availableSpace = 0,
+  hasAdjacentItems = false
 }) => {
   const [selectedWidth, setSelectedWidth] = useState(defaultWidth);
+  const [selectedOption, setSelectedOption] = useState<'keep' | 'custom' | 'fill'>('keep');
 
   const widthOptions = [
     { value: 0.3, label: '30 ס"מ', desc: 'צר - למקומות קטנים' },
@@ -25,7 +30,13 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   ];
 
   const handleConfirm = () => {
-    onConfirm(selectedWidth);
+    if (selectedOption === 'fill') {
+      onConfirm('fill', availableSpace);
+    } else if (selectedOption === 'custom') {
+      onConfirm('custom', selectedWidth);
+    } else {
+      onConfirm('keep', defaultWidth);
+    }
   };
 
   return (
@@ -51,38 +62,124 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         </div>
         
         <p className="text-gray-600 mb-6">
-          בחר את הרוחב המתאים לארון המטבח שלך
+          בחר את האפשרות המתאימה לארון המטבח שלך
         </p>
         
-        <div className="space-y-3 mb-6">
-          {widthOptions.map((option) => (
+        {/* Main Options */}
+        <div className="space-y-4 mb-6">
+          {/* Keep current size */}
+          <label
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              selectedOption === 'keep'
+                ? 'border-primary bg-primary/5 shadow-lg'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="option"
+              value="keep"
+              checked={selectedOption === 'keep'}
+              onChange={(e) => setSelectedOption(e.target.value as 'keep')}
+              className="text-primary focus:ring-primary"
+            />
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900">שמור על המידה הנוכחית</div>
+              <div className="text-sm text-gray-600">{(defaultWidth * 100).toFixed(0)} ס"מ רוחב</div>
+            </div>
+            {selectedOption === 'keep' && (
+              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                <Check size={14} className="text-white" />
+              </div>
+            )}
+          </label>
+
+          {/* Custom size */}
+          <label
+            className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              selectedOption === 'custom'
+                ? 'border-primary bg-primary/5 shadow-lg'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="option"
+              value="custom"
+              checked={selectedOption === 'custom'}
+              onChange={(e) => setSelectedOption(e.target.value as 'custom')}
+              className="mt-1 text-primary focus:ring-primary"
+            />
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900 mb-2">בחר מידה אחרת</div>
+              <div className="text-sm text-gray-600 mb-3">בחר מתוך המידות הסטנדרטיות</div>
+              
+              {selectedOption === 'custom' && (
+                <div className="grid grid-cols-2 gap-2">
+                  {widthOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${
+                        selectedWidth === option.value
+                          ? 'border-primary bg-primary/10'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="width"
+                        value={option.value}
+                        checked={selectedWidth === option.value}
+                        onChange={(e) => setSelectedWidth(parseFloat(e.target.value))}
+                        className="text-primary focus:ring-primary"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 text-sm">{option.label}</div>
+                        <div className="text-xs text-gray-600">{option.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            {selectedOption === 'custom' && (
+              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                <Check size={14} className="text-white" />
+              </div>
+            )}
+          </label>
+
+          {/* Fill space option - only show if there's space to fill */}
+          {hasAdjacentItems && availableSpace > 0.5 && (
             <label
-              key={option.value}
               className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                selectedWidth === option.value
+                selectedOption === 'fill'
                   ? 'border-primary bg-primary/5 shadow-lg'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <input
                 type="radio"
-                name="width"
-                value={option.value}
-                checked={selectedWidth === option.value}
-                onChange={(e) => setSelectedWidth(parseFloat(e.target.value))}
+                name="option"
+                value="fill"
+                checked={selectedOption === 'fill'}
+                onChange={(e) => setSelectedOption(e.target.value as 'fill')}
                 className="text-primary focus:ring-primary"
               />
               <div className="flex-1">
-                <div className="font-semibold text-gray-900">{option.label}</div>
-                <div className="text-sm text-gray-600">{option.desc}</div>
+                <div className="font-semibold text-gray-900">מלא את כל השטח</div>
+                <div className="text-sm text-gray-600">
+                  מלא את השטח בין הרכיבים או הקיר ({(availableSpace * 100).toFixed(0)} ס"מ)
+                </div>
+                <div className="text-xs text-orange-600 mt-1">💡 ניצול מקסימלי של השטח</div>
               </div>
-              {selectedWidth === option.value && (
+              {selectedOption === 'fill' && (
                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                   <Check size={14} className="text-white" />
                 </div>
               )}
             </label>
-          ))}
+          )}
         </div>
         
         <div className="flex gap-3">
