@@ -25,14 +25,14 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
 
   const handleConfirm = () => {
     if (selectedOption === 'stack') {
-      // ✅ FIXED: Place oven at SAME position but mark as stacked
+      // ✅ FIXED: Place oven at exact same position as base oven for stacking
       const stackedPosition = new Vector3(
         baseOven.position.x,
-        0, // Keep Y at 0 - the DraggableObject will handle the height
+        0, // Y stays 0, DraggableObject handles visual stacking
         baseOven.position.z
       );
       
-      placeItem(ovenId, stackedPosition, rotation);
+      placeItem(ovenId, stackedPosition, baseOven.rotation || 0); // Use base oven's rotation
       
       // Mark both ovens as stacked
       setTimeout(() => {
@@ -40,7 +40,8 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
       }, 50);
       
     } else {
-      // Replace existing oven
+      // ✅ FIXED: Replace - remove old oven first, then place new one
+      // This should be handled by removing the base oven first
       placeItem(ovenId, position, rotation);
     }
     

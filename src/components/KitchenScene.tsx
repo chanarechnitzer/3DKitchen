@@ -510,15 +510,15 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         setShowCabinetDialog(true);
         setShowCabinetDialog(true);
       } else if (selectedItem.type === 'oven') {
-        // Check if placing oven on another oven
+        // ✅ FIXED: Check if placing oven on another oven - more precise detection
         const baseOven = placedItems.find(item => 
           item.type === 'oven' && 
-          Math.abs(item.position.x - finalPos.x) < 0.3 && 
-          Math.abs(item.position.z - finalPos.z) < 0.3
+          Math.abs(item.position.x - finalPos.x) < 0.1 && 
+          Math.abs(item.position.z - finalPos.z) < 0.1
         );
         
         if (baseOven) {
-          // Show oven stacking dialog
+          // ✅ FIXED: Only show dialog if ovens are at exact same position
           setPendingOven({
             id: selectedItem.id,
             position: new THREE.Vector3(finalPos.x, 0, finalPos.z),
@@ -527,7 +527,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           });
           setShowOvenDialog(true);
         } else {
-          // Place oven normally
+          // ✅ FIXED: Place oven normally at the intended position
           placeItem(
             selectedItem.id, 
             new THREE.Vector3(finalPos.x, 0, finalPos.z),

@@ -353,12 +353,12 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       if (item.id === baseOvenId) {
         return {
           ...item,
-          stackedWith: topOvenId // Mark base oven as having something stacked on it
+          stackedWith: topOvenId as any // Mark base oven as having something stacked on it
         };
       } else if (item.id === topOvenId) {
         return {
           ...item,
-          stackedOn: baseOvenId // Mark top oven as being stacked on something
+          stackedOn: baseOvenId as any // Mark top oven as being stacked on something
         };
       }
       return item;
