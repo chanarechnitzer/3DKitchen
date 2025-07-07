@@ -25,24 +25,22 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
 
   const handleConfirm = () => {
     if (selectedOption === 'stack') {
-      // ✅ CRITICAL: Place oven at SAME position but mark as stacked
+      // ✅ FIXED: Place oven at SAME position but mark as stacked
       const stackedPosition = new Vector3(
         baseOven.position.x,
-        0, // ✅ FIXED: Keep Y at 0 - the DraggableObject will handle the height
+        0, // Keep Y at 0 - the DraggableObject will handle the height
         baseOven.position.z
       );
       
       placeItem(ovenId, stackedPosition, rotation);
       
-      // ✅ CRITICAL: Mark both ovens as stacked IMMEDIATELY
+      // Mark both ovens as stacked
       setTimeout(() => {
         updateOvenStack(baseOven.id, ovenId);
-      }, 50); // Faster update
+      }, 50);
       
     } else {
       // Replace existing oven
-      // This would remove the base oven and place the new one
-      // For now, we'll just place normally
       placeItem(ovenId, position, rotation);
     }
     
@@ -98,10 +96,10 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
             <div className="flex-1">
               <div className="font-medium text-gray-900 flex items-center gap-2">
                 <Layers size={16} className="text-orange-600" />
-                הנח מעל התנור הקיים
+                הנח מעל התנור הקיים (ערימה)
               </div>
               <div className="text-sm text-gray-600">
-                יוצר מגדל תנורים - התנור החדש יוקם מעל הקיים
+                התנור החדש יוקם מעל הקיים ביחידה אחת
               </div>
             </div>
           </label>
@@ -122,7 +120,7 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
             <div className="flex-1">
               <div className="font-medium text-gray-900">החלף את התנור הקיים</div>
               <div className="text-sm text-gray-600">
-                התנור הקיים יוסר והחדש יוקם במקומו
+                התנור החדש יוקם במקום הקיים
               </div>
             </div>
           </label>

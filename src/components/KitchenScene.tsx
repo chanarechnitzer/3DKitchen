@@ -92,19 +92,15 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       // ✅ FIXED: Smart collision detection based on item types
       let buffer = 0.02; // Default small buffer
       
-      // ✅ NEW: Allow specific item combinations to be placed adjacent
-      if (selectedItem.type === 'sink' && placedItem.type === 'sink') {
-        buffer = -0.05; // Negative buffer allows slight overlap for sinks
-      }
-      
       // ✅ NEW: Allow countertops to be placed adjacent to any item
       if (selectedItem.type === 'countertop') {
         buffer = -0.05; // Negative buffer allows countertops to be placed adjacent/overlapping slightly
       }
       
-      // ✅ NEW: Allow ovens to be placed on top of each other (handled separately)
+      // ✅ FIXED: Don't prevent oven collision here - let the dialog handle it
       if (selectedItem.type === 'oven' && placedItem.type === 'oven') {
-        buffer = -0.1; // Allow ovens to overlap for stacking
+        // Skip collision check for ovens - the dialog will handle stacking
+        continue;
       }
       
       const xOverlap = Math.abs(x - placedItem.position.x) < (itemHalfWidth + placedHalfWidth + buffer);
@@ -537,6 +533,12 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             new THREE.Vector3(finalPos.x, 0, finalPos.z),
             finalRotation
           );
+          setSelectedItem(null);
+          setIsDragging(false);
+          setSnapPosition(null);
+          setItemRotation(0);
+          setShowRotationHint(false);
+          setCollisionWarning(null);
         }
       } else {
         // Place other items normally
@@ -545,14 +547,13 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           new THREE.Vector3(finalPos.x, 0, finalPos.z),
           finalRotation
         );
+        setSelectedItem(null);
+        setIsDragging(false);
+        setSnapPosition(null);
+        setItemRotation(0);
+        setShowRotationHint(false);
+        setCollisionWarning(null);
       }
-
-      setSelectedItem(null);
-      setIsDragging(false);
-      setSnapPosition(null);
-      setItemRotation(0);
-      setShowRotationHint(false);
-      setCollisionWarning(null);
       
       // ✅ Haptic feedback for mobile
       if (navigator.vibrate) {
@@ -571,6 +572,13 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const handleOvenDialogClose = () => {
     setShowOvenDialog(false);
     setPendingOven(null);
+    // Reset selection state when dialog is closed
+    setSelectedItem(null);
+    setIsDragging(false);
+    setSnapPosition(null);
+    setItemRotation(0);
+    setShowRotationHint(false);
+    setCollisionWarning(null);
   };
 
   // Handle cabinet placement after dialog
