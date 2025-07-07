@@ -133,16 +133,16 @@ const KitchenControls: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setSelectedItem(null)}
-              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-yellow-500 rounded-lg hover:shadow-lg transition-all duration-200"
+              className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              🔧 אפשרויות ארון
+              ביטול
             </button>
             {selectedItem.type === 'countertop' && (
               <button
                 onClick={() => {
                   setShowCabinetDialog(true);
                 }}
-                className="flex-1 px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-yellow-500 rounded-lg hover:shadow-lg transition-all duration-200"
               >
                 🔧 אפשרויות
               </button>
@@ -155,35 +155,206 @@ const KitchenControls: React.FC = () => {
       {showCabinetDialog && selectedItem && (
         <CabinetOptionsDialog
           onClose={() => setShowCabinetDialog(false)}
-          onConfirm={(option, width) => {
-            if (option === 'fill') {
-              // Calculate available space and create filling cabinet  
-              const fillWidth = width || 2.4; // Use calculated space or default
-              const updatedItem = {
-                ...selectedItem,
-                dimensions: {
-                  ...selectedItem.dimensions,
-                  width: fillWidth
-                }
-              };
-              setSelectedItem(updatedItem);
-            } else if (option === 'custom' && width) {
-              // Update with custom width
-              const updatedItem = {
-                ...selectedItem,
-                dimensions: {
-                  ...selectedItem.dimensions,
-                  width: width
-                }
-              };
-              setSelectedItem(updatedItem);
-            }
-            // For 'keep' option, no changes needed
+          onConfirm={(width) => {
+            // Update the selected item's width before placing
+            const updatedItem = {
+              ...selectedItem,
+              dimensions: {
+                ...selectedItem.dimensions,
+                width: width
+              }
+            };
+            setSelectedItem(updatedItem);
             setShowCabinetDialog(false);
           }}
           defaultWidth={selectedItem.dimensions.width}
-          availableSpace={2.4} // Calculated available space
-          hasAdjacentItems={placedItems.length > 0} // Check if there are placed items
+        />
+      )}
+      
+      {/* Oven Stack Dialog */}
+      {showOvenDialog && baseOvenForStack && (
+        <OvenStackDialog
+          onClose={() => {
+            setShowOvenDialog(false);
+            setBaseOvenForStack(null);
+          }}
+          onConfirm={(shouldStack) => {
+            if (shouldStack && selectedItem) {
+              // Create oven stack
+              updateOvenStack(baseOvenForStack, selectedItem.id);
+            } else {
+              // Replace existing oven
+              removeItem(baseOvenForStack);
+            }
+            setShowOvenDialog(false);
+            setBaseOvenForStack(null);
+          }}
+          baseOvenName={placedItems.find(item => item.id === baseOvenForStack)?.name || 'תנור'}
+        />
+      )}
+      
+      {Object.keys(groupedItems).length === 0 && (
+        <div className="text-center py-6 flex-1 flex flex-col justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Package className="text-white" size={20} />
+          </div>
+          <p className="text-gray-600 font-medium text-sm">כל הרכיבים מוקמו במטבח!</p>
+          <p className="text-gray-500 text-xs mt-1">מעולה! המטבח שלך מוכן</p>
+        </div>
+      )}
+      
+      <div className={`space-y-2 flex-1 overflow-y-auto ${selectedItem ? 'opacity-30 pointer-events-none' : ''}`}>
+        {Object.values(groupedItems).map(group => {
+          const isCountertopLimitReached = group.type === KitchenItemType.COUNTERTOP && placedCabinets >= 10;
+          const isSelected = selectedItem?.type === group.type;
+          const isDisabled = selectedItem !== null && selectedItem.type !== group.type;
+          
+          return (
+            <div 
+              key={group.type}
+              className={`group relative border-2 rounded-lg p-3 transition-all duration-200 cursor-pointer ${
+                isSelected 
+                  ? 'border-primary bg-primary/5 shadow-lg' 
+                  : (group.count === 0 || isCountertopLimitReached) 
+                    ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed' 
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+              }`}
+              onClick={() => group.count > 0 && !isCountertopLimitReached && !isDisabled && handleSelectItem(group.type)}
+              title={
+                isCountertopLimitReached ? 'הגעת למגבלת הארונות המותרת (10)' : 
+                group.count === 0 ? 'אין יחידות נותרות' : undefined
+              }
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 bg-gradient-to-br ${getItemColor(group.type)} rounded-lg flex items-center justify-center text-white text-lg shadow-lg`}>
+                    {getItemIcon(group.type)}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-sm">{group.name}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        group.count > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {group.count} יחידות
+                      </span>
+                      {isCountertopLimitReached && (
+                        <AlertCircle size={12} className="text-warning" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  {group.count > 0 && !isCountertopLimitReached && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewItem(previewItem === group.type ? null : group.type);
+                        }}
+                        className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="תצוגה מקדימה"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <MoveHorizontal 
+                        className={`text-gray-400 transition-colors ${
+                          isSelected ? 'text-primary' : 'group-hover:text-gray-600'
+                        }`} 
+                        size={16} 
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {isSelected && (
+                <div className="absolute inset-0 border-2 border-primary rounded-lg bg-primary/5 flex items-center justify-center">
+                  <div className="bg-primary text-white px-2 py-1 rounded-full text-xs font-medium">
+                    נבחר - גרור למטבח
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      
+      {placedItems.length > 0 && (
+        <div className="mt-4 border-t border-gray-200 pt-3">
+          <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            רכיבים במטבח ({placedItems.length})
+          </h3>
+          
+          <div className="mb-2 p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+            <p className="text-xs text-green-700 font-medium text-center">
+              💡 לחץ על "אפשרויות" לשינוי גודל או "הסר" להזזה
+            </p>
+          </div>
+          
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {placedItems.map(item => (
+              <div 
+                key={item.id}
+                className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg border border-gray-200"
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`w-6 h-6 bg-gradient-to-br ${getItemColor(item.type)} rounded-lg flex items-center justify-center text-white text-xs`}>
+                    {getItemIcon(item.type)}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-900 text-xs">{item.name}</span>
+                    {item.type === 'countertop' && (
+                      <div className="text-xs text-gray-500">
+                        {(item.dimensions.width * 100).toFixed(0)} ס"מ רוחב
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  {item.type === 'countertop' && (
+                    <button 
+                      className="text-xs text-primary hover:text-primary-dark hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors font-medium"
+                      onClick={() => {
+                        setSelectedCabinetId(item.id);
+                        setShowCabinetDialog(true);
+                      }}
+                      title="שנה גודל ארון"
+                    >
+                      🔧
+                    </button>
+                  )}
+                  <button 
+                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium"
+                    onClick={() => removeItem(item.id)}
+                    title="הסר רכיב כדי למקם אותו במקום אחר"
+                  >
+                    הסר
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Cabinet Options Dialog for placed items */}
+      {showCabinetDialog && selectedCabinetId && !selectedItem && (
+        <CabinetOptionsDialog
+          onClose={() => {
+            setShowCabinetDialog(false);
+            setSelectedCabinetId(null);
+          }}
+          onConfirm={(width) => {
+            if (selectedCabinetId) {
+              updateCabinetSize(selectedCabinetId, width);
+            }
+            setShowCabinetDialog(false);
+            setSelectedCabinetId(null);
+          }}
+          defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
         />
       )}
       
