@@ -131,10 +131,56 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           )}
           
           {/* Kitchen Controls - Only show if no item is being dragged */}
-          {/* ✅ CRITICAL: Always show kitchen controls when not in design phase and no item selected */}
-          {!designPhaseComplete && (
+          {/* ✅ FIXED: Show kitchen controls when not in design phase OR when item is selected (for options) */}
+          {!designPhaseComplete && !selectedItem && (
             <div className="flex-1 min-h-0 overflow-hidden">
               <KitchenControls />
+            </div>
+          )}
+          
+          {/* ✅ NEW: Show item options when item is selected */}
+          {selectedItem && !designPhaseComplete && (
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100 h-full flex flex-col">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-lg">
+                      {selectedItem.type === 'sink' ? '💧' : 
+                       selectedItem.type === 'stove' ? '🔥' : 
+                       selectedItem.type === 'oven' ? '♨️' : 
+                       selectedItem.type === 'refrigerator' ? '❄️' : '📦'}
+                    </span>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-gray-900">{selectedItem.name}</h2>
+                    <p className="text-xs text-gray-600">מוכן להנחה</p>
+                  </div>
+                </div>
+                
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200 text-center">
+                    <div className="text-4xl mb-3">🎯</div>
+                    <h3 className="text-lg font-bold text-blue-800 mb-2">גרור למיקום</h3>
+                    <p className="text-sm text-blue-700 mb-4">
+                      גרור את {selectedItem.name} למיקום הרצוי במטבח התלת-ממדי
+                    </p>
+                    
+                    <div className="space-y-2 text-xs text-blue-600">
+                      <p>💡 <strong>טיפים:</strong></p>
+                      <p>• הפריט יצמד אוטומטית לקירות ולפריטים אחרים</p>
+                      <p>• בפינות תוכל לסובב עם מקש R</p>
+                      <p>• לחץ במטבח כדי למקם את הפריט</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => setSelectedItem(null)}
+                  className="w-full mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  ביטול
+                </button>
+              </div>
             </div>
           )}
           
@@ -260,17 +306,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
               </div>
             )}
             
-            {/* ✅ NEW: Show message when item is selected */}
-            {selectedItem && (
-              <div className="w-full p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 text-center">
-                <p className="text-sm font-medium text-blue-800 mb-1">
-                  🎯 מוכן להנחה
-                </p>
-                <p className="text-xs text-blue-600">
-                  גרור את {selectedItem.name} למיקום הרצוי במטבח
-                </p>
-              </div>
-            )}
+            {/* ✅ REMOVED: Moved to dedicated panel above */}
           </div>
         </div>
       </div>
