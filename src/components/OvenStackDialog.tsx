@@ -41,11 +41,37 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
     onClose();
   };
 
+  // ✅ CRITICAL: Handle dialog close properly
+  const handleClose = () => {
+    console.log('Closing oven dialog');
+    onClose();
+  };
+
+  // ✅ CRITICAL: Handle escape key to close dialog
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all animate-in zoom-in-95 duration-300">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={handleClose}
+    >
+      <div 
+        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all animate-in zoom-in-95 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
@@ -54,8 +80,9 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
             <h2 className="text-xl font-bold text-gray-900">הנחת תנור</h2>
           </div>
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            type="button"
           >
             <X size={24} />
           </button>
@@ -122,8 +149,9 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
         
         <div className="flex gap-3 pt-6">
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+            type="button"
           >
             ביטול
           </button>

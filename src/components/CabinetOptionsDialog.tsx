@@ -6,6 +6,7 @@ import { Vector3 } from 'three';
 interface CabinetOptionsDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void; // ✅ NEW: Callback for successful placement
   cabinetId: string;
   position: Vector3;
   rotation: number;
@@ -14,6 +15,7 @@ interface CabinetOptionsDialogProps {
 const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   isOpen,
   onClose,
+  onSuccess,
   cabinetId,
   position,
   rotation
@@ -25,7 +27,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const checkForCollisions = (cabinetPos: Vector3, width: number, depth: number = 0.6) => {
     const cabinetHalfWidth = width / 2;
     const cabinetHalfDepth = depth / 2;
-    const buffer = -0.12; // ✅ FIXED: Even more permissive buffer for tight gap filling
+    const buffer = -0.15; // ✅ FIXED: Very permissive buffer for gap filling
     
     for (const item of placedItems) {
       // ✅ CRITICAL: Skip the cabinet we're trying to place
@@ -58,8 +60,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         const xDistance = Math.abs(cabinetPos.x - item.position.x) - (cabinetHalfWidth + itemHalfWidth);
         const zDistance = Math.abs(cabinetPos.z - item.position.z) - (cabinetHalfDepth + itemHalfDepth);
         
-        // ✅ FIXED: Only report collision if overlapping by more than 6cm (very significant)
-        if (xDistance < -0.06 && zDistance < -0.06) {
+        // ✅ FIXED: Only report collision if overlapping by more than 10cm (very significant)
+        if (xDistance < -0.10 && zDistance < -0.10) {
           return item;
         }
       }
@@ -69,7 +71,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   const calculateFillWidth = () => {
     const wallMargin = 0.05;
-    const buffer = 0.02; // Small buffer between items
+    const buffer = 0.005; // ✅ FIXED: Very small buffer for tight fitting
     
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
@@ -83,7 +85,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         // ✅ CRITICAL: Skip the cabinet we're trying to place
         if (item.id === cabinetId) continue;
         
-        if (Math.abs(item.position.x - position.x) < 0.4) { // ✅ FIXED: More precise alignment check
+        if (Math.abs(item.position.x - position.x) < 0.5) { // ✅ FIXED: More generous alignment check
           const itemEdge = item.position.z;
           const itemHalfSize = (isRotated ? item.dimensions.width : item.dimensions.depth) / 2;
           
@@ -108,7 +110,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           continue;
         }
         
-        if (Math.abs(item.position.z - position.z) < 0.4) { // ✅ FIXED: More generous alignment check
+        if (Math.abs(item.position.z - position.z) < 0.5) { // ✅ FIXED: Even more generous alignment check
           const itemEdge = item.position.x;
           
           // ✅ FIXED: Account for item rotation
@@ -121,9 +123,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           const itemHalfSize = (isRotated ? itemRotatedDepth : itemRotatedWidth) / 2;
           
           if (itemEdge < position.x) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + 0.005); // Very minimal gap
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + 0.002); // Extremely minimal gap
           } else if (itemEdge > position.x) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - 0.005); // Very minimal gap
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - 0.002); // Extremely minimal gap
           }
         }
       }
@@ -158,7 +160,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     });
     
     // ✅ FIXED: Better width calculation with minimum viable size
-    return Math.max(0.15, Math.min(4.0, availableWidth - 0.01)); // Very minimal margin for tight fitting
+    return Math.max(0.10, Math.min(4.0, availableWidth - 0.005)); // Extremely minimal margin for tight fitting
   };
 
   const validateCabinetPlacement = (width: number) => {
@@ -232,24 +234,57 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     console.log('Placing cabinet with width:', newWidth);
     
+    // ✅ CRITICAL: Place the cabinet
     placeItem(cabinetId, position, rotation);
     
+    // ✅ CRITICAL: Update size if different from default
     if (Math.abs(newWidth - 0.6) > 0.01) {
       setTimeout(() => {
         updateCabinetSize(cabinetId, newWidth);
       }, 100);
     }
     
+    // ✅ CRITICAL: Call success callback if provided, otherwise just close
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      onClose();
+    }
+  };
+
+  // ✅ CRITICAL: Handle dialog close properly - reset selection state
+  const handleClose = () => {
+    console.log('Closing cabinet dialog');
     onClose();
   };
+
+  // ✅ CRITICAL: Handle escape key to close dialog
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const fillValidation = validateCabinetPlacement(fillWidth);
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all animate-in zoom-in-95 duration-300">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={handleClose}
+    >
+      <div 
+        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all animate-in zoom-in-95 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-yellow-500 rounded-xl flex items-center justify-center">
@@ -258,8 +293,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
             <h2 className="text-xl font-bold text-gray-900">הגדרת גודל ארון</h2>
           </div>
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+            type="button"
           >
             <X size={24} />
           </button>
@@ -339,9 +375,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
             <div className="flex-1">
               <div className="font-medium text-gray-900">מלא את החלל</div>
               <div className="text-sm text-gray-600">
-                {fillValidation.valid && fillWidth >= 0.4 
+               {fillValidation.valid && fillWidth >= 0.3 
                   ? `ימלא ${fillWidth.toFixed(1)} מטר בין הרכיבים`
-                  : fillValidation.valid && fillWidth >= 0.2
+                 : fillValidation.valid && fillWidth >= 0.15
                     ? `ימלא ${fillWidth.toFixed(1)} מטר (מקום מוגבל)`
                     : !fillValidation.valid
                       ? `לא ניתן: ${fillValidation.reason}`
@@ -353,7 +389,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
                   ❌ {fillValidation.reason}
                 </div>
               )}
-              {fillValidation.valid && fillWidth < 0.4 && fillWidth >= 0.2 && (
+             {fillValidation.valid && fillWidth < 0.3 && fillWidth >= 0.15 && (
                 <div className="text-xs text-yellow-600 mt-1">
                   ⚠️ מקום מוגבל - ארון קטן מהסטנדרט
                 </div>
@@ -365,16 +401,17 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         
         <div className="flex gap-3 pt-6">
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+            type="button"
           >
             ביטול
           </button>
           <button 
             onClick={handleConfirm}
-            disabled={(selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.2))}
+            disabled={(selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.15))}
             className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
-              (selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.2))
+              (selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.15))
                 ? 'text-gray-500 bg-gray-200 cursor-not-allowed'
                 : 'text-white bg-gradient-to-r from-primary to-yellow-500 hover:shadow-lg transform hover:scale-105'
             }`}

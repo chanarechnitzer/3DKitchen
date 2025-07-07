@@ -604,12 +604,21 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
 
   // Handle cabinet dialog close
   const handleCabinetDialogClose = () => {
+    console.log('Cabinet dialog closing - resetting selection state');
     setShowCabinetDialog(false);
     setPendingCabinet(null);
+    // ✅ CRITICAL: Reset selection state when dialog is closed
+    setSelectedItem(null);
+    setIsDragging(false);
+    setSnapPosition(null);
+    setItemRotation(0);
+    setShowRotationHint(false);
+    setCollisionWarning(null);
   };
 
   // Handle oven dialog close
   const handleOvenDialogClose = () => {
+    console.log('Oven dialog closing - resetting selection state');
     setShowOvenDialog(false);
     setPendingOven(null);
     // Reset selection state when dialog is closed
@@ -621,8 +630,18 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     setCollisionWarning(null);
   };
 
-  // Handle cabinet placement after dialog
-  // This is now handled inside the CabinetOptionsDialog component
+  // ✅ CRITICAL: Handle cabinet placement success - called from dialog
+  const handleCabinetPlaced = () => {
+    console.log('Cabinet placed successfully');
+    setShowCabinetDialog(false);
+    setPendingCabinet(null);
+    setSelectedItem(null);
+    setIsDragging(false);
+    setSnapPosition(null);
+    setItemRotation(0);
+    setShowRotationHint(false);
+    setCollisionWarning(null);
+  };
 
   const handleMouseMove = (event: React.MouseEvent) => {
     if (!canvasRef.current || !selectedItem) return;
@@ -875,6 +894,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         <CabinetOptionsDialog
           isOpen={showCabinetDialog}
           onClose={handleCabinetDialogClose}
+          onSuccess={handleCabinetPlaced}
           cabinetId={pendingCabinet.id}
           position={pendingCabinet.position}
           rotation={pendingCabinet.rotation}
