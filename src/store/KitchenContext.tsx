@@ -1,14 +1,17 @@
+  interface KitchenContextType {
   getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
   updateCabinetSize: (itemId: string, newWidth: number) => void;
   updateOvenStack: (baseOvenId: string, newOvenId: string) => void;
 }
 
+const defaultContext: KitchenContextType = {
   setGameCompleted: () => {},
   getDragValidation: () => ({ isValid: false, distances: {} }),
   updateCabinetSize: () => {},
   updateOvenStack: () => {},
 };
 
+const getDragValidation = (position: Vector3, type: KitchenItemType) => {
     return { isValid, distances };
   };
 
@@ -34,8 +37,7 @@
     }));
   };
 
-  // Place an item in the kitchen
-
+  return {
     getDragValidation,
     updateCabinetSize,
     updateOvenStack,
