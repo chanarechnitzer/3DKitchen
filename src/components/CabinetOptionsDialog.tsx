@@ -22,88 +22,71 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const [selectedOption, setSelectedOption] = useState<'keep' | 'custom' | 'fill'>('keep');
   const [customWidth, setCustomWidth] = useState('0.6');
 
-  // ✅ IMPROVED: Much better collision detection
   const checkForCollisions = (cabinetPos: Vector3, width: number, depth: number = 0.6) => {
     const cabinetHalfWidth = width / 2;
     const cabinetHalfDepth = depth / 2;
-    const buffer = 0.01; // 1cm buffer to prevent overlap
+    const buffer = 0.01;
     
     for (const item of placedItems) {
       const itemHalfWidth = item.dimensions.width / 2;
       const itemHalfDepth = item.dimensions.depth / 2;
       
-      // Check if bounding boxes overlap
       const xOverlap = Math.abs(cabinetPos.x - item.position.x) < (cabinetHalfWidth + itemHalfWidth + buffer);
       const zOverlap = Math.abs(cabinetPos.z - item.position.z) < (cabinetHalfDepth + itemHalfDepth + buffer);
       
       if (xOverlap && zOverlap) {
-        return item; // Return the colliding item
+        return item;
       }
     }
     return null;
   };
 
-  // ✅ COMPLETELY REWRITTEN: Much more accurate fill calculation
   const calculateFillWidth = () => {
     const wallMargin = 0.05;
-    const buffer = 0.02; // 2cm buffer between items
+    const buffer = 0.02;
     
-    // ✅ FIXED: Simple and accurate calculation
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
     let leftBoundary, rightBoundary;
     
     if (isRotated) {
-      // Cabinet is rotated - width goes along Z axis
       leftBoundary = -kitchenDimensions.length / 2 + wallMargin;
       rightBoundary = kitchenDimensions.length / 2 - wallMargin;
       
-      // Find closest obstacles on both sides
       for (const item of placedItems) {
-        // Only check items in the same X corridor (within 1 meter)
         if (Math.abs(item.position.x - position.x) < 1.0) {
           const itemEdge = item.position.z;
           const itemHalfSize = Math.max(item.dimensions.width, item.dimensions.depth) / 2;
           
           if (itemEdge < position.z) {
-            // Item is behind - update left boundary
             leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
           } else if (itemEdge > position.z) {
-            // Item is in front - update right boundary  
             rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
           }
         }
       }
     } else {
-      // Cabinet is normal - width goes along X axis
       leftBoundary = -kitchenDimensions.width / 2 + wallMargin;
       rightBoundary = kitchenDimensions.width / 2 - wallMargin;
       
-      // Find closest obstacles on both sides
       for (const item of placedItems) {
-        // Only check items in the same Z corridor (within 1 meter)
         if (Math.abs(item.position.z - position.z) < 1.0) {
           const itemEdge = item.position.x;
           const itemHalfSize = Math.max(item.dimensions.width, item.dimensions.depth) / 2;
           
           if (itemEdge < position.x) {
-            // Item is to the left - update left boundary
             leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
           } else if (itemEdge > position.x) {
-            // Item is to the right - update right boundary
             rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
           }
         }
       }
     }
     
-    // ✅ SIMPLE: Calculate available width
     const availableWidth = rightBoundary - leftBoundary;
     
-    // ✅ FIXED: Position cabinet to fill the space
     const centerPosition = (leftBoundary + rightBoundary) / 2;
     
-    // Update position to center of available space
     if (isRotated) {
       position.z = centerPosition;
     } else {
@@ -121,45 +104,6 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     return Math.max(0.3, Math.min(4.0, availableWidth));
   };
 
-  // ✅ SIMPLIFIED: Much simpler collision check
-  const checkForCollisions = (cabinetPos: Vector3, width: number, depth: number = 0.6) => {
-    const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
-    const buffer = 0.01;
-    
-    let cabinetMinX, cabinetMaxX, cabinetMinZ, cabinetMaxZ;
-    
-    if (isRotated) {
-      // Rotated cabinet
-      cabinetMinX = cabinetPos.x - depth / 2;
-      cabinetMaxX = cabinetPos.x + depth / 2;
-      cabinetMinZ = cabinetPos.z - width / 2;
-      cabinetMaxZ = cabinetPos.z + width / 2;
-    } else {
-      // Normal cabinet
-      cabinetMinX = cabinetPos.x - width / 2;
-      cabinetMaxX = cabinetPos.x + width / 2;
-      cabinetMinZ = cabinetPos.z - depth / 2;
-      cabinetMaxZ = cabinetPos.z + depth / 2;
-    }
-    
-    for (const item of placedItems) {
-      const itemMinX = item.position.x - item.dimensions.width / 2;
-      const itemMaxX = item.position.x + item.dimensions.width / 2;
-      const itemMinZ = item.position.z - item.dimensions.depth / 2;
-      const itemMaxZ = item.position.z + item.dimensions.depth / 2;
-      
-      // Check overlap with buffer
-      const xOverlap = !(cabinetMaxX + buffer < itemMinX || cabinetMinX - buffer > itemMaxX);
-      const zOverlap = !(cabinetMaxZ + buffer < itemMinZ || cabinetMinZ - buffer > itemMaxZ);
-      
-      if (xOverlap && zOverlap) {
-        return item;
-      }
-    }
-    return null;
-  };
-
-  // ✅ SIMPLIFIED: Much simpler boundary check
   const validateCabinetPlacement = (width: number) => {
     const wallMargin = 0.05;
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
@@ -167,20 +111,17 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     let minX, maxX, minZ, maxZ;
     
     if (isRotated) {
-      // Rotated cabinet
-      minX = position.x - 0.3; // Half depth
+      minX = position.x - 0.3;
       maxX = position.x + 0.3;
       minZ = position.z - width / 2;
       maxZ = position.z + width / 2;
     } else {
-      // Normal cabinet  
       minX = position.x - width / 2;
       maxX = position.x + width / 2;
-      minZ = position.z - 0.3; // Half depth
+      minZ = position.z - 0.3;
       maxZ = position.z + 0.3;
     }
     
-    // Check kitchen boundaries
     const kitchenMinX = -kitchenDimensions.width / 2 + wallMargin;
     const kitchenMaxX = kitchenDimensions.width / 2 - wallMargin;
     const kitchenMinZ = -kitchenDimensions.length / 2 + wallMargin;
@@ -193,7 +134,6 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       return { valid: false, reason: 'יוצא מגבולות המטבח (אורך)' };
     }
     
-    // Check collisions
     const collision = checkForCollisions(position, width);
     if (collision) {
       return { valid: false, reason: `יתנגש עם ${collision.name}` };
@@ -201,105 +141,13 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     return { valid: true, reason: '' };
   };
-        
-        // Check if item is in the same X corridor (within cabinet width)
-        if (Math.abs(item.position.x - position.x) < 0.8) {
-          if (item.position.z < position.z) {
-            // Item is behind cabinet
-            minZ = Math.max(minZ, item.position.z + itemHalfDepth + buffer);
-          } else if (item.position.z > position.z) {
-            // Item is in front of cabinet
-            maxZ = Math.min(maxZ, item.position.z - itemHalfDepth - buffer);
-          }
-        }
-      }
-      
-      availableWidth = Math.max(0, maxZ - minZ);
-    } else {
-      // Cabinet faces front/back - calculate available space along X axis
-      let minX = -halfKitchenWidth + wallMargin + cabinetHalfDepth;
-      let maxX = halfKitchenWidth - wallMargin - cabinetHalfDepth;
-      
-      // Find closest items on both sides
-      for (const item of placedItems) {
-        const itemHalfWidth = item.dimensions.width / 2;
-        const buffer = 0.02; // 2cm buffer
-        
-        // Check if item is in the same Z corridor (within cabinet depth)
-        if (Math.abs(item.position.z - position.z) < 0.8) {
-          if (item.position.x < position.x) {
-            // Item is to the left of cabinet
-            minX = Math.max(minX, item.position.x + itemHalfWidth + buffer);
-          } else if (item.position.x > position.x) {
-            // Item is to the right of cabinet
-            maxX = Math.min(maxX, item.position.x - itemHalfWidth - buffer);
-          }
-        }
-      }
-      
-      availableWidth = Math.max(0, maxX - minX);
-    }
-    
-    // Return the calculated width, minimum 0.3m, maximum 4.0m
-    return Math.max(0.3, Math.min(4.0, availableWidth));
-  };
 
-  // ✅ Calculate fill width when dialog opens
   const [fillWidth, setFillWidth] = useState(0.6);
   
   useEffect(() => {
     const calculatedWidth = calculateFillWidth();
     setFillWidth(calculatedWidth);
   }, [position, placedItems, kitchenDimensions]);
-
-  // ✅ IMPROVED: Better validation before placing cabinet
-  const validateCabinetPlacement = (width: number) => {
-    const halfKitchenWidth = kitchenDimensions.width / 2;
-    const halfKitchenLength = kitchenDimensions.length / 2;
-    const wallMargin = 0.05;
-    const cabinetHalfWidth = width / 2;
-    const cabinetHalfDepth = 0.3; // Half of 0.6m depth
-    
-    // Determine cabinet orientation
-    const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
-    
-    // Check kitchen boundaries
-    if (isRotated) {
-      // Cabinet is rotated - width extends along Z axis
-      const minZ = position.z - cabinetHalfWidth;
-      const maxZ = position.z + cabinetHalfWidth;
-      const minX = position.x - cabinetHalfDepth;
-      const maxX = position.x + cabinetHalfDepth;
-      
-      if (minZ < -halfKitchenLength + wallMargin || maxZ > halfKitchenLength - wallMargin) {
-        return { valid: false, reason: 'הארון יוצא מגבולות המטבח (אורך)' };
-      }
-      if (minX < -halfKitchenWidth + wallMargin || maxX > halfKitchenWidth - wallMargin) {
-        return { valid: false, reason: 'הארון יוצא מגבולות המטבח (רוחב)' };
-      }
-    } else {
-      // Cabinet is normal - width extends along X axis
-      const minX = position.x - cabinetHalfWidth;
-      const maxX = position.x + cabinetHalfWidth;
-      const minZ = position.z - cabinetHalfDepth;
-      const maxZ = position.z + cabinetHalfDepth;
-      
-      if (minX < -halfKitchenWidth + wallMargin || maxX > halfKitchenWidth - wallMargin) {
-        return { valid: false, reason: 'הארון יוצא מגבולות המטבח (רוחב)' };
-      }
-      if (minZ < -halfKitchenLength + wallMargin || maxZ > halfKitchenLength - wallMargin) {
-        return { valid: false, reason: 'הארון יוצא מגבולות המטבח (אורך)' };
-      }
-    }
-    
-    // Check for collisions with existing items
-    const collision = checkForCollisions(position, width);
-    if (collision) {
-      return { valid: false, reason: `יתנגש עם ${collision.name}` };
-    }
-    
-    return { valid: true, reason: '' };
-  };
 
   const handleConfirm = () => {
     let newWidth = 0.6;
@@ -316,7 +164,6 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         break;
     }
     
-    // ✅ Validate before placing
     const validation = validateCabinetPlacement(newWidth);
     if (!validation.valid) {
       alert(`לא ניתן למקם ארון: ${validation.reason}`);
@@ -325,10 +172,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     console.log('Placing cabinet with width:', newWidth);
     
-    // Place the cabinet first
     placeItem(cabinetId, position, rotation);
     
-    // Then update the size if it's not the default
     if (Math.abs(newWidth - 0.6) > 0.01) {
       setTimeout(() => {
         updateCabinetSize(cabinetId, newWidth);
@@ -340,7 +185,6 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   if (!isOpen) return null;
 
-  // ✅ Check if current fill width would cause issues
   const fillValidation = validateCabinetPlacement(fillWidth);
 
   return (
@@ -366,7 +210,6 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         </p>
         
         <div className="space-y-4">
-          {/* Keep Default Size */}
           <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
             selectedOption === 'keep'
               ? 'border-primary bg-primary/5'
@@ -386,7 +229,6 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
             </div>
           </label>
 
-          {/* Custom Size */}
           <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
             selectedOption === 'custom'
               ? 'border-primary bg-primary/5'
@@ -420,7 +262,6 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
             </div>
           </label>
 
-          {/* Fill Space */}
           <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
             selectedOption === 'fill'
               ? 'border-primary bg-primary/5'
