@@ -120,7 +120,6 @@ const KitchenControls: React.FC = () => {
                 <span>לחץ במטבח כדי למקם את הפריט</span>
               </div>
             </div>
-            </div>
           </div>
           
           <div className="flex gap-2">
