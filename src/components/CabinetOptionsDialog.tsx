@@ -45,26 +45,162 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   // ✅ COMPLETELY REWRITTEN: Much more accurate fill calculation
   const calculateFillWidth = () => {
-    const halfKitchenWidth = kitchenDimensions.width / 2;
-    const halfKitchenLength = kitchenDimensions.length / 2;
-    const wallMargin = 0.05; // 5cm from wall
-    const cabinetDepth = 0.6;
-    const cabinetHalfDepth = cabinetDepth / 2;
+    const wallMargin = 0.05;
+    const buffer = 0.02; // 2cm buffer between items
     
-    // Determine cabinet orientation based on rotation
+    // ✅ FIXED: Simple and accurate calculation
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
-    let availableWidth = 0;
+    let leftBoundary, rightBoundary;
     
     if (isRotated) {
-      // Cabinet faces left/right - calculate available space along Z axis
-      let minZ = -halfKitchenLength + wallMargin + cabinetHalfDepth;
-      let maxZ = halfKitchenLength - wallMargin - cabinetHalfDepth;
+      // Cabinet is rotated - width goes along Z axis
+      leftBoundary = -kitchenDimensions.length / 2 + wallMargin;
+      rightBoundary = kitchenDimensions.length / 2 - wallMargin;
       
-      // Find closest items on both sides
+      // Find closest obstacles on both sides
       for (const item of placedItems) {
-        const itemHalfDepth = item.dimensions.depth / 2;
-        const buffer = 0.02; // 2cm buffer
+        // Only check items in the same X corridor (within 1 meter)
+        if (Math.abs(item.position.x - position.x) < 1.0) {
+          const itemEdge = item.position.z;
+          const itemHalfSize = Math.max(item.dimensions.width, item.dimensions.depth) / 2;
+          
+          if (itemEdge < position.z) {
+            // Item is behind - update left boundary
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
+          } else if (itemEdge > position.z) {
+            // Item is in front - update right boundary  
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
+          }
+        }
+      }
+    } else {
+      // Cabinet is normal - width goes along X axis
+      leftBoundary = -kitchenDimensions.width / 2 + wallMargin;
+      rightBoundary = kitchenDimensions.width / 2 - wallMargin;
+      
+      // Find closest obstacles on both sides
+      for (const item of placedItems) {
+        // Only check items in the same Z corridor (within 1 meter)
+        if (Math.abs(item.position.z - position.z) < 1.0) {
+          const itemEdge = item.position.x;
+          const itemHalfSize = Math.max(item.dimensions.width, item.dimensions.depth) / 2;
+          
+          if (itemEdge < position.x) {
+            // Item is to the left - update left boundary
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
+          } else if (itemEdge > position.x) {
+            // Item is to the right - update right boundary
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
+          }
+        }
+      }
+    }
+    
+    // ✅ SIMPLE: Calculate available width
+    const availableWidth = rightBoundary - leftBoundary;
+    
+    // ✅ FIXED: Position cabinet to fill the space
+    const centerPosition = (leftBoundary + rightBoundary) / 2;
+    
+    // Update position to center of available space
+    if (isRotated) {
+      position.z = centerPosition;
+    } else {
+      position.x = centerPosition;
+    }
+    
+    console.log('Fill calculation:', {
+      isRotated,
+      leftBoundary: leftBoundary.toFixed(2),
+      rightBoundary: rightBoundary.toFixed(2),
+      availableWidth: availableWidth.toFixed(2),
+      centerPosition: centerPosition.toFixed(2)
+    });
+    
+    return Math.max(0.3, Math.min(4.0, availableWidth));
+  };
+
+  // ✅ SIMPLIFIED: Much simpler collision check
+  const checkForCollisions = (cabinetPos: Vector3, width: number, depth: number = 0.6) => {
+    const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
+    const buffer = 0.01;
+    
+    let cabinetMinX, cabinetMaxX, cabinetMinZ, cabinetMaxZ;
+    
+    if (isRotated) {
+      // Rotated cabinet
+      cabinetMinX = cabinetPos.x - depth / 2;
+      cabinetMaxX = cabinetPos.x + depth / 2;
+      cabinetMinZ = cabinetPos.z - width / 2;
+      cabinetMaxZ = cabinetPos.z + width / 2;
+    } else {
+      // Normal cabinet
+      cabinetMinX = cabinetPos.x - width / 2;
+      cabinetMaxX = cabinetPos.x + width / 2;
+      cabinetMinZ = cabinetPos.z - depth / 2;
+      cabinetMaxZ = cabinetPos.z + depth / 2;
+    }
+    
+    for (const item of placedItems) {
+      const itemMinX = item.position.x - item.dimensions.width / 2;
+      const itemMaxX = item.position.x + item.dimensions.width / 2;
+      const itemMinZ = item.position.z - item.dimensions.depth / 2;
+      const itemMaxZ = item.position.z + item.dimensions.depth / 2;
+      
+      // Check overlap with buffer
+      const xOverlap = !(cabinetMaxX + buffer < itemMinX || cabinetMinX - buffer > itemMaxX);
+      const zOverlap = !(cabinetMaxZ + buffer < itemMinZ || cabinetMinZ - buffer > itemMaxZ);
+      
+      if (xOverlap && zOverlap) {
+        return item;
+      }
+    }
+    return null;
+  };
+
+  // ✅ SIMPLIFIED: Much simpler boundary check
+  const validateCabinetPlacement = (width: number) => {
+    const wallMargin = 0.05;
+    const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
+    
+    let minX, maxX, minZ, maxZ;
+    
+    if (isRotated) {
+      // Rotated cabinet
+      minX = position.x - 0.3; // Half depth
+      maxX = position.x + 0.3;
+      minZ = position.z - width / 2;
+      maxZ = position.z + width / 2;
+    } else {
+      // Normal cabinet  
+      minX = position.x - width / 2;
+      maxX = position.x + width / 2;
+      minZ = position.z - 0.3; // Half depth
+      maxZ = position.z + 0.3;
+    }
+    
+    // Check kitchen boundaries
+    const kitchenMinX = -kitchenDimensions.width / 2 + wallMargin;
+    const kitchenMaxX = kitchenDimensions.width / 2 - wallMargin;
+    const kitchenMinZ = -kitchenDimensions.length / 2 + wallMargin;
+    const kitchenMaxZ = kitchenDimensions.length / 2 - wallMargin;
+    
+    if (minX < kitchenMinX || maxX > kitchenMaxX) {
+      return { valid: false, reason: 'יוצא מגבולות המטבח (רוחב)' };
+    }
+    if (minZ < kitchenMinZ || maxZ > kitchenMaxZ) {
+      return { valid: false, reason: 'יוצא מגבולות המטבח (אורך)' };
+    }
+    
+    // Check collisions
+    const collision = checkForCollisions(position, width);
+    if (collision) {
+      return { valid: false, reason: `יתנגש עם ${collision.name}` };
+    }
+    
+    return { valid: true, reason: '' };
+  };
         
         // Check if item is in the same X corridor (within cabinet width)
         if (Math.abs(item.position.x - position.x) < 0.8) {
