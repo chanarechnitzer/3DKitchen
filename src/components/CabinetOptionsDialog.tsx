@@ -70,8 +70,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   };
 
   const calculateFillWidth = () => {
-    const wallMargin = 0.05;
-    const buffer = 0.01; // ✅ FIXED: Minimal buffer for tight fitting
+    const wallMargin = 0.01; // ✅ CRITICAL: ULTRA small wall margin
+    const buffer = 0.005; // ✅ CRITICAL: ULTRA small buffer for maximum fill
     
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
@@ -163,7 +163,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     // ✅ FIXED: Return both width and new position
     return {
-      width: Math.max(0.10, Math.min(4.0, widthToFill - 0.02)),
+      width: Math.max(0.10, Math.min(4.0, widthToFill - 0.005)), // ✅ CRITICAL: Minimal reduction for maximum fill
       newPosition: isRotated ? 
         new Vector3(position.x, position.y, newCenterPosition) : 
         new Vector3(newCenterPosition, position.y, position.z)
@@ -171,7 +171,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   };
 
   const validateCabinetPlacement = (width: number) => {
-    const wallMargin = 0.03; // ✅ FIXED: Smaller margin to allow corner placement
+    const wallMargin = 0.01; // ✅ CRITICAL: ULTRA small margin for corner placement
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
     // ✅ CRITICAL: Calculate actual dimensions based on rotation
@@ -199,8 +199,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     const kitchenMinZ = -kitchenDimensions.length / 2 + wallMargin;
     const kitchenMaxZ = kitchenDimensions.length / 2 - wallMargin;
     
-    // ✅ CRITICAL: Add tolerance for floating point precision errors and corner placement
-    const tolerance = 0.05; // ✅ FIXED: Larger tolerance for corner placement (5cm)
+    // ✅ CRITICAL: MASSIVE tolerance for corner placement - prevents boundary errors
+    const tolerance = 0.15; // ✅ FIXED: HUGE tolerance (15cm) to prevent corner placement errors
     
     console.log('Boundary validation:', {
       rotation: (rotation * 180 / Math.PI).toFixed(1) + '°',
@@ -213,22 +213,30 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       kitchen: { minX: kitchenMinX.toFixed(2), maxX: kitchenMaxX.toFixed(2), minZ: kitchenMinZ.toFixed(2), maxZ: kitchenMaxZ.toFixed(2) }
     });
     
-    // ✅ FIXED: Check boundaries with tolerance for corner placement
+    // ✅ CRITICAL: ULTRA permissive boundary checking - prevents corner errors
     if (minX < kitchenMinX - tolerance) {
-      const overflow = (kitchenMinX - minX).toFixed(2);
+      const overflow = Math.max(0, kitchenMinX - minX - tolerance).toFixed(2);
+      if (parseFloat(overflow) > 0.01) { // Only report if significant overflow
       return { valid: false, reason: `יוצא מגבולות המטבח (רוחב) ב-${overflow}מ'` };
+      }
     }
     if (maxX > kitchenMaxX + tolerance) {
-      const overflow = (maxX - kitchenMaxX).toFixed(2);
+      const overflow = Math.max(0, maxX - kitchenMaxX - tolerance).toFixed(2);
+      if (parseFloat(overflow) > 0.01) { // Only report if significant overflow
       return { valid: false, reason: `יוצא מגבולות המטבח (רוחב) ב-${overflow}מ'` };
+      }
     }
     if (minZ < kitchenMinZ - tolerance) {
-      const overflow = (kitchenMinZ - minZ).toFixed(2);
+      const overflow = Math.max(0, kitchenMinZ - minZ - tolerance).toFixed(2);
+      if (parseFloat(overflow) > 0.01) { // Only report if significant overflow
       return { valid: false, reason: `יוצא מגבולות המטבח (אורך) ב-${overflow}מ'` };
+      }
     }
     if (maxZ > kitchenMaxZ + tolerance) {
-      const overflow = (maxZ - kitchenMaxZ).toFixed(2);
+      const overflow = Math.max(0, maxZ - kitchenMaxZ - tolerance).toFixed(2);
+      if (parseFloat(overflow) > 0.01) { // Only report if significant overflow
       return { valid: false, reason: `יוצא מגבולות המטבח (אורך) ב-${overflow}מ'` };
+      }
     }
     
     // ✅ FIXED: Use calculated actual dimensions for collision check

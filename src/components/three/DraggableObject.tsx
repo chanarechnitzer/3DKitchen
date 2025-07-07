@@ -152,7 +152,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <cylinderGeometry args={[0.03, 0.025, 0.02, 12]} />
               <meshStandardMaterial 
-                color="#a0a0a0" 
+                color="#f0f0f0" 
                 metalness={0.9} 
                 roughness={0.2} 
                 transparent 
@@ -207,19 +207,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             </mesh>
             
             {/* ✅ NEW: Additional sink highlights for better visibility */}
-            <mesh 
-              position={[0, baseHeight + 0.04, 0]} 
-              castShadow
-            >
-              <torusGeometry args={[dimensions.width * 0.33, 0.01, 8, 16]} />
-              <meshStandardMaterial 
-                color="#ffffff" 
-                metalness={0.9} 
-                roughness={0.05} 
-                transparent 
-                opacity={opacity * 0.8} 
-              />
-            </mesh>
+            {/* ✅ REMOVED: No more arc/ring around sink - clean design */}
             
             {/* Cabinet handles */}
             <mesh 
