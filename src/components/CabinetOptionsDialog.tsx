@@ -163,7 +163,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   };
 
   const validateCabinetPlacement = (width: number) => {
-    const wallMargin = 0.05;
+    const wallMargin = 0.03; // ✅ FIXED: Smaller margin to allow corner placement
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
     // ✅ CRITICAL: Calculate actual dimensions based on rotation
@@ -180,7 +180,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     let minX, maxX, minZ, maxZ;
     
-    // ✅ FIXED: Use actual dimensions for boundary calculation
+    // ✅ FIXED: Use actual dimensions for boundary calculation with tolerance
     minX = position.x - actualWidth / 2;
     maxX = position.x + actualWidth / 2;
     minZ = position.z - actualDepth / 2;
@@ -190,6 +190,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     const kitchenMaxX = kitchenDimensions.width / 2 - wallMargin;
     const kitchenMinZ = -kitchenDimensions.length / 2 + wallMargin;
     const kitchenMaxZ = kitchenDimensions.length / 2 - wallMargin;
+    
+    // ✅ CRITICAL: Add tolerance for floating point precision errors
+    const tolerance = 0.02; // 2cm tolerance for corner placement
     
     console.log('Boundary validation:', {
       rotation: (rotation * 180 / Math.PI).toFixed(1) + '°',
@@ -202,12 +205,13 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       kitchen: { minX: kitchenMinX.toFixed(2), maxX: kitchenMaxX.toFixed(2), minZ: kitchenMinZ.toFixed(2), maxZ: kitchenMaxZ.toFixed(2) }
     });
     
-    if (minX < kitchenMinX || maxX > kitchenMaxX) {
-      const overflow = minX < kitchenMinX ? (kitchenMinX - minX).toFixed(2) : (maxX - kitchenMaxX).toFixed(2);
+    // ✅ FIXED: Check boundaries with tolerance for corner placement
+    if (minX < kitchenMinX - tolerance || maxX > kitchenMaxX + tolerance) {
+      const overflow = minX < kitchenMinX - tolerance ? (kitchenMinX - minX).toFixed(2) : (maxX - kitchenMaxX).toFixed(2);
       return { valid: false, reason: `יוצא מגבולות המטבח (רוחב) ב-${overflow}מ'` };
     }
-    if (minZ < kitchenMinZ || maxZ > kitchenMaxZ) {
-      const overflow = minZ < kitchenMinZ ? (kitchenMinZ - minZ).toFixed(2) : (maxZ - kitchenMaxZ).toFixed(2);
+    if (minZ < kitchenMinZ - tolerance || maxZ > kitchenMaxZ + tolerance) {
+      const overflow = minZ < kitchenMinZ - tolerance ? (kitchenMinZ - minZ).toFixed(2) : (maxZ - kitchenMaxZ).toFixed(2);
       return { valid: false, reason: `יוצא מגבולות המטבח (אורך) ב-${overflow}מ'` };
     }
     

@@ -163,7 +163,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const getSnapPosition = (x: number, z: number) => {
     if (!selectedItem) return null;
     
-    const snapDistance = 0.05; // Distance from walls
+    const snapDistance = 0.03; // ✅ FIXED: Smaller distance from walls for corner placement
     const itemSnapDistance = 0.01; // Distance for item snapping
     const snapThreshold = 0.5; // Threshold for easier snapping
     const halfWidth = kitchenDimensions.width / 2;
@@ -449,15 +449,18 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const itemHalfWidth = selectedItem.dimensions.width / 2;
     const itemHalfDepth = selectedItem.dimensions.depth / 2;
     
-    const margin = 0.05;
+    const margin = 0.03; // ✅ FIXED: Smaller margin to allow corner placement
+    const tolerance = 0.02; // ✅ FIXED: Add tolerance for floating point errors
+    
     const minX = -halfWidth + itemHalfWidth + margin;
     const maxX = halfWidth - itemHalfWidth - margin;
     const minZ = -halfLength + itemHalfDepth + margin;
     const maxZ = halfLength - itemHalfDepth - margin;
     
+    // ✅ FIXED: Apply tolerance to prevent tiny overflow errors in corners
     return {
-      x: Math.min(Math.max(minX, x), maxX),
-      z: Math.min(Math.max(minZ, z), maxZ)
+      x: Math.min(Math.max(minX - tolerance, x), maxX + tolerance),
+      z: Math.min(Math.max(minZ - tolerance, z), maxZ + tolerance)
     };
   };
 
