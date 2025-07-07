@@ -215,12 +215,13 @@ const KitchenControls: React.FC = () => {
                           isSelected ? 'text-primary' : 'group-hover:text-gray-600'
                         }`} 
                         size={16} 
-                  {group.type === KitchenItemType.COUNTERTOP && (
+                      />
+                      {group.type === KitchenItemType.COUNTERTOP && (
                     <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
                       {group.items[0]?.customWidth ? `${group.items[0].customWidth}מ'` : '0.6מ''}
                     </span>
                   )}
-                      />
+                      )}
                     </>
                   )}
                 </div>
