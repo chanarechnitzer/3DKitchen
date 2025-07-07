@@ -169,7 +169,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
                     ⚠️ המשולש זקוק לתיקון
                   </p>
                   <p className="text-xs text-red-600 mb-2">
-                    תקן את המרחקים ולחץ שוב על "סיימתי לעצב"
+                    ✅ ניתן לתקן: הסר והזז רכיבים או שנה גדלי ארונות
                   </p>
                 </div>
                 
@@ -179,7 +179,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                 >
                   <Edit3 size={16} />
-                  חזור לעריכה (הסר והזז רכיבים)
+                  ✅ תקן עכשיו (הסר והזז רכיבים)
                 </button>
                 
                 {/* Try again button */}
@@ -201,7 +201,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
                     🎯 המשולש לא הושלם
                   </p>
                   <p className="text-xs text-yellow-600 mb-2">
-                    נדרשים כיור, כיריים ומקרר כדי ליצור משולש זהב
+                    ✅ ניתן לתקן: הוסף כיור, כיריים ומקרר
                   </p>
                 </div>
                 
@@ -211,7 +211,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                 >
                   <Edit3 size={16} />
-                  חזור לעריכה (הוסף רכיבים)
+                  ✅ תקן עכשיו (הוסף רכיבים)
                 </button>
               </div>
             )}

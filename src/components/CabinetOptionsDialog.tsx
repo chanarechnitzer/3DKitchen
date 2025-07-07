@@ -71,7 +71,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   const calculateFillWidth = () => {
     const wallMargin = 0.05;
-    const buffer = 0.01; // ✅ FIXED: Slightly larger buffer for proper snapping
+    const buffer = 0.005; // ✅ FIXED: Smaller buffer for tighter snapping
     
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
@@ -81,17 +81,17 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     if (isRotated) {
       // ✅ FIXED: When rotated, we're filling along the Z-axis (length direction)
-      leftBoundary = -kitchenDimensions.length / 2 + wallMargin;
-      rightBoundary = kitchenDimensions.length / 2 - wallMargin;
+      leftBoundary = -kitchenDimensions.length / 2 + wallMargin + 0.3; // ✅ FIXED: Add cabinet half-depth
+      rightBoundary = kitchenDimensions.length / 2 - wallMargin - 0.3; // ✅ FIXED: Subtract cabinet half-depth
       
       for (const item of placedItems) {
         // ✅ CRITICAL: Skip the cabinet we're trying to place
         if (item.id === cabinetId) continue;
         
         // ✅ CRITICAL: Check if item is in the same row (Z alignment for rotated cabinets)
-        if (Math.abs(item.position.x - position.x) < 0.3) { // ✅ FIXED: Tighter alignment check for proper row detection
+        if (Math.abs(item.position.x - position.x) < 0.2) { // ✅ FIXED: Even tighter alignment check
           const itemEdge = item.position.z;
-          const itemHalfSize = (isRotated ? item.dimensions.width : item.dimensions.depth) / 2;
+          const itemHalfSize = item.dimensions.depth / 2; // ✅ FIXED: Use depth for Z-axis calculation
           
           if (itemEdge < position.z) {
             leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer); // ✅ FIXED: Snap to right edge of left item
@@ -102,8 +102,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       }
     } else {
       // ✅ FIXED: Normal orientation - filling along X-axis (width direction)
-      leftBoundary = -kitchenDimensions.width / 2 + wallMargin;
-      rightBoundary = kitchenDimensions.width / 2 - wallMargin;
+      leftBoundary = -kitchenDimensions.width / 2 + wallMargin + 0.3; // ✅ FIXED: Add cabinet half-depth
+      rightBoundary = kitchenDimensions.width / 2 - wallMargin - 0.3; // ✅ FIXED: Subtract cabinet half-depth
       
       for (const item of placedItems) {
         // ✅ CRITICAL: Skip the cabinet we're trying to place
@@ -116,7 +116,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         }
         
         // ✅ CRITICAL: Check if item is in the same row (Z alignment for normal cabinets)
-        if (Math.abs(item.position.z - position.z) < 0.3) { // ✅ FIXED: Tighter alignment check for proper row detection
+        if (Math.abs(item.position.z - position.z) < 0.2) { // ✅ FIXED: Even tighter alignment check
           const itemEdge = item.position.x;
           
           // ✅ FIXED: Account for item rotation
@@ -126,7 +126,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           const itemRotatedDepth = Math.abs(Math.sin(itemRotation)) * item.dimensions.width + 
                                    Math.abs(Math.cos(itemRotation)) * item.dimensions.depth;
           
-          const itemHalfSize = (isRotated ? itemRotatedDepth : itemRotatedWidth) / 2;
+          const itemHalfSize = itemRotatedWidth / 2; // ✅ FIXED: Use width for X-axis calculation
           
           if (itemEdge < position.x) {
             leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer); // ✅ FIXED: Snap to right edge of left item
@@ -140,17 +140,21 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     const availableWidth = rightBoundary - leftBoundary;
     console.log('Available width calculation:', availableWidth, 'between', leftBoundary, 'and', rightBoundary);
     
-    // ✅ CRITICAL: Position cabinet to fill the gap properly
-    const centerPosition = (leftBoundary + rightBoundary) / 2;
+    // ✅ CRITICAL: Don't reposition cabinet - keep it where user placed it
+    // Only calculate the width needed to fill the space
     
-    // ✅ CRITICAL: Only reposition if there's a meaningful gap to fill
-    if (availableWidth > 0.4) { // Only center if there's a significant gap
-      if (isRotated) {
-        position.z = centerPosition;
-      } else {
-        position.x = centerPosition;
-      }
-      console.log('Repositioned cabinet to center of gap at:', centerPosition.toFixed(2));
+    // ✅ FIXED: Calculate width from current position to nearest boundary
+    let widthToFill;
+    if (isRotated) {
+      // For rotated cabinets, calculate distance to nearest Z boundary
+      const distanceToLeft = position.z - leftBoundary;
+      const distanceToRight = rightBoundary - position.z;
+      widthToFill = Math.min(distanceToLeft, distanceToRight) * 2; // Fill in both directions
+    } else {
+      // For normal cabinets, calculate distance to nearest X boundary
+      const distanceToLeft = position.x - leftBoundary;
+      const distanceToRight = rightBoundary - position.x;
+      widthToFill = Math.min(distanceToLeft, distanceToRight) * 2; // Fill in both directions
     }
     
     console.log('Fill calculation:', {
@@ -158,11 +162,12 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       leftBoundary: leftBoundary.toFixed(2),
       rightBoundary: rightBoundary.toFixed(2),
       availableWidth: availableWidth.toFixed(2),
-      centerPosition: centerPosition.toFixed(2)
+      widthToFill: widthToFill.toFixed(2),
+      position: { x: position.x.toFixed(2), z: position.z.toFixed(2) }
     });
     
-    // ✅ FIXED: Better width calculation with minimum viable size
-    return Math.max(0.10, Math.min(4.0, availableWidth - 0.02)); // ✅ FIXED: Subtract buffer to ensure proper fit
+    // ✅ FIXED: Return the calculated width, ensuring it's within reasonable bounds
+    return Math.max(0.10, Math.min(4.0, widthToFill - 0.02)); // ✅ FIXED: Use calculated width instead of full available width
   };
 
   const validateCabinetPlacement = (width: number) => {
@@ -194,8 +199,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     const kitchenMinZ = -kitchenDimensions.length / 2 + wallMargin;
     const kitchenMaxZ = kitchenDimensions.length / 2 - wallMargin;
     
-    // ✅ CRITICAL: Add tolerance for floating point precision errors
-    const tolerance = 0.02; // 2cm tolerance for corner placement
+    // ✅ CRITICAL: Add tolerance for floating point precision errors and corner placement
+    const tolerance = 0.05; // ✅ FIXED: Larger tolerance for corner placement (5cm)
     
     console.log('Boundary validation:', {
       rotation: (rotation * 180 / Math.PI).toFixed(1) + '°',
@@ -209,12 +214,20 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     });
     
     // ✅ FIXED: Check boundaries with tolerance for corner placement
-    if (minX < kitchenMinX - tolerance || maxX > kitchenMaxX + tolerance) {
-      const overflow = minX < kitchenMinX - tolerance ? (kitchenMinX - minX).toFixed(2) : (maxX - kitchenMaxX).toFixed(2);
+    if (minX < kitchenMinX - tolerance) {
+      const overflow = (kitchenMinX - minX).toFixed(2);
       return { valid: false, reason: `יוצא מגבולות המטבח (רוחב) ב-${overflow}מ'` };
     }
-    if (minZ < kitchenMinZ - tolerance || maxZ > kitchenMaxZ + tolerance) {
-      const overflow = minZ < kitchenMinZ - tolerance ? (kitchenMinZ - minZ).toFixed(2) : (maxZ - kitchenMaxZ).toFixed(2);
+    if (maxX > kitchenMaxX + tolerance) {
+      const overflow = (maxX - kitchenMaxX).toFixed(2);
+      return { valid: false, reason: `יוצא מגבולות המטבח (רוחב) ב-${overflow}מ'` };
+    }
+    if (minZ < kitchenMinZ - tolerance) {
+      const overflow = (kitchenMinZ - minZ).toFixed(2);
+      return { valid: false, reason: `יוצא מגבולות המטבח (אורך) ב-${overflow}מ'` };
+    }
+    if (maxZ > kitchenMaxZ + tolerance) {
+      const overflow = (maxZ - kitchenMaxZ).toFixed(2);
       return { valid: false, reason: `יוצא מגבולות המטבח (אורך) ב-${overflow}מ'` };
     }
     
@@ -400,8 +413,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
               <div className="text-sm text-gray-600">
                {fillValidation.valid && fillWidth >= 0.3 
                   ? `ימלא ${fillWidth.toFixed(1)} מטר בין הרכיבים`
-                 : fillValidation.valid && fillWidth >= 0.15
-                    ? `ימלא ${fillWidth.toFixed(1)} מטר (מקום מוגבל)`
+                 : fillValidation.valid && fillWidth >= 0.2
+                    ? `ימלא ${fillWidth.toFixed(1)} מטר (ארון קטן)`
                     : !fillValidation.valid
                       ? `לא ניתן: ${fillValidation.reason}`
                       : 'אין מספיק מקום למילוי'
@@ -412,7 +425,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
                   ❌ {fillValidation.reason}
                 </div>
               )}
-             {fillValidation.valid && fillWidth < 0.3 && fillWidth >= 0.15 && (
+             {fillValidation.valid && fillWidth < 0.3 && fillWidth >= 0.2 && (
                 <div className="text-xs text-yellow-600 mt-1">
                   ⚠️ מקום מוגבל - ארון קטן מהסטנדרט
                 </div>
@@ -432,9 +445,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           </button>
           <button 
             onClick={handleConfirm}
-            disabled={(selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.15))}
+            disabled={(selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.2))}
             className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
-              (selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.15))
+              (selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.2))
                 ? 'text-gray-500 bg-gray-200 cursor-not-allowed'
                 : 'text-white bg-gradient-to-r from-primary to-yellow-500 hover:shadow-lg transform hover:scale-105'
             }`}
