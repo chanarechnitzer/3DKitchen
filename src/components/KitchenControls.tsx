@@ -136,7 +136,7 @@ const KitchenControls: React.FC = () => {
             >
               ביטול
             </button>
-            {selectedItem.type === 'countertop' && (
+            {selectedItem.type === KitchenItemType.COUNTERTOP && (
               <button
                 onClick={() => {
                   setShowCabinetDialog(true);

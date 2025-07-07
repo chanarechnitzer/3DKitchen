@@ -39,7 +39,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     let leftBoundary = -kitchenDimensions.width / 2 + 0.05; // Wall
     let rightBoundary = kitchenDimensions.width / 2 - 0.05; // Wall
     
-    placedItems.forEach(item => {
+    placedItems?.forEach(item => {
       const itemLeft = item.position.x - item.dimensions.width / 2;
       const itemRight = item.position.x + item.dimensions.width / 2;
       
