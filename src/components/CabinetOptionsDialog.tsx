@@ -38,9 +38,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       return defaultWidth;
     }
     
-    console.log('🔍 Calculating fill width for position:', position);
+    console.log('🔍 Starting fill width calculation');
+    console.log('📍 Target position:', position);
     console.log('🏠 Kitchen dimensions:', kitchenDimensions);
-    console.log('📦 Placed items count:', placedItems.length);
     
     // חישוב גבולות המטבח
     const halfWidth = kitchenDimensions.width / 2;
@@ -50,64 +50,74 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     let leftBoundary = -halfWidth + snapDistance;
     let rightBoundary = halfWidth - snapDistance;
     
-    console.log('🏗️ Initial boundaries:', { leftBoundary, rightBoundary, totalWidth: rightBoundary - leftBoundary });
+    console.log('🏗️ Initial boundaries:');
+    console.log(`   Left: ${leftBoundary.toFixed(3)}m`);
+    console.log(`   Right: ${rightBoundary.toFixed(3)}m`);
+    console.log(`   Total available: ${(rightBoundary - leftBoundary).toFixed(3)}m`);
     
     // מצא רכיבים באותו שורה (Z דומה) שיכולים להגביל את הרוחב
-    placedItems?.forEach((item, index) => {
-      if (!item.position || !item.dimensions) {
-        console.log(`⚠️ Item ${index} missing position or dimensions`);
-        return;
-      }
+    const relevantItems = placedItems.filter(item => {
+      if (!item.position || !item.dimensions) return false;
       
       // דלג על הפריט הנוכחי אם הוא כבר קיים במיקום זה
       const isSamePosition = Math.abs(item.position.x - position.x) < 0.1 && 
                             Math.abs(item.position.z - position.z) < 0.1;
       if (isSamePosition) {
         console.log(`🔄 Skipping same position item: ${item.name}`);
-        return;
+        return false;
       }
       
       // בדוק אם הפריט באותו שורה (מרחק Z קטן מ-0.8 מטר)
       const zDistance = Math.abs(item.position.z - position.z);
-      console.log(`📏 Item ${item.name}: Z distance = ${zDistance.toFixed(2)}m`);
+      const isInSameRow = zDistance < 0.8;
       
-      if (zDistance < 0.8) {
-        const itemLeft = item.position.x - item.dimensions.width / 2;
-        const itemRight = item.position.x + item.dimensions.width / 2;
-        
-        console.log(`📦 Item ${item.name}:`);
-        console.log(`   Position: X=${item.position.x.toFixed(2)}, Z=${item.position.z.toFixed(2)}`);
-        console.log(`   Width: ${item.dimensions.width.toFixed(2)}m`);
-        console.log(`   Boundaries: left=${itemLeft.toFixed(2)}, right=${itemRight.toFixed(2)}`);
-        console.log(`   Current position X: ${position.x.toFixed(2)}`);
-        
-        // אם הפריט משמאל למיקום הנוכחי
-        if (itemRight <= position.x && itemRight > leftBoundary) {
-          const oldBoundary = leftBoundary;
-          leftBoundary = itemRight + 0.01; // רווח קטן בין פריטים
-          console.log(`⬅️ Updated left boundary from ${oldBoundary.toFixed(2)} to ${leftBoundary.toFixed(2)}`);
+      console.log(`📦 Item ${item.name}:`);
+      console.log(`   Position: X=${item.position.x.toFixed(3)}, Z=${item.position.z.toFixed(3)}`);
+      console.log(`   Z distance: ${zDistance.toFixed(3)}m`);
+      console.log(`   In same row: ${isInSameRow}`);
+      
+      return isInSameRow;
+    });
+    
+    console.log(`🎯 Found ${relevantItems.length} relevant items in same row`);
+    
+    // עדכן גבולות בהתאם לרכיבים הקיימים
+    relevantItems.forEach((item, index) => {
+      const itemLeft = item.position.x - item.dimensions.width / 2;
+      const itemRight = item.position.x + item.dimensions.width / 2;
+      
+      console.log(`📦 Processing item ${index + 1}: ${item.name}`);
+      console.log(`   Item boundaries: left=${itemLeft.toFixed(3)}, right=${itemRight.toFixed(3)}`);
+      console.log(`   Target position X: ${position.x.toFixed(3)}`);
+      
+      // אם הפריט משמאל למיקום הנוכחי
+      if (itemRight <= position.x) {
+        const newLeftBoundary = itemRight + 0.01; // רווח קטן בין פריטים
+        if (newLeftBoundary > leftBoundary) {
+          console.log(`⬅️ Updated left boundary from ${leftBoundary.toFixed(3)} to ${newLeftBoundary.toFixed(3)}`);
+          leftBoundary = newLeftBoundary;
         }
-        
-        // אם הפריט מימין למיקום הנוכחי
-        if (itemLeft >= position.x && itemLeft < rightBoundary) {
-          const oldBoundary = rightBoundary;
-          rightBoundary = itemLeft - 0.01; // רווח קטן בין פריטים
-          console.log(`➡️ Updated right boundary from ${oldBoundary.toFixed(2)} to ${rightBoundary.toFixed(2)}`);
+      }
+      
+      // אם הפריט מימין למיקום הנוכחי
+      if (itemLeft >= position.x) {
+        const newRightBoundary = itemLeft - 0.01; // רווח קטן בין פריטים
+        if (newRightBoundary < rightBoundary) {
+          console.log(`➡️ Updated right boundary from ${rightBoundary.toFixed(3)} to ${newRightBoundary.toFixed(3)}`);
+          rightBoundary = newRightBoundary;
         }
-      } else {
-        console.log(`❌ Item ${item.name} not in same row (Z distance: ${zDistance.toFixed(2)}m)`);
       }
     });
     
     const availableWidth = rightBoundary - leftBoundary;
     console.log('📐 Final calculation:');
-    console.log(`   Left boundary: ${leftBoundary.toFixed(2)}m`);
-    console.log(`   Right boundary: ${rightBoundary.toFixed(2)}m`);
-    console.log(`   Available width: ${availableWidth.toFixed(2)}m`);
+    console.log(`   Final left boundary: ${leftBoundary.toFixed(3)}m`);
+    console.log(`   Final right boundary: ${rightBoundary.toFixed(3)}m`);
+    console.log(`   Available width: ${availableWidth.toFixed(3)}m`);
     
     // הגבל בין 30 ס"מ ל-300 ס"מ
     const finalWidth = Math.max(0.3, Math.min(3.0, availableWidth));
-    console.log(`✅ Final width: ${finalWidth.toFixed(2)}m (${(finalWidth * 100).toFixed(0)}cm)`);
+    console.log(`✅ Final width: ${finalWidth.toFixed(3)}m (${(finalWidth * 100).toFixed(0)}cm)`);
     
     return finalWidth;
   };

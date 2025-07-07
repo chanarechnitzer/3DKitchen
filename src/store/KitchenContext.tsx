@@ -62,7 +62,6 @@ interface KitchenContextType {
   updateCustomization: (category: keyof CustomizationOptions, value: string) => void;
   availableItems: KitchenItem[];
   setAvailableItems: (items: KitchenItem[] | ((prev: KitchenItem[]) => KitchenItem[])) => void;
-  setAvailableItems: (items: KitchenItem[] | ((prev: KitchenItem[]) => KitchenItem[])) => void;
   placedItems: KitchenItem[];
   selectedItem: KitchenItem | null;
   setSelectedItem: (item: KitchenItem | null) => void;
@@ -92,7 +91,6 @@ const defaultContext: KitchenContextType = {
   setCustomization: () => {},
   updateCustomization: () => {},
   availableItems: [],
-  setAvailableItems: () => {},
   setAvailableItems: () => {},
   placedItems: [],
   selectedItem: null,
@@ -416,7 +414,6 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     setCustomization,
     updateCustomization,
     availableItems,
-    setAvailableItems,
     setAvailableItems,
     placedItems,
     selectedItem,

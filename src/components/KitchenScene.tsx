@@ -501,17 +501,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       // ✅ NEW: Check if this is a countertop - show options dialog first
       if (selectedItem.type === KitchenItemType.COUNTERTOP) {
-        console.log('🏗️ Countertop placement - showing options dialog');
-        setPendingCabinetPlacement({
-          position: { x: finalPos.x, z: finalPos.z },
-          rotation: finalRotation
-        });
-        setShowCabinetOptionsDialog(true);
-        return; // Don't place yet, wait for user choice
-      }
-      
-      // ✅ NEW: Check if this is a countertop - show options dialog first
-      if (selectedItem.type === KitchenItemType.COUNTERTOP) {
         setPendingCabinetPlacement({
           position: { x: finalPos.x, z: finalPos.z },
           rotation: finalRotation
