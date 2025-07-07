@@ -43,6 +43,9 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
     console.log('User clicked finish designing button');
     console.log('Triangle validation:', triangleValidation);
     
+    // ✅ CRITICAL: Clear selected item when finishing design
+    setSelectedItem(null);
+    
     // Always mark design phase as complete when user clicks the button
     setDesignPhaseComplete(true);
     
@@ -60,6 +63,8 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
 
   // ✅ NEW: Handle going back to editing mode - allows user to move items after finishing
   const handleBackToEditing = () => {
+    // ✅ CRITICAL: Clear selected item when going back to editing
+    setSelectedItem(null);
     setDesignPhaseComplete(false);
     setGameCompleted(false);
   };
@@ -125,9 +130,57 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           )}
           
           {/* Kitchen Controls - Only show if no item is being dragged */}
-          {!selectedItem && (
+          {/* ✅ FIXED: Always show kitchen controls unless design is complete */}
+          {!designPhaseComplete && (
             <div className="flex-1 min-h-0 overflow-hidden">
               <KitchenControls />
+            </div>
+          )}
+          
+          {/* ✅ NEW: Show simplified controls when design is complete but user is editing */}
+          {designPhaseComplete && !gameCompleted && (
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 h-full flex flex-col">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <Edit3 className="text-white" size={16} />
+                  </div>
+                  <h2 className="text-base font-bold text-gray-900">מצב תיקון</h2>
+                </div>
+                
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-3 border border-blue-200">
+                  <p className="text-sm font-medium text-blue-800 mb-2">
+                    🔧 ניתן לתקן את המטבח
+                  </p>
+                  <div className="space-y-1 text-xs text-blue-700">
+                    <p>• לחץ "הסר" ברשימת הרכיבים</p>
+                    <p>• גרור רכיבים למיקומים חדשים</p>
+                    <p>• לחץ "סיימתי לעצב" שוב לבדיקה</p>
+                  </div>
+                </div>
+                
+                {placedItems.length > 0 && (
+                  <div className="mt-4 border-t border-gray-200 pt-3 flex-1 overflow-y-auto">
+                    <h3 className="text-sm font-bold text-gray-900 mb-2">רכיבים במטבח</h3>
+                    <div className="space-y-1">
+                      {placedItems.map(item => (
+                        <div 
+                          key={item.id}
+                          className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg border border-gray-200"
+                        >
+                          <span className="font-medium text-gray-900 text-xs">{item.name}</span>
+                          <button 
+                            className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium"
+                            onClick={() => removeItem(item.id)}
+                          >
+                            הסר
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           
@@ -197,7 +250,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
                     🎯 המשולש לא הושלם
                   </p>
                   <p className="text-xs text-yellow-600 mb-2">
-                    ✅ ניתן לתקן: הוסף כיור, כיריים ומקרר
+                    הוסף את הרכיבים החסרים: כיור 💧 + כיריים 🔥 + מקרר ❄️
                   </p>
                 </div>
                 
@@ -207,7 +260,16 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                 >
                   <Edit3 size={16} />
-                  ✅ תקן עכשיו (הוסף רכיבים)
+                  הוסף רכיבים חסרים
+                </button>
+                
+                {/* Try again button */}
+                <button
+                  onClick={handleFinishDesigning}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 text-base font-bold text-white bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  <CheckCircle size={18} />
+                  <span>🎯 סיימתי לעצב!</span>
                 </button>
               </div>
             )}
