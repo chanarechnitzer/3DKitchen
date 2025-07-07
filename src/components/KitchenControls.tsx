@@ -12,6 +12,7 @@ const KitchenControls: React.FC = () => {
   } = useKitchen();
 
   const [previewItem, setPreviewItem] = useState<string | null>(null);
+  const [showItemOptions, setShowItemOptions] = useState(false);
 
   // Group items by type
   const groupedItems = availableItems.reduce((acc, item) => {
@@ -87,6 +88,40 @@ const KitchenControls: React.FC = () => {
         <h2 className="text-base font-bold text-gray-900">רכיבי מטבח</h2>
       </div>
       
+      {/* ✅ NEW: Show item options when item is selected */}
+      {selectedItem && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-lg">
+                {getItemIcon(selectedItem.type)}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-blue-800">{selectedItem.name}</h3>
+              <p className="text-xs text-blue-600">מוכן להנחה</p>
+            </div>
+          </div>
+          
+          <div className="text-center mb-3">
+            <div className="text-2xl mb-2">🎯</div>
+            <p className="text-sm font-medium text-blue-800 mb-2">גרור למיקום במטבח</p>
+            <div className="space-y-1 text-xs text-blue-600">
+              <p>• הפריט יצמד אוטומטית לקירות</p>
+              <p>• בפינות לחץ R לסיבוב</p>
+              <p>• לחץ במטבח כדי למקם</p>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => setSelectedItem(null)}
+            className="w-full px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
+          >
+            ביטול
+          </button>
+        </div>
+      )}
+      
       {Object.keys(groupedItems).length === 0 && (
         <div className="text-center py-6 flex-1 flex flex-col justify-center">
           <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -97,10 +132,11 @@ const KitchenControls: React.FC = () => {
         </div>
       )}
       
-      <div className="space-y-2 flex-1 overflow-y-auto">
+      <div className={`space-y-2 flex-1 overflow-y-auto ${selectedItem ? 'opacity-50' : ''}`}>
         {Object.values(groupedItems).map(group => {
           const isCountertopLimitReached = group.type === KitchenItemType.COUNTERTOP && placedCabinets >= 10;
           const isSelected = selectedItem?.type === group.type;
+          const isDisabled = selectedItem !== null; // Disable when item is selected
           
           return (
             <div 
@@ -108,12 +144,16 @@ const KitchenControls: React.FC = () => {
               className={`group relative border-2 rounded-lg p-3 transition-all duration-200 cursor-pointer ${
                 isSelected 
                   ? 'border-primary bg-primary/5 shadow-lg' 
-                  : (group.count === 0 || isCountertopLimitReached) 
+                  : (group.count === 0 || isCountertopLimitReached || isDisabled) 
                     ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed' 
                     : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
               }`}
-              onClick={() => group.count > 0 && !isCountertopLimitReached && handleSelectItem(group.type)}
-              title={isCountertopLimitReached ? 'הגעת למגבלת הארונות המותרת (10)' : group.count === 0 ? 'אין יחידות נותרות' : undefined}
+              onClick={() => group.count > 0 && !isCountertopLimitReached && !isDisabled && handleSelectItem(group.type)}
+              title={
+                isDisabled ? 'סיים להניח את הפריט הנוכחי תחילה' :
+                isCountertopLimitReached ? 'הגעת למגבלת הארונות המותרת (10)' : 
+                group.count === 0 ? 'אין יחידות נותרות' : undefined
+              }
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -136,7 +176,7 @@ const KitchenControls: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-1">
-                  {group.count > 0 && !isCountertopLimitReached && (
+                  {group.count > 0 && !isCountertopLimitReached && !isDisabled && (
                     <>
                       <button
                         onClick={(e) => {
