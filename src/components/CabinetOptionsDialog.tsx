@@ -34,106 +34,63 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   // ✅ FIXED: חישוב נכון של השטח הזמין
   const calculateFillWidth = () => {
     if (!position || !kitchenDimensions) {
-      console.log('❌ Missing position or kitchen dimensions', { position, kitchenDimensions });
       return defaultWidth;
     }
     
-    console.log('🔍 Starting fill width calculation for position:', position);
-    console.log('🏠 Kitchen dimensions:', kitchenDimensions);
-    console.log('📦 Available placed items:', placedItems.length);
-    
-    // חישוב גבולות המטבח
+    // ✅ SIMPLE: חישוב גבולות המטבח
     const halfWidth = kitchenDimensions.width / 2;
-    const wallMargin = 0.05; // מרחק מהקיר
-    const itemMargin = 0.02; // מרחק בין פריטים
+    const margin = 0.05; // מרחק מהקירות
     
-    // גבולות ברירת מחדל - מהקיר השמאלי לקיר הימני
-    let leftBoundary = -halfWidth + wallMargin;
-    let rightBoundary = halfWidth - wallMargin;
+    // ✅ SIMPLE: התחל מהקירות
+    let leftBound = -halfWidth + margin;
+    let rightBound = halfWidth - margin;
     
-    console.log('🏗️ Initial boundaries (wall to wall):');
-    console.log(`   Left boundary: ${leftBoundary.toFixed(3)}m`);
-    console.log(`   Right boundary: ${rightBoundary.toFixed(3)}m`);
-    console.log(`   Initial available width: ${(rightBoundary - leftBoundary).toFixed(3)}m (${((rightBoundary - leftBoundary) * 100).toFixed(0)}cm)`);
+    console.log('🏠 Kitchen bounds:', { leftBound, rightBound, totalWidth: rightBound - leftBound });
     
-    // ✅ FIXED: מצא רכיבים באותו שורה (Z דומה) שיכולים להגביל את הרוחב
-    const relevantItems = [];
+    // ✅ SIMPLE: מצא את הפריט הקרוב ביותר משמאל ומימין
+    let closestLeft = leftBound;
+    let closestRight = rightBound;
     
-    for (const item of placedItems) {
-      if (!item.position || !item.dimensions) {
-        console.log(`⚠️ Item ${item.name} missing position or dimensions`);
-        continue;
-      }
+    placedItems.forEach(item => {
+      if (!item.position || !item.dimensions) return;
       
-      // דלג על הפריט הנוכחי אם הוא כבר קיים במיקום זה
-      const isSamePosition = Math.abs(item.position.x - position.x) < 0.1 && 
-                            Math.abs(item.position.z - position.z) < 0.1;
-      if (isSamePosition) {
-        console.log(`🔄 Skipping same position item: ${item.name} at (${item.position.x.toFixed(2)}, ${item.position.z.toFixed(2)})`);
-        continue;
-      }
+      // ✅ SIMPLE: רק פריטים באותו שורה (Z דומה)
+      const zDiff = Math.abs(item.position.z - position.z);
+      if (zDiff > 0.5) return; // לא באותו שורה
       
-      // ✅ FIXED: בדוק אם הפריט באותו שורה (מרחק Z קטן מ-1.0 מטר)
-      const zDistance = Math.abs(item.position.z - position.z);
-      const isInSameRow = zDistance < 1.0; // הגדלתי את הטווח
+      // ✅ SIMPLE: דלג על הפריט הנוכחי
+      const isSame = Math.abs(item.position.x - position.x) < 0.1;
+      if (isSame) return;
       
-      console.log(`📦 Item ${item.name}:`);
-      console.log(`   Position: X=${item.position.x.toFixed(3)}, Z=${item.position.z.toFixed(3)}`);
-      console.log(`   Dimensions: W=${item.dimensions.width.toFixed(3)}, D=${item.dimensions.depth.toFixed(3)}`);
-      console.log(`   Z distance: ${zDistance.toFixed(3)}m`);
-      console.log(`   In same row: ${isInSameRow}`);
-      
-      if (isInSameRow) {
-        relevantItems.push(item);
-      }
-    }
-    
-    console.log(`🎯 Found ${relevantItems.length} relevant items in same row`);
-    
-    // ✅ FIXED: עדכן גבולות בהתאם לרכיבים הקיימים
-    for (let i = 0; i < relevantItems.length; i++) {
-      const item = relevantItems[i];
       const itemLeft = item.position.x - item.dimensions.width / 2;
       const itemRight = item.position.x + item.dimensions.width / 2;
       
-      console.log(`📦 Processing item ${i + 1}: ${item.name}`);
-      console.log(`   Item boundaries: left=${itemLeft.toFixed(3)}, right=${itemRight.toFixed(3)}`);
-      console.log(`   Target position X: ${position.x.toFixed(3)}`);
-      
-      // ✅ FIXED: אם הפריט משמאל למיקום הנוכחי (עם מרווח)
-      if (itemRight <= position.x - 0.1) { // הפריט משמאל עם מרווח
-        const newLeftBoundary = itemRight + itemMargin;
-        if (newLeftBoundary > leftBoundary) {
-          console.log(`⬅️ Updated left boundary from ${leftBoundary.toFixed(3)} to ${newLeftBoundary.toFixed(3)}`);
-          leftBoundary = newLeftBoundary;
-        }
+      // ✅ SIMPLE: אם הפריט משמאל למיקום הנוכחי
+      if (itemRight < position.x) {
+        closestLeft = Math.max(closestLeft, itemRight + 0.02); // 2 ס"מ מרווח
       }
       
-      // ✅ FIXED: אם הפריט מימין למיקום הנוכחי (עם מרווח)
-      if (itemLeft >= position.x + 0.1) { // הפריט מימין עם מרווח
-        const newRightBoundary = itemLeft - itemMargin;
-        if (newRightBoundary < rightBoundary) {
-          console.log(`➡️ Updated right boundary from ${rightBoundary.toFixed(3)} to ${newRightBoundary.toFixed(3)}`);
-          rightBoundary = newRightBoundary;
-        }
+      // ✅ SIMPLE: אם הפריט מימין למיקום הנוכחי
+      if (itemLeft > position.x) {
+        closestRight = Math.min(closestRight, itemLeft - 0.02); // 2 ס"מ מרווח
       }
-    }
+    });
     
-    // ✅ FIXED: חישוב הרוחב הזמין
-    const availableWidth = rightBoundary - leftBoundary;
-    console.log('📐 Final calculation:');
-    console.log(`   Final left boundary: ${leftBoundary.toFixed(3)}m`);
-    console.log(`   Final right boundary: ${rightBoundary.toFixed(3)}m`);
-    console.log(`   Available width: ${availableWidth.toFixed(3)}m (${(availableWidth * 100).toFixed(0)}cm)`);
+    // ✅ SIMPLE: חישוב הרוחב הזמין
+    const availableWidth = closestRight - closestLeft;
     
-    // ✅ FIXED: הגבל בין 20 ס"מ ל-400 ס"מ (יותר גמיש)
-    const finalWidth = Math.max(0.2, Math.min(4.0, availableWidth));
+    console.log('📐 Fill calculation:', {
+      position: position.x,
+      closestLeft,
+      closestRight,
+      availableWidth,
+      availableWidthCm: Math.round(availableWidth * 100)
+    });
     
-    if (finalWidth !== availableWidth) {
-      console.log(`⚠️ Width was limited from ${(availableWidth * 100).toFixed(0)}cm to ${(finalWidth * 100).toFixed(0)}cm`);
-    }
+    // ✅ SIMPLE: הגבל בין 30 ס"מ ל-300 ס"מ
+    const finalWidth = Math.max(0.3, Math.min(3.0, availableWidth));
     
-    console.log(`✅ Final cabinet width: ${finalWidth.toFixed(3)}m (${(finalWidth * 100).toFixed(0)}cm)`);
+    console.log('✅ Final width:', Math.round(finalWidth * 100), 'cm');
     
     return finalWidth;
   };
