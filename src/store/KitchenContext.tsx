@@ -325,8 +325,10 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Update cabinet size
   const updateCabinetSize = (itemId: string, newWidth: number) => {
+    console.log('Updating cabinet size:', itemId, 'to width:', newWidth);
     setPlacedItems(prev => prev.map(item => {
       if (item.id === itemId && item.type === KitchenItemType.COUNTERTOP) {
+        console.log('Found cabinet to update:', item.name);
         return {
           ...item,
           dimensions: {
@@ -337,6 +339,9 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
       return item;
     }));
+    
+    // Force re-validation after size update
+    setTimeout(validateTriangle, 200);
   };
 
   // Validate the kitchen triangle - NEVER auto-complete the game
