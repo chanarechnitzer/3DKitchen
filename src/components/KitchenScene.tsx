@@ -7,7 +7,7 @@ import DraggableObject from './three/DraggableObject';
 import TriangleLines from './three/TriangleLines';
 import DistanceLines from './three/DistanceLines';
 import SnapGuides from './three/SnapGuides';
-import { useKitchen, WindowPlacement } from '../store/KitchenContext';
+import { useKitchen, WindowPlacement, KitchenItemType } from '../store/KitchenContext';
 import OvenStackDialog from './OvenStackDialog';
 
 interface KitchenSceneProps {
@@ -29,7 +29,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     triangleValidation,
     getDragValidation,
     updateOvenStack,
-    KitchenItemType
   } = useKitchen();
   
   const [position, setPosition] = useState({ x: 0, z: 0 });
