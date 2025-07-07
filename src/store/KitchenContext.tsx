@@ -280,11 +280,22 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Update cabinet size
   const updateCabinetSize = (itemId: string, newWidth: number) => {
+    console.log('🔧 updateCabinetSize called with:', { itemId, newWidth });
+    console.log('📋 Current placed items:', placedItems.map(item => ({ id: item.id, name: item.name, width: item.dimensions.width })));
+    
     setPlacedItems(prev => prev.map(item => 
       item.id === itemId 
         ? { ...item, dimensions: { ...item.dimensions, width: newWidth } }
         : item
     ));
+    
+    console.log('✅ Cabinet size updated successfully');
+    
+    // Force re-validation after size change
+    setTimeout(() => {
+      console.log('🔄 Re-validating triangle after size change');
+      validateTriangle();
+    }, 100);
   };
 
   // Update oven stack
