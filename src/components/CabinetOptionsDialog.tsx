@@ -31,43 +31,70 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     { value: 1.2, label: '120 ס"מ', desc: 'ארון גדול' },
   ];
 
-  // Calculate available space for fill option
+  // ✅ FIXED: חישוב נכון של השטח הזמין
   const calculateFillWidth = () => {
-    if (!position || !kitchenDimensions) return defaultWidth;
+    if (!position || !kitchenDimensions) {
+      console.log('Missing position or kitchen dimensions');
+      return defaultWidth;
+    }
     
-    // חישוב גבולות נכון
+    console.log('Calculating fill width for position:', position);
+    console.log('Kitchen dimensions:', kitchenDimensions);
+    console.log('Placed items:', placedItems);
+    
+    // חישוב גבולות המטבח
     const halfWidth = kitchenDimensions.width / 2;
-    const snapDistance = 0.05;
+    const snapDistance = 0.05; // מרחק מהקיר
     
+    // גבולות ברירת מחדל - מהקיר השמאלי לקיר הימני
     let leftBoundary = -halfWidth + snapDistance;
     let rightBoundary = halfWidth - snapDistance;
     
-    // מצא רכיבים באותו שורה (Z דומה)
+    console.log('Initial boundaries:', { leftBoundary, rightBoundary });
+    
+    // מצא רכיבים באותו שורה (Z דומה) שיכולים להגביל את הרוחב
     placedItems?.forEach(item => {
-      // דלג על הפריט הנוכחי אם הוא כבר קיים
-      if (item.position && Math.abs(item.position.x - position.x) < 0.1 && Math.abs(item.position.z - position.z) < 0.1) {
+      if (!item.position || !item.dimensions) return;
+      
+      // דלג על הפריט הנוכחי אם הוא כבר קיים במיקום זה
+      const isSamePosition = Math.abs(item.position.x - position.x) < 0.1 && 
+                            Math.abs(item.position.z - position.z) < 0.1;
+      if (isSamePosition) {
+        console.log('Skipping same position item:', item.name);
         return;
       }
       
-      const itemLeft = item.position.x - item.dimensions.width / 2;
-      const itemRight = item.position.x + item.dimensions.width / 2;
-      
-      // בדוק אם הפריט באותו שורה (מרחק Z קטן מ-0.7 מטר)
-      if (Math.abs(item.position.z - position.z) < 0.7) {
+      // בדוק אם הפריט באותו שורה (מרחק Z קטן מ-0.8 מטר)
+      const zDistance = Math.abs(item.position.z - position.z);
+      if (zDistance < 0.8) {
+        const itemLeft = item.position.x - item.dimensions.width / 2;
+        const itemRight = item.position.x + item.dimensions.width / 2;
+        
+        console.log(`Item ${item.name} at X:${item.position.x}, Z:${item.position.z}, width:${item.dimensions.width}`);
+        console.log(`Item boundaries: left=${itemLeft}, right=${itemRight}`);
+        
         // אם הפריט משמאל למיקום הנוכחי
         if (itemRight <= position.x && itemRight > leftBoundary) {
           leftBoundary = itemRight + 0.01; // רווח קטן בין פריטים
+          console.log(`Updated left boundary to: ${leftBoundary}`);
         }
+        
         // אם הפריט מימין למיקום הנוכחי
         if (itemLeft >= position.x && itemLeft < rightBoundary) {
           rightBoundary = itemLeft - 0.01; // רווח קטן בין פריטים
+          console.log(`Updated right boundary to: ${rightBoundary}`);
         }
       }
     });
     
     const availableWidth = rightBoundary - leftBoundary;
-    // הגבל בין 30 ס"מ ל-200 ס"מ
-    return Math.max(0.3, Math.min(2.0, availableWidth));
+    console.log('Final boundaries:', { leftBoundary, rightBoundary, availableWidth });
+    
+    // הגבל בין 30 ס"מ ל-300 ס"מ
+    const finalWidth = Math.max(0.3, Math.min(3.0, availableWidth));
+    console.log('Final width:', finalWidth);
+    
+    return finalWidth;
   };
 
   const fillWidth = calculateFillWidth();

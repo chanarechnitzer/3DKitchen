@@ -179,7 +179,7 @@ const KitchenControls: React.FC = () => {
           defaultWidth={selectedItem.dimensions.width}
           placedItems={placedItems}
           position={selectedItem ? { x: 0, z: 0 } : undefined}
-          kitchenDimensions={{ width: 6, length: 6 }}
+          kitchenDimensions={kitchenDimensions}
         />
       )}
       
@@ -377,7 +377,10 @@ const KitchenControls: React.FC = () => {
           }}
           defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
           placedItems={placedItems}
-          position={placedItems.find(item => item.id === selectedCabinetId)?.position}
+          position={placedItems.find(item => item.id === selectedCabinetId)?.position ? {
+            x: placedItems.find(item => item.id === selectedCabinetId)!.position.x,
+            z: placedItems.find(item => item.id === selectedCabinetId)!.position.z
+          } : undefined}
           kitchenDimensions={kitchenDimensions}
         />
       )}
