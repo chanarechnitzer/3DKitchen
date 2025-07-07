@@ -27,7 +27,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const checkForCollisions = (cabinetPos: Vector3, width: number, depth: number = 0.6) => {
     const cabinetHalfWidth = width / 2;
     const cabinetHalfDepth = depth / 2;
-    const buffer = -0.15; // ✅ FIXED: Very permissive buffer for gap filling
+    const buffer = -0.30; // ✅ FIXED: ULTRA permissive buffer - allows cabinets to be placed right next to anything
     
     for (const item of placedItems) {
       // ✅ CRITICAL: Skip the cabinet we're trying to place
@@ -55,13 +55,13 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       const xOverlap = Math.abs(cabinetPos.x - item.position.x) < (cabinetHalfWidth + itemHalfWidth + buffer);
       const zOverlap = Math.abs(cabinetPos.z - item.position.z) < (cabinetHalfDepth + itemHalfDepth + buffer);
       
-      // ✅ FIXED: Only report collision if there's very significant overlap
+      // ✅ FIXED: Only report collision if there's MASSIVE overlap (more than 20cm)
       if (xOverlap && zOverlap) {
         const xDistance = Math.abs(cabinetPos.x - item.position.x) - (cabinetHalfWidth + itemHalfWidth);
         const zDistance = Math.abs(cabinetPos.z - item.position.z) - (cabinetHalfDepth + itemHalfDepth);
         
-        // ✅ FIXED: Only report collision if overlapping by more than 10cm (very significant)
-        if (xDistance < -0.10 && zDistance < -0.10) {
+        // ✅ FIXED: Only report collision if overlapping by more than 20cm (MASSIVE overlap)
+        if (xDistance < -0.20 && zDistance < -0.20) {
           return item;
         }
       }
@@ -127,9 +127,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           const itemHalfSize = (isRotated ? itemRotatedDepth : itemRotatedWidth) / 2;
           
           if (itemEdge < position.x) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + 0.002); // Extremely minimal gap
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize - 0.01); // ✅ FIXED: Allow slight overlap for tight fitting
           } else if (itemEdge > position.x) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - 0.002); // Extremely minimal gap
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize + 0.01); // ✅ FIXED: Allow slight overlap for tight fitting
           }
         }
       }
@@ -159,7 +159,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     });
     
     // ✅ FIXED: Better width calculation with minimum viable size
-    return Math.max(0.10, Math.min(4.0, availableWidth - 0.005)); // Extremely minimal margin for tight fitting
+    return Math.max(0.10, Math.min(4.0, availableWidth + 0.02)); // ✅ FIXED: Add small margin to allow tight fitting
   };
 
   const validateCabinetPlacement = (width: number) => {

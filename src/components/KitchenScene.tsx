@@ -69,15 +69,15 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
     if (!selectedItem) return null;
     
-    // ✅ CRITICAL: For countertops, be much more permissive with collisions - allow filling gaps
+    // ✅ CRITICAL: For countertops, be EXTREMELY permissive - they should fill gaps and be adjacent
     if (selectedItem.type === 'countertop') {
-      // ✅ FIXED: Very permissive collision detection for countertops
-      const buffer = -0.15; // Very large negative buffer allows countertops to fill tight gaps
+      // ✅ FIXED: ULTRA permissive collision detection for countertops - allow them to be adjacent
+      const buffer = -0.25; // HUGE negative buffer allows countertops to be placed right next to anything
       
       for (const placedItem of placedItems) {
         if (placedItem.id === selectedItem.id) continue;
         
-        // ✅ CRITICAL: Account for rotation when checking collisions
+        // ✅ CRITICAL: Only prevent MAJOR overlaps (more than 15cm)
         const rotatedWidth = Math.abs(Math.cos(rotation)) * itemWidth + Math.abs(Math.sin(rotation)) * itemDepth;
         const rotatedDepth = Math.abs(Math.sin(rotation)) * itemWidth + Math.abs(Math.cos(rotation)) * itemDepth;
         
@@ -90,18 +90,23 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         const xOverlap = Math.abs(x - placedItem.position.x) < (rotatedWidth/2 + placedRotatedWidth/2 + buffer);
         const zOverlap = Math.abs(z - placedItem.position.z) < (rotatedDepth/2 + placedRotatedDepth/2 + buffer);
         
-        // ✅ FIXED: Only warn if there's very significant overlap (more than 8cm)
+        // ✅ FIXED: Only warn if there's MASSIVE overlap (more than 15cm) - allows tight fitting
         if (xOverlap && zOverlap) {
           const xDistance = Math.abs(x - placedItem.position.x) - (rotatedWidth/2 + placedRotatedWidth/2);
           const zDistance = Math.abs(z - placedItem.position.z) - (rotatedDepth/2 + placedRotatedDepth/2);
           
-          // ✅ FIXED: Only show warning if overlapping by more than 8cm (very significant overlap)
-          if (xDistance < -0.08 && zDistance < -0.08) {
+          // ✅ FIXED: Only show warning if overlapping by more than 15cm (MASSIVE overlap)
+          if (xDistance < -0.15 && zDistance < -0.15) {
             return placedItem.name;
           }
         }
       }
       return null;
+    }
+    
+    // ✅ NEW: For all other items, also be more permissive near walls and other items
+    if (isNearWall(x, z)) {
+      return null; // Never show collision warnings for items near walls
     }
     
     // Calculate rotated dimensions
@@ -125,7 +130,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const placedHalfDepth = placedRotatedDepth / 2;
       
       // ✅ FIXED: Standard collision detection for non-countertop items
-      const buffer = 0.02; // Small buffer for other items
+      const buffer = -0.05; // ✅ FIXED: Negative buffer allows items to be adjacent
       
       // ✅ FIXED: Don't prevent oven collision here - let the dialog handle it
       if (selectedItem.type === 'oven' && placedItem.type === 'oven') {
