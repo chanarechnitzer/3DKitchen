@@ -34,13 +34,13 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   // ✅ FIXED: חישוב נכון של השטח הזמין
   const calculateFillWidth = () => {
     if (!position || !kitchenDimensions) {
-      console.log('Missing position or kitchen dimensions');
+      console.log('❌ Missing position or kitchen dimensions');
       return defaultWidth;
     }
     
-    console.log('Calculating fill width for position:', position);
-    console.log('Kitchen dimensions:', kitchenDimensions);
-    console.log('Placed items:', placedItems);
+    console.log('🔍 Calculating fill width for position:', position);
+    console.log('🏠 Kitchen dimensions:', kitchenDimensions);
+    console.log('📦 Placed items count:', placedItems.length);
     
     // חישוב גבולות המטבח
     const halfWidth = kitchenDimensions.width / 2;
@@ -50,49 +50,64 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     let leftBoundary = -halfWidth + snapDistance;
     let rightBoundary = halfWidth - snapDistance;
     
-    console.log('Initial boundaries:', { leftBoundary, rightBoundary });
+    console.log('🏗️ Initial boundaries:', { leftBoundary, rightBoundary, totalWidth: rightBoundary - leftBoundary });
     
     // מצא רכיבים באותו שורה (Z דומה) שיכולים להגביל את הרוחב
-    placedItems?.forEach(item => {
-      if (!item.position || !item.dimensions) return;
+    placedItems?.forEach((item, index) => {
+      if (!item.position || !item.dimensions) {
+        console.log(`⚠️ Item ${index} missing position or dimensions`);
+        return;
+      }
       
       // דלג על הפריט הנוכחי אם הוא כבר קיים במיקום זה
       const isSamePosition = Math.abs(item.position.x - position.x) < 0.1 && 
                             Math.abs(item.position.z - position.z) < 0.1;
       if (isSamePosition) {
-        console.log('Skipping same position item:', item.name);
+        console.log(`🔄 Skipping same position item: ${item.name}`);
         return;
       }
       
       // בדוק אם הפריט באותו שורה (מרחק Z קטן מ-0.8 מטר)
       const zDistance = Math.abs(item.position.z - position.z);
+      console.log(`📏 Item ${item.name}: Z distance = ${zDistance.toFixed(2)}m`);
+      
       if (zDistance < 0.8) {
         const itemLeft = item.position.x - item.dimensions.width / 2;
         const itemRight = item.position.x + item.dimensions.width / 2;
         
-        console.log(`Item ${item.name} at X:${item.position.x}, Z:${item.position.z}, width:${item.dimensions.width}`);
-        console.log(`Item boundaries: left=${itemLeft}, right=${itemRight}`);
+        console.log(`📦 Item ${item.name}:`);
+        console.log(`   Position: X=${item.position.x.toFixed(2)}, Z=${item.position.z.toFixed(2)}`);
+        console.log(`   Width: ${item.dimensions.width.toFixed(2)}m`);
+        console.log(`   Boundaries: left=${itemLeft.toFixed(2)}, right=${itemRight.toFixed(2)}`);
+        console.log(`   Current position X: ${position.x.toFixed(2)}`);
         
         // אם הפריט משמאל למיקום הנוכחי
         if (itemRight <= position.x && itemRight > leftBoundary) {
+          const oldBoundary = leftBoundary;
           leftBoundary = itemRight + 0.01; // רווח קטן בין פריטים
-          console.log(`Updated left boundary to: ${leftBoundary}`);
+          console.log(`⬅️ Updated left boundary from ${oldBoundary.toFixed(2)} to ${leftBoundary.toFixed(2)}`);
         }
         
         // אם הפריט מימין למיקום הנוכחי
         if (itemLeft >= position.x && itemLeft < rightBoundary) {
+          const oldBoundary = rightBoundary;
           rightBoundary = itemLeft - 0.01; // רווח קטן בין פריטים
-          console.log(`Updated right boundary to: ${rightBoundary}`);
+          console.log(`➡️ Updated right boundary from ${oldBoundary.toFixed(2)} to ${rightBoundary.toFixed(2)}`);
         }
+      } else {
+        console.log(`❌ Item ${item.name} not in same row (Z distance: ${zDistance.toFixed(2)}m)`);
       }
     });
     
     const availableWidth = rightBoundary - leftBoundary;
-    console.log('Final boundaries:', { leftBoundary, rightBoundary, availableWidth });
+    console.log('📐 Final calculation:');
+    console.log(`   Left boundary: ${leftBoundary.toFixed(2)}m`);
+    console.log(`   Right boundary: ${rightBoundary.toFixed(2)}m`);
+    console.log(`   Available width: ${availableWidth.toFixed(2)}m`);
     
     // הגבל בין 30 ס"מ ל-300 ס"מ
     const finalWidth = Math.max(0.3, Math.min(3.0, availableWidth));
-    console.log('Final width:', finalWidth);
+    console.log(`✅ Final width: ${finalWidth.toFixed(2)}m (${(finalWidth * 100).toFixed(0)}cm)`);
     
     return finalWidth;
   };
@@ -100,11 +115,15 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const fillWidth = calculateFillWidth();
 
   const handleConfirm = () => {
+    console.log('🎯 User confirmed option:', selectedOption);
     if (selectedOption === 'custom') {
+      console.log('📏 Custom width:', customWidth);
       onConfirm(selectedOption, customWidth);
     } else if (selectedOption === 'fill') {
+      console.log('🔧 Fill width:', fillWidth);
       onConfirm(selectedOption, fillWidth);
     } else {
+      console.log('✋ Keep current width:', defaultWidth);
       onConfirm(selectedOption);
     }
   };
