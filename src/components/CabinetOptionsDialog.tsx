@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Ruler, Check } from 'lucide-react';
+import { X, Ruler, Check, Maximize2 } from 'lucide-react';
 
 interface CabinetOptionsDialogProps {
   onClose: () => void;
@@ -42,7 +42,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div 
-        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl transform transition-all animate-in zoom-in-95 duration-300"
+        className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl transform transition-all animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
@@ -50,7 +50,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
             <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center">
               <Ruler className="text-white" size={20} />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">בחר רוחב ארון</h2>
+            <h2 className="text-xl font-bold text-gray-900">אפשרויות ארון מטבח</h2>
           </div>
           <button 
             onClick={onClose}
@@ -67,7 +67,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         
         {/* Main Options */}
         <div className="space-y-4 mb-6">
-          {/* Keep current size */}
+          {/* Option 1: Keep current size */}
           <label
             className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
               selectedOption === 'keep'
@@ -84,7 +84,10 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
               className="text-primary focus:ring-primary"
             />
             <div className="flex-1">
-              <div className="font-semibold text-gray-900">שמור על המידה הנוכחית</div>
+              <div className="font-semibold text-gray-900 flex items-center gap-2">
+                <span>📏</span>
+                שמור על המידה הנוכחית
+              </div>
               <div className="text-sm text-gray-600">{(defaultWidth * 100).toFixed(0)} ס"מ רוחב</div>
             </div>
             {selectedOption === 'keep' && (
@@ -94,7 +97,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
             )}
           </label>
 
-          {/* Custom size */}
+          {/* Option 2: Custom size */}
           <label
             className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
               selectedOption === 'custom'
@@ -111,7 +114,10 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
               className="mt-1 text-primary focus:ring-primary"
             />
             <div className="flex-1">
-              <div className="font-semibold text-gray-900 mb-2">בחר מידה אחרת</div>
+              <div className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <span>🎯</span>
+                בחר מידה אחרת
+              </div>
               <div className="text-sm text-gray-600 mb-3">בחר מתוך המידות הסטנדרטיות</div>
               
               {selectedOption === 'custom' && (
@@ -149,37 +155,61 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
             )}
           </label>
 
-          {/* Fill space option - only show if there's space to fill */}
-          {hasAdjacentItems && availableSpace > 0.5 && (
-            <label
-              className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                selectedOption === 'fill'
-                  ? 'border-primary bg-primary/5 shadow-lg'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <input
-                type="radio"
-                name="option"
-                value="fill"
-                checked={selectedOption === 'fill'}
-                onChange={(e) => setSelectedOption(e.target.value as 'fill')}
-                className="text-primary focus:ring-primary"
-              />
-              <div className="flex-1">
-                <div className="font-semibold text-gray-900">מלא את כל השטח</div>
-                <div className="text-sm text-gray-600">
-                  מלא את השטח בין הרכיבים או הקיר ({(availableSpace * 100).toFixed(0)} ס"מ)
-                </div>
-                <div className="text-xs text-orange-600 mt-1">💡 ניצול מקסימלי של השטח</div>
+          {/* Option 3: Fill space - always show with smart detection */}
+          <label
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              selectedOption === 'fill'
+                ? 'border-primary bg-primary/5 shadow-lg'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="option"
+              value="fill"
+              checked={selectedOption === 'fill'}
+              onChange={(e) => setSelectedOption(e.target.value as 'fill')}
+              className="text-primary focus:ring-primary"
+            />
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900 flex items-center gap-2">
+                <Maximize2 size={16} className="text-primary" />
+                מלא את כל השטח הזמין
               </div>
-              {selectedOption === 'fill' && (
-                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                  <Check size={14} className="text-white" />
-                </div>
-              )}
-            </label>
-          )}
+              <div className="text-sm text-gray-600">
+                {hasAdjacentItems && availableSpace > 0.5 ? (
+                  <>מלא את השטח בין הרכיבים או הקיר ({(availableSpace * 100).toFixed(0)} ס"מ)</>
+                ) : (
+                  <>זיהוי אוטומטי של השטח הזמין במטבח</>
+                )}
+              </div>
+              <div className="text-xs text-orange-600 mt-1 flex items-center gap-1">
+                <span>💡</span>
+                <span>ניצול מקסימלי של השטח - חסכוני וחכם</span>
+              </div>
+            </div>
+            {selectedOption === 'fill' && (
+              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                <Check size={14} className="text-white" />
+              </div>
+            )}
+          </label>
+        </div>
+
+        {/* Info box */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-200 mb-4">
+          <div className="flex items-center gap-2 text-blue-700">
+            <span className="text-sm">ℹ️</span>
+            <span className="text-sm font-medium">טיפ מקצועי</span>
+          </div>
+          <p className="text-xs text-blue-600 mt-1">
+            {selectedOption === 'fill' 
+              ? 'מילוי השטח יוצר רצף עבודה חלק ומקסם את השטח הזמין במטבח'
+              : selectedOption === 'custom'
+              ? 'מידות סטנדרטיות מבטיחות התאמה מושלמת לציוד מטבח'
+              : 'שמירה על המידה הנוכחית מתאימה כשהמיקום מושלם'
+            }
+          </p>
         </div>
         
         <div className="flex gap-3">

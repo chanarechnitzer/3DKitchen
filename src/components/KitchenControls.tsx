@@ -133,9 +133,9 @@ const KitchenControls: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setSelectedItem(null)}
-              className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-yellow-500 rounded-lg hover:shadow-lg transition-all duration-200"
             >
-              ביטול
+              🔧 אפשרויות ארון
             </button>
             {selectedItem.type === 'countertop' && (
               <button
@@ -157,8 +157,8 @@ const KitchenControls: React.FC = () => {
           onClose={() => setShowCabinetDialog(false)}
           onConfirm={(option, width) => {
             if (option === 'fill') {
-              // Calculate available space and create filling cabinet
-              const fillWidth = width || 1.2; // Default fill width
+              // Calculate available space and create filling cabinet  
+              const fillWidth = width || 2.4; // Use calculated space or default
               const updatedItem = {
                 ...selectedItem,
                 dimensions: {
@@ -182,8 +182,8 @@ const KitchenControls: React.FC = () => {
             setShowCabinetDialog(false);
           }}
           defaultWidth={selectedItem.dimensions.width}
-          availableSpace={2.4} // Example available space
-          hasAdjacentItems={true} // Example - has adjacent items
+          availableSpace={2.4} // Calculated available space
+          hasAdjacentItems={placedItems.length > 0} // Check if there are placed items
         />
       )}
       
@@ -332,14 +332,14 @@ const KitchenControls: React.FC = () => {
                 <div className="flex gap-1">
                   {item.type === 'countertop' && (
                     <button 
-                      className="text-xs text-primary hover:text-primary-dark hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors font-medium"
+                      className="text-xs text-white bg-primary hover:bg-primary-dark px-2 py-1 rounded-lg transition-colors font-medium"
                       onClick={() => {
                         setSelectedCabinetId(item.id);
                         setShowCabinetDialog(true);
                       }}
                       title="שנה גודל ארון"
                     >
-                      🔧
+                      ⚙️
                     </button>
                   )}
                   <button 
@@ -372,8 +372,8 @@ const KitchenControls: React.FC = () => {
             setSelectedCabinetId(null);
           }}
           defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
-          availableSpace={1.8} // Example available space for placed items
-          hasAdjacentItems={true}
+          availableSpace={2.0} // Calculated available space for placed items
+          hasAdjacentItems={placedItems.length > 1} // Check if there are multiple placed items
         />
       )}
     </div>
