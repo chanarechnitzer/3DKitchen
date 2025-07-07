@@ -131,11 +131,11 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           )}
           
           {/* Kitchen Controls - Only show if no item is being dragged */}
-          {!designPhaseComplete && (
+          <div className="flex-1 min-h-0 overflow-hidden">
             <div className="flex-1 min-h-0 overflow-hidden">
               <KitchenControls />
             </div>
-          )}
+          </div>
           
           {/* Action Buttons - Fixed at bottom */}
           <div className="flex-shrink-0 space-y-2 bg-white rounded-xl p-3 border border-gray-100 shadow-lg">

@@ -90,35 +90,58 @@ const KitchenControls: React.FC = () => {
       
       {/* ✅ NEW: Show item options when item is selected */}
       {selectedItem && (
-        <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+        <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-yellow-500/10 rounded-xl border-2 border-primary/30 shadow-lg">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-yellow-500 rounded-xl flex items-center justify-center shadow-lg">
               <span className="text-white text-lg">
                 {getItemIcon(selectedItem.type)}
               </span>
             </div>
             <div>
-              <h3 className="text-sm font-bold text-blue-800">{selectedItem.name}</h3>
-              <p className="text-xs text-blue-600">מוכן להנחה</p>
+              <h3 className="text-base font-bold text-gray-900">{selectedItem.name}</h3>
+              <p className="text-sm text-primary font-medium">✨ מוכן להנחה במטבח</p>
             </div>
           </div>
           
           <div className="text-center mb-3">
-            <div className="text-2xl mb-2">🎯</div>
-            <p className="text-sm font-medium text-blue-800 mb-2">גרור למיקום במטבח</p>
-            <div className="space-y-1 text-xs text-blue-600">
-              <p>• הפריט יצמד אוטומטית לקירות</p>
-              <p>• בפינות לחץ R לסיבוב</p>
-              <p>• לחץ במטבח כדי למקם</p>
+            <div className="text-3xl mb-2 animate-pulse">🎯</div>
+            <p className="text-sm font-bold text-gray-900 mb-3">גרור למיקום במטבח</p>
+            <div className="bg-white/80 rounded-lg p-3 space-y-2 text-xs text-gray-700">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span>הפריט יצמד אוטומטית לקירות ולפריטים אחרים</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                <span>בפינות לחץ R או לחץ על כפתור הסיבוב</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                <span>לחץ במטבח כדי למקם את הפריט</span>
+              </div>
+            </div>
             </div>
           </div>
           
-          <button
-            onClick={() => setSelectedItem(null)}
-            className="w-full px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
-          >
-            ביטול
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSelectedItem(null)}
+              className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              ביטול
+            </button>
+            {selectedItem.type === 'countertop' && (
+              <button
+                onClick={() => {
+                  // TODO: Open cabinet options dialog
+                  console.log('Open cabinet options');
+                }}
+                className="flex-1 px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+              >
+                🔧 אפשרויות
+              </button>
+            )}
+          </div>
         </div>
       )}
       
@@ -132,11 +155,11 @@ const KitchenControls: React.FC = () => {
         </div>
       )}
       
-      <div className={`space-y-2 flex-1 overflow-y-auto ${selectedItem ? 'opacity-50' : ''}`}>
+      <div className={`space-y-2 flex-1 overflow-y-auto ${selectedItem ? 'opacity-30 pointer-events-none' : ''}`}>
         {Object.values(groupedItems).map(group => {
           const isCountertopLimitReached = group.type === KitchenItemType.COUNTERTOP && placedCabinets >= 10;
           const isSelected = selectedItem?.type === group.type;
-          const isDisabled = selectedItem !== null; // Disable when item is selected
+          const isDisabled = selectedItem !== null && selectedItem.type !== group.type; // Disable other items when one is selected
           
           return (
             <div 
@@ -144,13 +167,12 @@ const KitchenControls: React.FC = () => {
               className={`group relative border-2 rounded-lg p-3 transition-all duration-200 cursor-pointer ${
                 isSelected 
                   ? 'border-primary bg-primary/5 shadow-lg' 
-                  : (group.count === 0 || isCountertopLimitReached || isDisabled) 
+                  : (group.count === 0 || isCountertopLimitReached) 
                     ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed' 
                     : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
               }`}
               onClick={() => group.count > 0 && !isCountertopLimitReached && !isDisabled && handleSelectItem(group.type)}
               title={
-                isDisabled ? 'סיים להניח את הפריט הנוכחי תחילה' :
                 isCountertopLimitReached ? 'הגעת למגבלת הארונות המותרת (10)' : 
                 group.count === 0 ? 'אין יחידות נותרות' : undefined
               }
@@ -176,7 +198,7 @@ const KitchenControls: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-1">
-                  {group.count > 0 && !isCountertopLimitReached && !isDisabled && (
+                  {group.count > 0 && !isCountertopLimitReached && (
                     <>
                       <button
                         onClick={(e) => {

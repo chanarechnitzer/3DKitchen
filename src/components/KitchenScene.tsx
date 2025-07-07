@@ -644,7 +644,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       {/* ✅ FIXED: Elevated window position - starts above kitchen units */}
       {selectedItem && (
-        <div className="fixed top-20 right-4 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 w-80 border border-gray-200 z-40">
+        <div className="fixed top-20 right-4 bg-white/98 backdrop-blur-sm rounded-2xl shadow-2xl p-5 w-80 border-2 border-primary/20 z-40">
           <div className="space-y-4">
             {/* Item Header */}
             <div className="flex items-center gap-3">
@@ -657,12 +657,20 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               }`}>
                 {getItemIcon(selectedItem.type)}
               </div>
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold text-gray-900">{selectedItem.name}</h3>
                 <p className="text-sm text-gray-600">
                   {selectedItem.dimensions.width} × {selectedItem.dimensions.depth} × {selectedItem.dimensions.height}מ'
                 </p>
               </div>
+            </div>
+
+            {/* Live Status Indicator */}
+            <div className="flex items-center justify-center gap-2 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+              <div className={`w-3 h-3 rounded-full animate-pulse ${collisionWarning ? 'bg-red-500' : 'bg-green-500'}`}></div>
+              <span className="text-sm font-medium text-gray-700">
+                {collisionWarning ? 'מיקום לא זמין' : 'מיקום זמין'}
+              </span>
             </div>
 
             {/* Status */}
@@ -678,7 +686,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             </div>
             
             {/* ✅ FIXED: Collision Warning - only shows for actual overlaps, NOT for wall-adjacent items */}
-            {collisionWarning && (
+            {collisionWarning && !isNearWall(finalPosition.x, finalPosition.z) && (
               <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-3 border border-red-200">
                 <p className="text-sm font-medium text-red-800 mb-1">
                   🚫 לא ניתן למקם כאן
@@ -711,7 +719,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             )}
             
             {/* Distance Measurements */}
-            {Object.keys(dragValidation.distances).length > 0 && !collisionWarning && (
+            {Object.keys(dragValidation.distances).length > 0 && (
               <div>
                 <h4 className="text-sm font-bold text-gray-900 mb-2">מרחקי משולש הזהב</h4>
                 <div className="grid grid-cols-1 gap-2">
@@ -735,7 +743,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             )}
             
             {/* Instructions */}
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-3 border border-gray-200">
+            <div className="bg-gradient-to-r from-primary/5 to-yellow-500/5 rounded-xl p-3 border border-primary/20">
               <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-2">
                 <div className={`w-2 h-2 rounded-full animate-pulse ${
                   collisionWarning ? 'bg-red-500' : 'bg-primary'
@@ -743,7 +751,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
                 <span>{collisionWarning ? 'בחר מיקום אחר' : 'לחץ כדי למקם'}</span>
               </div>
               <p className="text-xs text-gray-500 text-center">
-                💡 <strong>לא במקום הנכון?</strong> לחץ "הסר" ברשימת הרכיבים ולאחר מכן גרור שוב
+                💡 <strong>רוצה לשנות מיקום?</strong> לחץ "הסר" ברשימת הרכיבים ולאחר מכן גרור שוב
               </p>
             </div>
           </div>
