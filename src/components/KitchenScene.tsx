@@ -7,7 +7,6 @@ import DraggableObject from './three/DraggableObject';
 import TriangleLines from './three/TriangleLines';
 import DistanceLines from './three/DistanceLines';
 import SnapGuides from './three/SnapGuides';
-import CabinetSizingDialog from './CabinetSizingDialog';
 import { useKitchen, WindowPlacement } from '../store/KitchenContext';
 
 interface KitchenSceneProps {
@@ -26,9 +25,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     setSelectedItem,
     placeItem,
     triangleValidation,
-    getDragValidation,
-    detectGaps,
-    createCustomCabinet
+    getDragValidation
   } = useKitchen();
   
   const [position, setPosition] = useState({ x: 0, z: 0 });
@@ -38,12 +35,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const [itemRotation, setItemRotation] = useState(0);
   const [showRotationHint, setShowRotationHint] = useState(false);
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
-  const [showSizingDialog, setShowSizingDialog] = useState(false);
-  const [pendingPlacement, setPendingPlacement] = useState<{
-    position: { x: number, z: number };
-    rotation: number;
-    gapInfo: { hasGap: boolean; gapSize: number; position: string; suggestedWidth?: number };
-  } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
@@ -496,81 +487,24 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snapPosition || validatePosition(position.x, position.z);
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
-      // Check if this is a countertop/cabinet and if there are gaps
-      if (selectedItem.type === 'countertop') {
-        const gapInfo = detectGaps(
-          new THREE.Vector3(finalPos.x, 0, finalPos.z),
-          selectedItem.dimensions.width
-        );
-        
-        if (gapInfo.hasGap && gapInfo.suggestedWidth) {
-          // Show sizing dialog for gap filling
-          setPendingPlacement({
-            position: finalPos,
-            rotation: finalRotation,
-            gapInfo
-          });
-          setShowSizingDialog(true);
-          return;
-        }
-      }
-      
-      // Place item normally
       placeItem(
         selectedItem.id, 
         new THREE.Vector3(finalPos.x, 0, finalPos.z),
         finalRotation
       );
       
-      resetDragState();
-    }
-  };
-  
-  // Reset drag state
-  const resetDragState = () => {
-    setSelectedItem(null);
-    setIsDragging(false);
-    setSnapPosition(null);
-    setItemRotation(0);
-    setShowRotationHint(false);
-    setCollisionWarning(null);
-    
-    // ✅ Haptic feedback for mobile
-    if (navigator.vibrate) {
-      navigator.vibrate(50);
-    }
-  };
-  
-  // Handle cabinet sizing confirmation
-  const handleCabinetSizing = (width: number, autoFill: boolean) => {
-    if (selectedItem && pendingPlacement) {
-      if (autoFill || width !== selectedItem.dimensions.width) {
-        // Place with custom width
-        placeItem(
-          selectedItem.id,
-          new THREE.Vector3(pendingPlacement.position.x, 0, pendingPlacement.position.z),
-          pendingPlacement.rotation,
-          width
-        );
-      } else {
-        // Place with original width
-        placeItem(
-          selectedItem.id,
-          new THREE.Vector3(pendingPlacement.position.x, 0, pendingPlacement.position.z),
-          pendingPlacement.rotation
-        );
-      }
+      setSelectedItem(null);
+      setIsDragging(false);
+      setSnapPosition(null);
+      setItemRotation(0);
+      setShowRotationHint(false);
+      setCollisionWarning(null);
       
-      setShowSizingDialog(false);
-      setPendingPlacement(null);
-      resetDragState();
+      // ✅ Haptic feedback for mobile
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
     }
-  };
-  
-  // Handle sizing dialog close
-  const handleSizingDialogClose = () => {
-    setShowSizingDialog(false);
-    setPendingPlacement(null);
   };
 
   const handleMouseMove = (event: React.MouseEvent) => {
@@ -816,16 +750,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           </div>
         </div>
       )}
-      
-      {/* Cabinet Sizing Dialog */}
-      <CabinetSizingDialog
-        isOpen={showSizingDialog}
-        onClose={handleSizingDialogClose}
-        onConfirm={handleCabinetSizing}
-        defaultWidth={selectedItem?.dimensions.width || 0.6}
-        suggestedWidth={pendingPlacement?.gapInfo.suggestedWidth}
-        gapInfo={pendingPlacement?.gapInfo}
-      />
     </div>
   );
 };

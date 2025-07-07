@@ -37,7 +37,6 @@ export interface KitchenItem {
     height: number;
   };
   rotation?: number;
-  customWidth?: number; // Allow custom width for cabinets
 }
 
 // Triangle validation result
@@ -72,8 +71,6 @@ interface KitchenContextType {
   gameCompleted: boolean;
   setGameCompleted: (completed: boolean) => void;
   getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
-  detectGaps: (position: Vector3, itemWidth: number) => { hasGap: boolean; gapSize: number; position: string; suggestedWidth?: number };
-  createCustomCabinet: (width: number) => KitchenItem;
 }
 
 // Default context value
@@ -101,8 +98,6 @@ const defaultContext: KitchenContextType = {
   gameCompleted: false,
   setGameCompleted: () => {},
   getDragValidation: () => ({ isValid: false, distances: {} }),
-  detectGaps: () => ({ hasGap: false, gapSize: 0, position: '' }),
-  createCustomCabinet: () => ({} as KitchenItem),
 };
 
 // Create context
@@ -177,7 +172,6 @@ const initialKitchenItems: KitchenItem[] = [
     name: 'משטח עם מגירות',
     dimensions: { width: 0.6, depth: 0.6, height: 0.85 },
     rotation: 0,
-    customWidth: 0.6, // Default width
   })),
 ];
 
@@ -279,28 +273,16 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // Place an item in the kitchen
-  const placeItem = (itemId: string, position: Vector3, rotation: number = 0, customWidth?: number) => {
+  const placeItem = (itemId: string, position: Vector3, rotation: number = 0) => {
     const itemIndex = availableItems.findIndex(item => item.id === itemId);
     
     if (itemIndex !== -1) {
-      let item = { 
+      const item = { 
         ...availableItems[itemIndex], 
         position: new Vector3(position.x, position.y, position.z),
         placed: true,
         rotation
       };
-      
-      // Apply custom width if provided
-      if (customWidth && item.type === KitchenItemType.COUNTERTOP) {
-        item = {
-          ...item,
-          dimensions: {
-            ...item.dimensions,
-            width: customWidth
-          },
-          customWidth
-        };
-      }
       
       if (item.type === KitchenItemType.COUNTERTOP) {
         const placedCabinets = placedItems.filter(i => i.type === KitchenItemType.COUNTERTOP).length;
@@ -395,93 +377,6 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Detect gaps between components for auto-filling
-  const detectGaps = (position: Vector3, itemWidth: number) => {
-    const snapDistance = 0.05;
-    const halfWidth = kitchenDimensions.width / 2;
-    const halfLength = kitchenDimensions.length / 2;
-    const itemHalfWidth = itemWidth / 2;
-    const itemDepth = 0.6; // Standard cabinet depth
-    const itemHalfDepth = itemDepth / 2;
-    
-    // Check if item is near a wall
-    const nearLeftWall = Math.abs(position.x - (-halfWidth + snapDistance + itemHalfWidth)) < 0.1;
-    const nearRightWall = Math.abs(position.x - (halfWidth - snapDistance - itemHalfWidth)) < 0.1;
-    const nearBackWall = Math.abs(position.z - (-halfLength + snapDistance + itemHalfDepth)) < 0.1;
-    const nearFrontWall = Math.abs(position.z - (halfLength - snapDistance - itemHalfDepth)) < 0.1;
-    
-    // Find adjacent items
-    const adjacentItems = placedItems.filter(item => {
-      const distance = Math.abs(position.z - item.position.z);
-      return distance < 0.3; // Same row
-    });
-    
-    let hasGap = false;
-    let gapSize = 0;
-    let gapPosition = '';
-    let suggestedWidth: number | undefined;
-    
-    if (nearBackWall || nearFrontWall) {
-      // Check for gaps along the wall
-      const sortedItems = [...adjacentItems, { position, dimensions: { width: itemWidth } }]
-        .sort((a, b) => a.position.x - b.position.x);
-      
-      for (let i = 0; i < sortedItems.length - 1; i++) {
-        const currentItem = sortedItems[i];
-        const nextItem = sortedItems[i + 1];
-        
-        const currentRight = currentItem.position.x + currentItem.dimensions.width / 2;
-        const nextLeft = nextItem.position.x - nextItem.dimensions.width / 2;
-        const gap = nextLeft - currentRight;
-        
-        if (gap > 0.1) { // Significant gap
-          hasGap = true;
-          gapSize = gap;
-          gapPosition = `בין ${currentItem.name || 'רכיב'} ל${nextItem.name || 'רכיב'}`;
-          suggestedWidth = Math.min(gap - 0.02, 1.2); // Leave small margin, max 1.2m
-          break;
-        }
-      }
-      
-      // Check gap to walls
-      if (!hasGap) {
-        const leftmostItem = sortedItems[0];
-        const rightmostItem = sortedItems[sortedItems.length - 1];
-        
-        const leftGap = leftmostItem.position.x - leftmostItem.dimensions.width / 2 - (-halfWidth + snapDistance);
-        const rightGap = (halfWidth - snapDistance) - (rightmostItem.position.x + rightmostItem.dimensions.width / 2);
-        
-        if (leftGap > 0.1) {
-          hasGap = true;
-          gapSize = leftGap;
-          gapPosition = 'לקיר השמאלי';
-          suggestedWidth = Math.min(leftGap - 0.02, 1.2);
-        } else if (rightGap > 0.1) {
-          hasGap = true;
-          gapSize = rightGap;
-          gapPosition = 'לקיר הימני';
-          suggestedWidth = Math.min(rightGap - 0.02, 1.2);
-        }
-      }
-    }
-    
-    return { hasGap, gapSize, position: gapPosition, suggestedWidth };
-  };
-  
-  // Create a custom cabinet with specified width
-  const createCustomCabinet = (width: number): KitchenItem => {
-    return {
-      id: generateId('countertop'),
-      type: KitchenItemType.COUNTERTOP,
-      position: new Vector3(0, 0, 0),
-      placed: false,
-      name: `ארון ${width}מ'`,
-      dimensions: { width, depth: 0.6, height: 0.85 },
-      rotation: 0,
-      customWidth: width,
-    };
-  };
-
   const value = {
     kitchenDimensions,
     setKitchenDimensions,
@@ -501,8 +396,6 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     gameCompleted,
     setGameCompleted,
     getDragValidation,
-    detectGaps,
-    createCustomCabinet,
   };
 
   return (

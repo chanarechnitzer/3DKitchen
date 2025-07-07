@@ -370,46 +370,22 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               <meshStandardMaterial color={countertopColor} transparent opacity={opacity} />
             </mesh>
             
-            {/* Drawer handles - scale with width */}
-            {dimensions.width > 0.4 && (
+            {/* Drawer handles */}
             <mesh 
               position={[0, baseHeight * 0.3, dimensions.depth / 2 + 0.01]} 
               castShadow
             >
-              <boxGeometry args={[Math.min(dimensions.width * 0.6, 0.4), 0.03, 0.02]} />
+              <boxGeometry args={[dimensions.width * 0.5, 0.03, 0.02]} />
               <meshStandardMaterial color="#9ca3af" transparent opacity={opacity} />
             </mesh>
-            )}
             
-            {dimensions.width > 0.4 && (
             <mesh 
               position={[0, baseHeight * 0.6, dimensions.depth / 2 + 0.01]} 
               castShadow
             >
-              <boxGeometry args={[Math.min(dimensions.width * 0.6, 0.4), 0.03, 0.02]} />
+              <boxGeometry args={[dimensions.width * 0.5, 0.03, 0.02]} />
               <meshStandardMaterial color="#9ca3af" transparent opacity={opacity} />
             </mesh>
-            )}
-            
-            {/* Add dividers for wide cabinets */}
-            {dimensions.width > 1.0 && (
-              <>
-                <mesh 
-                  position={[-dimensions.width * 0.25, baseHeight / 2, 0]} 
-                  castShadow
-                >
-                  <boxGeometry args={[0.02, baseHeight, dimensions.depth]} />
-                  <meshStandardMaterial color={cabinetColor} transparent opacity={opacity * 0.8} />
-                </mesh>
-                <mesh 
-                  position={[dimensions.width * 0.25, baseHeight / 2, 0]} 
-                  castShadow
-                >
-                  <boxGeometry args={[0.02, baseHeight, dimensions.depth]} />
-                  <meshStandardMaterial color={cabinetColor} transparent opacity={opacity * 0.8} />
-                </mesh>
-              </>
-            )}
           </group>
         );
         
