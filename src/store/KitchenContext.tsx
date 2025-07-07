@@ -1,15 +1,15 @@
-getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
+  getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
   updateCabinetSize: (itemId: string, newWidth: number) => void;
   updateOvenStack: (baseOvenId: string, newOvenId: string) => void;
 }
 
-setGameCompleted: () => {},
+  setGameCompleted: () => {},
   getDragValidation: () => ({ isValid: false, distances: {} }),
   updateCabinetSize: () => {},
   updateOvenStack: () => {},
 };
 
-return { isValid, distances };
+    return { isValid, distances };
   };
 
   // Update cabinet size
@@ -36,7 +36,7 @@ return { isValid, distances };
 
   // Place an item in the kitchen
 
-getDragValidation,
+    getDragValidation,
     updateCabinetSize,
     updateOvenStack,
   };
