@@ -9,6 +9,7 @@ import DistanceLines from './three/DistanceLines';
 import SnapGuides from './three/SnapGuides';
 import { useKitchen, WindowPlacement, KitchenItemType } from '../store/KitchenContext';
 import OvenStackDialog from './OvenStackDialog';
+import CabinetOptionsDialog from './CabinetOptionsDialog';
 
 interface KitchenSceneProps {
   windowPlacement: WindowPlacement;
