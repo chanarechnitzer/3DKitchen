@@ -185,11 +185,6 @@ const KitchenControls: React.FC = () => {
                   <div>
                     <h3 className="font-semibold text-gray-900 text-sm">{group.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        group.count > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {group.items[0]?.customWidth ? `${group.items[0].customWidth}מ'` : '0.6מ\''}
-                      </span>
                       {isCountertopLimitReached && (
                         <AlertCircle size={12} className="text-warning" />
                       )}
@@ -216,12 +211,6 @@ const KitchenControls: React.FC = () => {
                         }`} 
                         size={16} 
                       />
-                      {group.type === KitchenItemType.COUNTERTOP && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                      {group.items[0]?.customWidth ? `${group.items[0].customWidth}מ'` : '0.6מ''}
-                    </span>
-                  )}
-                      )}
                     </>
                   )}
                 </div>
