@@ -53,8 +53,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const halfLength = kitchenDimensions.length / 2;
     const itemHalfWidth = selectedItem.dimensions.width / 2;
     const itemHalfDepth = selectedItem.dimensions.depth / 2;
-    const snapDistance = 0.05;
-    const wallThreshold = 0.1; // Distance to consider "near wall"
+    const snapDistance = 0.01; // ✅ CRITICAL: Ultra small snap distance
+    const wallThreshold = 0.3; // ✅ CRITICAL: Much larger threshold for "near wall"
     
     // Check if item is positioned near any wall
     const nearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < wallThreshold;
@@ -69,44 +69,10 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
     if (!selectedItem) return null;
     
-    // ✅ CRITICAL: For countertops, be EXTREMELY permissive - they should fill gaps and be adjacent
-    if (selectedItem.type === 'countertop') {
-      // ✅ FIXED: ULTRA permissive collision detection for countertops - allow them to be adjacent
-      const buffer = -0.25; // HUGE negative buffer allows countertops to be placed right next to anything
-      
-      for (const placedItem of placedItems) {
-        if (placedItem.id === selectedItem.id) continue;
-        
-        // ✅ CRITICAL: Only prevent MAJOR overlaps (more than 15cm)
-        const rotatedWidth = Math.abs(Math.cos(rotation)) * itemWidth + Math.abs(Math.sin(rotation)) * itemDepth;
-        const rotatedDepth = Math.abs(Math.sin(rotation)) * itemWidth + Math.abs(Math.cos(rotation)) * itemDepth;
-        
-        const placedRotation = placedItem.rotation || 0;
-        const placedRotatedWidth = Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.width + 
-                                   Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.depth;
-        const placedRotatedDepth = Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.width + 
-                                   Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.depth;
-        
-        const xOverlap = Math.abs(x - placedItem.position.x) < (rotatedWidth/2 + placedRotatedWidth/2 + buffer);
-        const zOverlap = Math.abs(z - placedItem.position.z) < (rotatedDepth/2 + placedRotatedDepth/2 + buffer);
-        
-        // ✅ FIXED: Only warn if there's MASSIVE overlap (more than 15cm) - allows tight fitting
-        if (xOverlap && zOverlap) {
-          const xDistance = Math.abs(x - placedItem.position.x) - (rotatedWidth/2 + placedRotatedWidth/2);
-          const zDistance = Math.abs(z - placedItem.position.z) - (rotatedDepth/2 + placedRotatedDepth/2);
-          
-          // ✅ FIXED: Only show warning if overlapping by more than 15cm (MASSIVE overlap)
-          if (xDistance < -0.15 && zDistance < -0.15) {
-            return placedItem.name;
-          }
-        }
-      }
-      return null;
-    }
-    
-    // ✅ NEW: For all other items, also be more permissive near walls and other items
+    // ✅ CRITICAL: If item is near a wall, don't check for collisions
+    // Items against walls should never show collision warnings
     if (isNearWall(x, z)) {
-      return null; // Never show collision warnings for items near walls
+      return null;
     }
     
     // Calculate rotated dimensions
@@ -129,26 +95,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const placedHalfWidth = placedRotatedWidth / 2;
       const placedHalfDepth = placedRotatedDepth / 2;
       
-      // ✅ FIXED: Standard collision detection for non-countertop items
-      const buffer = -0.05; // ✅ FIXED: Negative buffer allows items to be adjacent
-      
-      // ✅ FIXED: Don't prevent oven collision here - let the dialog handle it
-      if (selectedItem.type === 'oven' && placedItem.type === 'oven') {
-        // ✅ FIXED: Check if ovens are in same position (for stacking) vs different positions
-        const samePosition = Math.abs(x - placedItem.position.x) < 0.1 && Math.abs(z - placedItem.position.z) < 0.1;
-        if (samePosition) {
-          // Skip collision check for ovens in same position - the dialog will handle stacking
-          continue;
-        }
-        // For ovens in different positions, continue with normal collision detection
-      }
-      
-      // ✅ FIXED: Special handling for stacked ovens - treat them as single unit
-      if ((placedItem as any).stackedWith || (placedItem as any).stackedOn) {
-        // For stacked ovens, use the base oven's position and combined height
-        continue;
-      }
-      
+      // ✅ FIXED: Much smaller buffer - only prevent actual overlap, allow touching
+      const buffer = 0.01; // Only 1cm buffer - allows items to be adjacent
       const xOverlap = Math.abs(x - placedItem.position.x) < (itemHalfWidth + placedHalfWidth + buffer);
       const zOverlap = Math.abs(z - placedItem.position.z) < (itemHalfDepth + placedHalfDepth + buffer);
       
@@ -168,18 +116,15 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     const itemHalfWidth = selectedItem.dimensions.width / 2;
     const itemHalfDepth = selectedItem.dimensions.depth / 2;
     
-    const margin = 0.005; // ✅ CRITICAL: ULTRA small margin for corner placement
-    const tolerance = 0.1; // ✅ CRITICAL: HUGE tolerance to prevent boundary errors
-    
+    const margin = 0.05;
     const minX = -halfWidth + itemHalfWidth + margin;
     const maxX = halfWidth - itemHalfWidth - margin;
     const minZ = -halfLength + itemHalfDepth + margin;
     const maxZ = halfLength - itemHalfDepth - margin;
     
-    // ✅ CRITICAL: ULTRA permissive validation - prevents corner placement errors
     return {
-      x: Math.min(Math.max(minX - tolerance, x), maxX + tolerance), // ✅ CRITICAL: Huge tolerance
-      z: Math.min(Math.max(minZ - tolerance, z), maxZ + tolerance)  // ✅ CRITICAL: Huge tolerance
+      x: Math.min(Math.max(minX, x), maxX),
+      z: Math.min(Math.max(minZ, z), maxZ)
     };
   };
 
@@ -187,17 +132,14 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const getSnapPosition = (x: number, z: number) => {
     if (!selectedItem) return null;
     
-    const snapDistance = 0.01; // ✅ CRITICAL: ULTRA small distance from walls
-    const itemSnapDistance = 0.002; // ✅ CRITICAL: ULTRA small distance for tight snapping
+    const snapDistance = 0.05; // Distance from walls
+    const itemSnapDistance = 0.01; // Distance for item snapping
     const snapThreshold = 0.5; // Threshold for easier snapping
     const halfWidth = kitchenDimensions.width / 2;
     const halfLength = kitchenDimensions.length / 2;
     const itemHalfWidth = selectedItem.dimensions.width / 2;
     const itemHalfDepth = selectedItem.dimensions.depth / 2;
     const cornerThreshold = 0.8;
-    
-    // ✅ CRITICAL: ULTRA permissive corner detection for better snapping
-    const cornerDetectionThreshold = 1.2; // ✅ CRITICAL: Much larger threshold for corner detection
     
     let snapX = x;
     let snapZ = z;
@@ -206,38 +148,38 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     let snapType = '';
 
     // ✅ NEW: Check wall proximity first for countertops
-    const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < cornerDetectionThreshold;
-    const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfWidth)) < cornerDetectionThreshold;
-    const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerDetectionThreshold;
-    const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerDetectionThreshold;
+    const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < cornerThreshold;
+    const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfWidth)) < cornerThreshold;
+    const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
+    const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
 
     // ✅ PRIORITY 1: For countertops, prioritize wall snapping even when near other items
     if (selectedItem.type === 'countertop') {
       // Corner snapping with rotation options
       if (isNearLeftWall && isNearBackWall) {
-        snapX = -halfWidth + snapDistance + itemHalfWidth; // ✅ CRITICAL: Perfect corner placement
-        snapZ = -halfLength + snapDistance + itemHalfDepth; // ✅ CRITICAL: Perfect corner placement
+        snapX = -halfWidth + snapDistance + itemHalfWidth;
+        snapZ = -halfLength + snapDistance + itemHalfDepth;
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה שמאל-אחור';
         setShowRotationHint(true);
       } else if (isNearRightWall && isNearBackWall) {
-        snapX = halfWidth - snapDistance - itemHalfWidth;   // ✅ CRITICAL: Perfect corner placement
-        snapZ = -halfLength + snapDistance + itemHalfDepth; // ✅ CRITICAL: Perfect corner placement
+        snapX = halfWidth - snapDistance - itemHalfWidth;
+        snapZ = -halfLength + snapDistance + itemHalfDepth;
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה ימין-אחור';
         setShowRotationHint(true);
       } else if (isNearLeftWall && isNearFrontWall) {
-        snapX = -halfWidth + snapDistance + itemHalfWidth;  // ✅ CRITICAL: Perfect corner placement
-        snapZ = halfLength - snapDistance - itemHalfDepth;  // ✅ CRITICAL: Perfect corner placement
+        snapX = -halfWidth + snapDistance + itemHalfWidth;
+        snapZ = halfLength - snapDistance - itemHalfDepth;
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה שמאל-קדמי';
         setShowRotationHint(true);
       } else if (isNearRightWall && isNearFrontWall) {
-        snapX = halfWidth - snapDistance - itemHalfWidth;   // ✅ CRITICAL: Perfect corner placement
-        snapZ = halfLength - snapDistance - itemHalfDepth;  // ✅ CRITICAL: Perfect corner placement
+        snapX = halfWidth - snapDistance - itemHalfWidth;
+        snapZ = halfLength - snapDistance - itemHalfDepth;
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה ימין-קדמי';
@@ -282,7 +224,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         
         // ✅ FIXED: When snapping to items, face AWAY from walls, not the item
         // Snap to right side of placed item
-        const rightSnapX = placedItem.position.x + placedHalfWidth + itemHalfWidth + itemSnapDistance; // ✅ FIXED: Snap right next to item
+        const rightSnapX = placedItem.position.x + placedHalfWidth + itemHalfWidth + itemSnapDistance;
         if (Math.abs(x - rightSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
           snapX = rightSnapX;
           snapZ = placedItem.position.z;
@@ -307,7 +249,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         }
         
         // Snap to left side of placed item
-        const leftSnapX = placedItem.position.x - placedHalfWidth - itemHalfWidth - itemSnapDistance; // ✅ FIXED: Snap right next to item
+        const leftSnapX = placedItem.position.x - placedHalfWidth - itemHalfWidth - itemSnapDistance;
         if (Math.abs(x - leftSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
           snapX = leftSnapX;
           snapZ = placedItem.position.z;
@@ -332,7 +274,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         }
         
         // Snap to front of placed item
-        const frontSnapZ = placedItem.position.z + placedHalfDepth + itemHalfDepth + itemSnapDistance; // ✅ FIXED: Snap right next to item
+        const frontSnapZ = placedItem.position.z + placedHalfDepth + itemHalfDepth + itemSnapDistance;
         if (Math.abs(z - frontSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
           snapX = placedItem.position.x;
           snapZ = frontSnapZ;
@@ -357,7 +299,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         }
         
         // Snap to back of placed item
-        const backSnapZ = placedItem.position.z - placedHalfDepth - itemHalfDepth - itemSnapDistance; // ✅ FIXED: Snap right next to item
+        const backSnapZ = placedItem.position.z - placedHalfDepth - itemHalfDepth - itemSnapDistance;
         if (Math.abs(z - backSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
           snapX = placedItem.position.x;
           snapZ = backSnapZ;
@@ -551,122 +493,23 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snapPosition || validatePosition(position.x, position.z);
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
-      // Check if it's a countertop/cabinet  
-      if (selectedItem.type === 'countertop') {
-        // ✅ FIXED: Store cabinet info and show options dialog
-        setPendingCabinet({
-          id: selectedItem.id,
-          position: new THREE.Vector3(finalPos.x, 0, finalPos.z),
-          rotation: finalRotation
-        });
-        setShowCabinetDialog(true);
-        
-        // ✅ CRITICAL: Don't clear selected item here - let dialog handle it
-        
-        // ✅ CRITICAL: Don't clear selected item here - let dialog handle it
-        // This prevents the "stuck" state when dialog opens
-      } else if (selectedItem.type === 'oven') {
-        // ✅ FIXED: Check if placing oven on another oven - more precise detection
-        const baseOven = placedItems.find(item => 
-          item.type === 'oven' && 
-          Math.abs(item.position.x - finalPos.x) < 0.05 && 
-          Math.abs(item.position.z - finalPos.z) < 0.05
-        );
-        
-        if (baseOven) {
-          // Show stacking dialog
-          setPendingOven({
-            id: selectedItem.id,
-            position: new THREE.Vector3(baseOven.position.x, 0, baseOven.position.z), // Use base oven position
-            rotation: baseOven.rotation || 0, // Use base oven rotation
-            baseOven
-          });
-          setShowOvenDialog(true);
-        } else {
-          // Place oven normally
-          placeItem(
-            selectedItem.id, 
-            new THREE.Vector3(finalPos.x, 0, finalPos.z),
-            finalRotation
-          );
-          setSelectedItem(null);
-          setIsDragging(false);
-          setSnapPosition(null);
-          setItemRotation(0);
-          setShowRotationHint(false);
-          setCollisionWarning(null);
-        }
-      } else {
-        // Place other items normally
-        placeItem(
-          selectedItem.id, 
-          new THREE.Vector3(finalPos.x, 0, finalPos.z),
-          finalRotation
-        );
-        setSelectedItem(null);
-        setIsDragging(false);
-        setSnapPosition(null);
-        setItemRotation(0);
-        setShowRotationHint(false);
-        setCollisionWarning(null);
-      }
+      placeItem(
+        selectedItem.id, 
+        new THREE.Vector3(finalPos.x, 0, finalPos.z),
+        finalRotation
+      );
+      setSelectedItem(null);
+      setIsDragging(false);
+      setSnapPosition(null);
+      setItemRotation(0);
+      setShowRotationHint(false);
+      setCollisionWarning(null);
       
       // ✅ Haptic feedback for mobile
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
     }
-  };
-
-  // Handle cabinet dialog close
-  const handleCabinetDialogClose = () => {
-    console.log('Cabinet dialog closing - resetting selection state');
-    setShowCabinetDialog(false);
-    setPendingCabinet(null);
-    
-    // ✅ CRITICAL: Force reset ALL selection state with delay
-    setTimeout(() => {
-      setSelectedItem(null);
-      setIsDragging(false);
-      setSnapPosition(null);
-      setItemRotation(0);
-      setShowRotationHint(false);
-      setCollisionWarning(null);
-    }, 100);
-  };
-
-  // Handle oven dialog close
-  const handleOvenDialogClose = () => {
-    console.log('Oven dialog closing - resetting selection state');
-    setShowOvenDialog(false);
-    setPendingOven(null);
-    
-    // ✅ CRITICAL: Force reset ALL selection state with delay
-    setTimeout(() => {
-      setSelectedItem(null);
-      setIsDragging(false);
-      setSnapPosition(null);
-      setItemRotation(0);
-      setShowRotationHint(false);
-      setCollisionWarning(null);
-    }, 100);
-  };
-
-  // ✅ CRITICAL: Handle cabinet placement success - called from dialog
-  const handleCabinetPlaced = () => {
-    console.log('Cabinet placed successfully');
-    setShowCabinetDialog(false);
-    setPendingCabinet(null);
-    
-    // ✅ CRITICAL: Force reset ALL selection state with delay
-    setTimeout(() => {
-      setSelectedItem(null);
-      setIsDragging(false);
-      setSnapPosition(null);
-      setItemRotation(0);
-      setShowRotationHint(false);
-      setCollisionWarning(null);
-    }, 100);
   };
 
   const handleMouseMove = (event: React.MouseEvent) => {
@@ -760,8 +603,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             isPlaced={true}
             dimensions={item.dimensions}
             rotation={item.rotation || 0}
-            stackedOn={(item as any).stackedOn}
-            stackedWith={(item as any).stackedWith}
           />
         ))}
         
@@ -849,7 +690,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
                   🚫 לא ניתן למקם כאן
                 </p>
                 <p className="text-xs text-red-600">
-                  הרכיב חוסם את {collisionWarning}. בחר מיקום אחר.
+                  הרכיב יתנגש עם {collisionWarning}. בחר מיקום אחר.
                 </p>
               </div>
             )}
@@ -913,30 +754,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             </div>
           </div>
         </div>
-      )}
-      
-      {/* Cabinet Options Dialog */}
-      {showCabinetDialog && pendingCabinet && (
-        <CabinetOptionsDialog
-          isOpen={showCabinetDialog}
-          onClose={handleCabinetDialogClose}
-          onSuccess={handleCabinetPlaced}
-          cabinetId={pendingCabinet.id}
-          position={pendingCabinet.position}
-          rotation={pendingCabinet.rotation}
-        />
-      )}
-      
-      {/* Oven Stack Dialog */}
-      {showOvenDialog && pendingOven && (
-        <OvenStackDialog
-          isOpen={showOvenDialog}
-          onClose={handleOvenDialogClose}
-          ovenId={pendingOven.id}
-          position={pendingOven.position}
-          rotation={pendingOven.rotation}
-          baseOven={pendingOven.baseOven}
-        />
       )}
     </div>
   );
