@@ -308,17 +308,6 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               <boxGeometry args={[dimensions.width - 0.1, 0.08, 0.01]} />
               <meshStandardMaterial color="#374151" transparent opacity={opacity} />
             </mesh>
-            
-            {/* Stack indicator if this oven is stacked */}
-            {(stackedOn || stackedWith) && (
-              <mesh 
-                position={[0, baseHeight + 0.02, 0]}
-                castShadow
-              >
-                <cylinderGeometry args={[0.05, 0.05, 0.02, 8]} />
-                <meshStandardMaterial color="#22c55e" transparent opacity={opacity} />
-              </mesh>
-            )}
           </group>
         );
         
