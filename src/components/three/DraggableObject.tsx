@@ -68,17 +68,17 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
           <group>
             {/* Sink base - uses cabinet customization */}
             <mesh 
-              position={[0, baseHeight / 2, 0]} 
+              position={[0, (baseHeight - 0.05) / 2, 0]} 
               castShadow 
               receiveShadow
             >
-              <boxGeometry args={[dimensions.width, baseHeight, dimensions.depth]} />
+              <boxGeometry args={[dimensions.width, baseHeight - 0.05, dimensions.depth]} />
               <meshStandardMaterial color={cabinetColor} transparent opacity={opacity} />
             </mesh>
             
             {/* Countertop surface */}
             <mesh 
-              position={[0, baseHeight + 0.025, 0]} 
+              position={[0, baseHeight, 0]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width, 0.05, dimensions.depth]} />
@@ -87,7 +87,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* IMPROVED: Realistic sink bowl with proper stainless steel finish */}
             <mesh 
-              position={[0, baseHeight - 0.08, 0]} 
+              position={[0, baseHeight - 0.03, 0]} 
               castShadow
             >
               <cylinderGeometry args={[dimensions.width * 0.35, dimensions.width * 0.3, 0.12, 20]} />
@@ -102,7 +102,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* IMPROVED: Sink interior - darker stainless steel with better depth */}
             <mesh 
-              position={[0, baseHeight - 0.02, 0]} 
+              position={[0, baseHeight + 0.03, 0]} 
               castShadow
             >
               <cylinderGeometry args={[dimensions.width * 0.32, dimensions.width * 0.27, 0.08, 20]} />
@@ -117,7 +117,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* NEW: Sink drain - realistic detail */}
             <mesh 
-              position={[0, baseHeight - 0.05, 0]} 
+              position={[0, baseHeight, 0]} 
               castShadow
             >
               <cylinderGeometry args={[0.03, 0.025, 0.02, 12]} />
@@ -132,7 +132,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* IMPROVED: Faucet base - more realistic chrome finish */}
             <mesh 
-              position={[0, baseHeight + 0.08, -dimensions.depth * 0.3]} 
+              position={[0, baseHeight + 0.13, -dimensions.depth * 0.3]} 
               castShadow
             >
               <cylinderGeometry args={[0.04, 0.05, 0.12, 12]} />
@@ -147,7 +147,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* IMPROVED: Faucet spout - curved and realistic */}
             <mesh 
-              position={[0, baseHeight + 0.18, -dimensions.depth * 0.15]} 
+              position={[0, baseHeight + 0.23, -dimensions.depth * 0.15]} 
               castShadow
               rotation={[Math.PI / 6, 0, 0]}
             >
@@ -163,7 +163,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* NEW: Faucet handle - realistic detail */}
             <mesh 
-              position={[0.08, baseHeight + 0.15, -dimensions.depth * 0.3]} 
+              position={[0.08, baseHeight + 0.20, -dimensions.depth * 0.3]} 
               castShadow
             >
               <cylinderGeometry args={[0.015, 0.02, 0.06, 8]} />
@@ -178,7 +178,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* Cabinet handles */}
             <mesh 
-              position={[0, baseHeight * 0.3, dimensions.depth / 2 + 0.01]} 
+              position={[0, (baseHeight - 0.05) * 0.3, dimensions.depth / 2 + 0.01]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width * 0.5, 0.03, 0.02]} />
@@ -186,7 +186,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             </mesh>
             
             <mesh 
-              position={[0, baseHeight * 0.6, dimensions.depth / 2 + 0.01]} 
+              position={[0, (baseHeight - 0.05) * 0.6, dimensions.depth / 2 + 0.01]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width * 0.5, 0.03, 0.02]} />
