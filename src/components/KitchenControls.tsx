@@ -141,7 +141,7 @@ const KitchenControls: React.FC = () => {
                 onClick={() => {
                   setShowCabinetDialog(true);
                 }}
-                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-yellow-500 rounded-lg hover:shadow-lg transition-all duration-200"
+                className="flex-1 px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
               >
                 🔧 אפשרויות
               </button>
@@ -315,14 +315,14 @@ const KitchenControls: React.FC = () => {
                 <div className="flex gap-1">
                   {item.type === 'countertop' && (
                     <button 
-                      className="text-xs text-white bg-primary hover:bg-primary-dark px-2 py-1 rounded-lg transition-colors font-medium"
+                      className="text-xs text-primary hover:text-primary-dark hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors font-medium"
                       onClick={() => {
                         setSelectedCabinetId(item.id);
                         setShowCabinetDialog(true);
                       }}
                       title="שנה גודל ארון"
                     >
-                      ⚙️
+                      🔧
                     </button>
                   )}
                   <button 
