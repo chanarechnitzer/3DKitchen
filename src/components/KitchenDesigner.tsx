@@ -39,9 +39,6 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
     return hasSink && hasStove && hasRefrigerator;
   };
 
-  // ✅ NEW: Check if user is currently dragging an item
-  const isCurrentlyDragging = selectedItem !== null;
-
   const handleFinishDesigning = () => {
     console.log('User clicked finish designing button');
     console.log('Triangle validation:', triangleValidation);
@@ -128,16 +125,15 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           )}
           
           {/* Kitchen Controls - Only show if no item is being dragged */}
-          {!isCurrentlyDragging && (
+          {!selectedItem && (
             <div className="flex-1 min-h-0 overflow-hidden">
               <KitchenControls />
             </div>
           )}
           
           {/* Action Buttons - Fixed at bottom */}
-          {/* ✅ CRITICAL: Only show action buttons when NOT dragging an item */}
-          {!isCurrentlyDragging && (
-            <div className="flex-shrink-0 space-y-2 bg-white rounded-xl p-3 border border-gray-100 shadow-lg">
+          {/* ✅ FIXED: Always show action buttons, only hide kitchen controls when dragging */}
+          <div className="flex-shrink-0 space-y-2 bg-white rounded-xl p-3 border border-gray-100 shadow-lg">
             {/* Message when triangle items are missing */}
             {!hasTriangleItems() && !designPhaseComplete && (
               <div className="w-full p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 text-center">
@@ -248,8 +244,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
                 </button>
               </div>
             )}
-            </div>
-          )}
+          </div>
         </div>
       </div>
       
