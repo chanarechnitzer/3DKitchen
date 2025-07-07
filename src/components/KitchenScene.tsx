@@ -493,6 +493,45 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snapPosition || validatePosition(position.x, position.z);
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
+      // ✅ CRITICAL: Check if this is a countertop - show options dialog
+      if (selectedItem.type === KitchenItemType.COUNTERTOP) {
+        setPendingCabinet({
+          id: selectedItem.id,
+          position: new THREE.Vector3(finalPos.x, 0, finalPos.z),
+          rotation: finalRotation
+        });
+        setShowCabinetDialog(true);
+        return; // Don't place immediately - wait for dialog
+      }
+      
+      // ✅ CRITICAL: Check if this is an oven and there's already an oven at this position
+      if (selectedItem.type === KitchenItemType.OVEN) {
+        const existingOven = placedItems.find(item => 
+          item.type === KitchenItemType.OVEN && 
+          Math.abs(item.position.x - finalPos.x) < 0.1 && 
+          Math.abs(item.position.z - finalPos.z) < 0.1
+        );
+        
+        if (existingOven) {
+          setPendingOven({
+            id: selectedItem.id,
+            position: new THREE.Vector3(finalPos.x, 0, finalPos.z),
+            rotation: finalRotation,
+            baseOven: existingOven
+          });
+          setShowOvenDialog(true);
+          return; // Don't place immediately - wait for dialog
+        }
+      }
+      
+      // ✅ For other items, place immediately
+      handleDirectPlacement(finalPos, finalRotation);
+    }
+  };
+
+  // ✅ NEW: Handle direct placement (no dialogs)
+  const handleDirectPlacement = (finalPos: { x: number, z: number }, finalRotation: number) => {
+    if (selectedItem) {
       placeItem(
         selectedItem.id, 
         new THREE.Vector3(finalPos.x, 0, finalPos.z),
@@ -509,6 +548,81 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
+    }
+  };
+
+  // ✅ NEW: Handle cabinet dialog confirmation
+  const handleCabinetConfirm = (width: number) => {
+    if (pendingCabinet) {
+      // Place the cabinet with custom width
+      placeItem(pendingCabinet.id, pendingCabinet.position, pendingCabinet.rotation);
+      
+      // Update the cabinet size after placement
+      setTimeout(() => {
+        updateCabinetSize(pendingCabinet.id, width);
+      }, 100);
+      
+      // Clean up
+      setPendingCabinet(null);
+      setShowCabinetDialog(false);
+      setSelectedItem(null);
+      setIsDragging(false);
+      setSnapPosition(null);
+      setItemRotation(0);
+      setShowRotationHint(false);
+      setCollisionWarning(null);
+      
+      // ✅ Haptic feedback for mobile
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }
+  };
+
+  // ✅ NEW: Handle cabinet dialog close
+  const handleCabinetClose = () => {
+    setPendingCabinet(null);
+    setShowCabinetDialog(false);
+  };
+
+  // ✅ NEW: Handle oven dialog confirmation
+  const handleOvenConfirm = (shouldStack: boolean) => {
+    if (pendingOven) {
+      if (shouldStack) {
+        // Create stacked oven
+        placeItem(pendingOven.id, pendingOven.position, pendingOven.rotation);
+        
+        // Update oven stack after placement
+        setTimeout(() => {
+          updateOvenStack(pendingOven.baseOven.id, pendingOven.id);
+        }, 100);
+      } else {
+        // Replace existing oven
+        removeItem(pendingOven.baseOven.id);
+        placeItem(pendingOven.id, pendingOven.position, pendingOven.rotation);
+      }
+      
+      // Clean up
+      setPendingOven(null);
+      setShowOvenDialog(false);
+      setSelectedItem(null);
+      setIsDragging(false);
+      setSnapPosition(null);
+      setItemRotation(0);
+      setShowRotationHint(false);
+      setCollisionWarning(null);
+      
+      // ✅ Haptic feedback for mobile
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }
+  };
+
+  // ✅ NEW: Handle oven dialog close
+  const handleOvenClose = () => {
+    setPendingOven(null);
+    setShowOvenDialog(false);
     }
   };
 
@@ -754,6 +868,24 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             </div>
           </div>
         </div>
+      )}
+      
+      {/* ✅ CRITICAL: Cabinet Options Dialog */}
+      {showCabinetDialog && pendingCabinet && (
+        <CabinetOptionsDialog
+          onClose={handleCabinetClose}
+          onConfirm={handleCabinetConfirm}
+          defaultWidth={0.6}
+        />
+      )}
+      
+      {/* ✅ CRITICAL: Oven Stack Dialog */}
+      {showOvenDialog && pendingOven && (
+        <OvenStackDialog
+          onClose={handleOvenClose}
+          onConfirm={handleOvenConfirm}
+          baseOvenName={pendingOven.baseOven?.name || 'תנור'}
+        />
       )}
     </div>
   );

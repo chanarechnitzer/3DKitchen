@@ -68,6 +68,7 @@ interface KitchenContextType {
   removeItem: (itemId: string) => void;
   updateCabinetSize: (itemId: string, newWidth: number) => void;
   updateOvenStack: (baseOvenId: string, topOvenId: string) => void;
+  removeItem: (itemId: string) => void;
   triangleValidation: TriangleValidation | null;
   validateTriangle: () => void;
   gameCompleted: boolean;
@@ -97,6 +98,7 @@ const defaultContext: KitchenContextType = {
   removeItem: () => {},
   updateCabinetSize: () => {},
   updateOvenStack: () => {},
+  removeItem: () => {},
   triangleValidation: null,
   validateTriangle: () => {},
   gameCompleted: false,
