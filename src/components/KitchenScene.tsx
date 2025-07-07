@@ -41,6 +41,11 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
   const [showOvenStackDialog, setShowOvenStackDialog] = useState(false);
   const [conflictingOven, setConflictingOven] = useState<string | null>(null);
+  const [showCabinetOptionsDialog, setShowCabinetOptionsDialog] = useState(false);
+  const [pendingCabinetPlacement, setPendingCabinetPlacement] = useState<{
+    position: { x: number; z: number };
+    rotation: number;
+  } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
@@ -493,6 +498,16 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snapPosition || validatePosition(position.x, position.z);
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
+      // ✅ NEW: Check if this is a countertop - show options dialog first
+      if (selectedItem.type === 'countertop') {
+        setPendingCabinetPlacement({
+          position: { x: finalPos.x, z: finalPos.z },
+          rotation: finalRotation
+        });
+        setShowCabinetOptionsDialog(true);
+        return; // Don't place yet, wait for user choice
+      }
+      
       // ✅ NEW: Check for oven stacking opportunity
       if (selectedItem.type === 'oven') {
         const existingOven = placedItems.find(item => 
@@ -824,6 +839,62 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             setConflictingOven(null);
           }}
           baseOvenName={placedItems.find(item => item.id === conflictingOven)?.name || 'תנור'}
+        />
+      )}
+      
+      {/* ✅ NEW: Cabinet Options Dialog - Auto-opens when placing countertop */}
+      {showCabinetOptionsDialog && selectedItem && pendingCabinetPlacement && (
+        <CabinetOptionsDialog
+          onClose={() => {
+            setShowCabinetOptionsDialog(false);
+            setPendingCabinetPlacement(null);
+            // Don't place the item if user cancels
+          }}
+          onConfirm={(option, customWidth) => {
+            if (!selectedItem || !pendingCabinetPlacement) return;
+            
+            let finalWidth = selectedItem.dimensions.width;
+            
+            if (option === 'custom' && customWidth) {
+              finalWidth = customWidth;
+            } else if (option === 'fill' && customWidth) {
+              finalWidth = customWidth;
+            }
+            // option === 'keep' uses current width
+            
+            // Place the item with the chosen width
+            const updatedItem = {
+              ...selectedItem,
+              dimensions: {
+                ...selectedItem.dimensions,
+                width: finalWidth
+              }
+            };
+            
+            placeItem(
+              updatedItem.id,
+              new THREE.Vector3(pendingCabinetPlacement.position.x, 0, pendingCabinetPlacement.position.z),
+              pendingCabinetPlacement.rotation
+            );
+            
+            setSelectedItem(null);
+            setIsDragging(false);
+            setSnapPosition(null);
+            setItemRotation(0);
+            setShowRotationHint(false);
+            setCollisionWarning(null);
+            setShowCabinetOptionsDialog(false);
+            setPendingCabinetPlacement(null);
+            
+            // ✅ Haptic feedback for mobile
+            if (navigator.vibrate) {
+              navigator.vibrate(50);
+            }
+          }}
+          defaultWidth={selectedItem.dimensions.width}
+          placedItems={placedItems}
+          position={pendingCabinetPlacement.position}
+          kitchenDimensions={kitchenDimensions}
         />
       )}
     </div>
