@@ -24,8 +24,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   // Calculate available space for filling
   const calculateFillWidth = () => {
-    const wallTolerance = 0.1; // 10cm tolerance for wall detection
-    const itemTolerance = 0.5; // 50cm tolerance for finding items on same wall/line
+    const wallTolerance = 0.15; // 15cm tolerance for wall detection
+    const itemTolerance = 0.3; // 30cm tolerance for finding items in vicinity
     const halfKitchenWidth = kitchenDimensions.width / 2;
     const halfKitchenLength = kitchenDimensions.length / 2;
     const buffer = 0.05; // 5cm buffer between items
@@ -56,188 +56,144 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     console.log('Wall distances:', { left: distanceToLeftWall, right: distanceToRightWall, back: distanceToBackWall, front: distanceToFrontWall });
     console.log('Against walls:', { left: isAgainstLeftWall, right: isAgainstRightWall, back: isAgainstBackWall, front: isAgainstFrontWall });
     
-    let leftBoundary, rightBoundary;
-    let workingAxis: 'x' | 'z';
-    let cabinetPosition: number;
+    // NEW APPROACH: Find the closest items in all 4 directions
+    const findClosestItemInDirection = (direction: 'left' | 'right' | 'up' | 'down') => {
+      let closestItem = null;
+      let closestDistance = Infinity;
+      
+      for (const item of otherItems) {
+        let distance = 0;
+        let isInDirection = false;
+        
+        switch (direction) {
+          case 'left': // Negative X direction
+            if (item.position.x < position.x - 0.1) {
+              distance = position.x - item.position.x;
+              isInDirection = Math.abs(item.position.z - position.z) < itemTolerance;
+            }
+            break;
+          case 'right': // Positive X direction
+            if (item.position.x > position.x + 0.1) {
+              distance = item.position.x - position.x;
+              isInDirection = Math.abs(item.position.z - position.z) < itemTolerance;
+            }
+            break;
+          case 'up': // Negative Z direction (back)
+            if (item.position.z < position.z - 0.1) {
+              distance = position.z - item.position.z;
+              isInDirection = Math.abs(item.position.x - position.x) < itemTolerance;
+            }
+            break;
+          case 'down': // Positive Z direction (front)
+            if (item.position.z > position.z + 0.1) {
+              distance = item.position.z - position.z;
+              isInDirection = Math.abs(item.position.x - position.x) < itemTolerance;
+            }
+            break;
+        }
+        
+        if (isInDirection && distance < closestDistance) {
+          closestDistance = distance;
+          closestItem = item;
+        }
+      }
+      
+      return closestItem;
+    };
     
-    // Determine working axis and boundaries
-    if (isAgainstLeftWall || isAgainstRightWall) {
-      // Working along Z axis (length of kitchen)
-      workingAxis = 'z';
-      cabinetPosition = position.z;
-      leftBoundary = -halfKitchenLength + 0.05; // Kitchen boundary + small margin
-      rightBoundary = halfKitchenLength - 0.05;
-      
-      // Find ALL items and check which ones affect our boundaries
-      const allItems = otherItems;
-      
-      console.log('All items for Z axis calculation:', allItems.map(item => ({
-        name: item.name,
-        position: { x: item.position.x, z: item.position.z },
-        dimensions: item.dimensions
-      })));
-      
-      // Find closest items on left and right (in Z direction)
-      const itemsOnLeft = allItems.filter(item => 
-        item.position.z < cabinetPosition - 0.1 // Item is to the left (negative Z)
-      );
-      const itemsOnRight = allItems.filter(item => 
-        item.position.z > cabinetPosition + 0.1 // Item is to the right (positive Z)
-      );
-      
-      console.log('Items on left (Z):', itemsOnLeft.length);
-      console.log('Items on right (Z):', itemsOnRight.length);
-      
-      if (itemsOnLeft.length > 0) {
-        // Find the closest item on the left
-        const closestLeft = itemsOnLeft.reduce((closest, item) => 
-          item.position.z > closest.position.z ? item : closest
-        );
-        leftBoundary = closestLeft.position.z + closestLeft.dimensions.depth / 2 + buffer;
-        console.log('Closest left item:', closestLeft.name, 'at Z:', closestLeft.position.z, 'new left boundary:', leftBoundary);
-      }
-      
-      if (itemsOnRight.length > 0) {
-        // Find the closest item on the right
-        const closestRight = itemsOnRight.reduce((closest, item) => 
-          item.position.z < closest.position.z ? item : closest
-        );
-        rightBoundary = closestRight.position.z - closestRight.dimensions.depth / 2 - buffer;
-        console.log('Closest right item:', closestRight.name, 'at Z:', closestRight.position.z, 'new right boundary:', rightBoundary);
-      }
-      
-    } else if (isAgainstBackWall || isAgainstFrontWall) {
-      // Working along X axis (width of kitchen)
-      workingAxis = 'x';
-      cabinetPosition = position.x;
-      leftBoundary = -halfKitchenWidth + 0.05;
-      rightBoundary = halfKitchenWidth - 0.05;
-      
-      // Find ALL items and check which ones affect our boundaries
-      const allItems = otherItems;
-      
-      console.log('All items for X axis calculation:', allItems.map(item => ({
-        name: item.name,
-        position: { x: item.position.x, z: item.position.z },
-        dimensions: item.dimensions
-      })));
-      
-      // Find closest items on left and right (in X direction)
-      const itemsOnLeft = allItems.filter(item => 
-        item.position.x < cabinetPosition - 0.1 // Item is to the left (negative X)
-      );
-      const itemsOnRight = allItems.filter(item => 
-        item.position.x > cabinetPosition + 0.1 // Item is to the right (positive X)
-      );
-      
-      console.log('Items on left (X):', itemsOnLeft.length);
-      console.log('Items on right (X):', itemsOnRight.length);
-      
-      if (itemsOnLeft.length > 0) {
-        // Find the closest item on the left
-        const closestLeft = itemsOnLeft.reduce((closest, item) => 
-          item.position.x > closest.position.x ? item : closest
-        );
-        leftBoundary = closestLeft.position.x + closestLeft.dimensions.width / 2 + buffer;
-        console.log('Closest left item:', closestLeft.name, 'at X:', closestLeft.position.x, 'new left boundary:', leftBoundary);
-      }
-      
-      if (itemsOnRight.length > 0) {
-        // Find the closest item on the right
-        const closestRight = itemsOnRight.reduce((closest, item) => 
-          item.position.x < closest.position.x ? item : closest
-        );
-        rightBoundary = closestRight.position.x - closestRight.dimensions.width / 2 - buffer;
-        console.log('Closest right item:', closestRight.name, 'at X:', closestRight.position.x, 'new right boundary:', rightBoundary);
-      }
-      
+    const leftItem = findClosestItemInDirection('left');
+    const rightItem = findClosestItemInDirection('right');
+    const upItem = findClosestItemInDirection('up');
+    const downItem = findClosestItemInDirection('down');
+    
+    console.log('Closest items:', {
+      left: leftItem ? `${leftItem.name} at X:${leftItem.position.x.toFixed(2)}` : 'none',
+      right: rightItem ? `${rightItem.name} at X:${rightItem.position.x.toFixed(2)}` : 'none',
+      up: upItem ? `${upItem.name} at Z:${upItem.position.z.toFixed(2)}` : 'none',
+      down: downItem ? `${downItem.name} at Z:${downItem.position.z.toFixed(2)}` : 'none'
+    });
+    
+    // Calculate available space in both directions
+    let xAxisLeftBoundary = -halfKitchenWidth + 0.05;
+    let xAxisRightBoundary = halfKitchenWidth - 0.05;
+    let zAxisUpBoundary = -halfKitchenLength + 0.05;
+    let zAxisDownBoundary = halfKitchenLength - 0.05;
+    
+    // Adjust boundaries based on found items
+    if (leftItem) {
+      xAxisLeftBoundary = leftItem.position.x + leftItem.dimensions.width / 2 + buffer;
+    }
+    if (rightItem) {
+      xAxisRightBoundary = rightItem.position.x - rightItem.dimensions.width / 2 - buffer;
+    }
+    if (upItem) {
+      zAxisUpBoundary = upItem.position.z + upItem.dimensions.depth / 2 + buffer;
+    }
+    if (downItem) {
+      zAxisDownBoundary = downItem.position.z - downItem.dimensions.depth / 2 - buffer;
+    }
+    
+    // Adjust for walls if cabinet is against them
+    if (isAgainstLeftWall) {
+      xAxisLeftBoundary = -halfKitchenWidth + 0.05;
+    }
+    if (isAgainstRightWall) {
+      xAxisRightBoundary = halfKitchenWidth - 0.05;
+    }
+    if (isAgainstBackWall) {
+      zAxisUpBoundary = -halfKitchenLength + 0.05;
+    }
+    if (isAgainstFrontWall) {
+      zAxisDownBoundary = halfKitchenLength - 0.05;
+    }
+    
+    const xAxisSpace = xAxisRightBoundary - xAxisLeftBoundary;
+    const zAxisSpace = zAxisDownBoundary - zAxisUpBoundary;
+    
+    console.log('Available spaces:', {
+      xAxis: `${xAxisSpace.toFixed(2)}m (${xAxisLeftBoundary.toFixed(2)} to ${xAxisRightBoundary.toFixed(2)})`,
+      zAxis: `${zAxisSpace.toFixed(2)}m (${zAxisUpBoundary.toFixed(2)} to ${zAxisDownBoundary.toFixed(2)})`
+    });
+    
+    // Choose the direction with more space, but prioritize based on context
+    let finalWidth = 0.6;
+    let chosenAxis = 'x';
+    
+    // If there are items on both sides in one axis, prefer that axis
+    const hasItemsOnBothSidesX = leftItem && rightItem;
+    const hasItemsOnBothSidesZ = upItem && downItem;
+    
+    if (hasItemsOnBothSidesX && !hasItemsOnBothSidesZ) {
+      finalWidth = Math.max(0.3, Math.min(xAxisSpace, 4.0));
+      chosenAxis = 'x';
+    } else if (hasItemsOnBothSidesZ && !hasItemsOnBothSidesX) {
+      finalWidth = Math.max(0.3, Math.min(zAxisSpace, 4.0));
+      chosenAxis = 'z';
     } else {
-      // Not against any wall - look for items in line
-      console.log('Not against wall, looking for items in line...');
-      
-      // Try both axes and see which gives better results
-      
-      // X axis calculation
-      workingAxis = 'x';
-      cabinetPosition = position.x;
-      leftBoundary = -halfKitchenWidth + 0.05;
-      rightBoundary = halfKitchenWidth - 0.05;
-      
-      const itemsOnLeftX = otherItems.filter(item => 
-        item.position.x < cabinetPosition - 0.1
-      );
-      const itemsOnRightX = otherItems.filter(item => 
-        item.position.x > cabinetPosition + 0.1
-      );
-      
-      if (itemsOnLeftX.length > 0) {
-        const closestLeft = itemsOnLeftX.reduce((closest, item) => 
-          item.position.x > closest.position.x ? item : closest
-        );
-        leftBoundary = closestLeft.position.x + closestLeft.dimensions.width / 2 + buffer;
-      }
-      
-      if (itemsOnRightX.length > 0) {
-        const closestRight = itemsOnRightX.reduce((closest, item) => 
-          item.position.x < closest.position.x ? item : closest
-        );
-        rightBoundary = closestRight.position.x - closestRight.dimensions.width / 2 - buffer;
-      }
-      
-      const xAxisSpace = rightBoundary - leftBoundary;
-      
-      // Z axis calculation
-      const zLeftBoundary = -halfKitchenLength + 0.05;
-      let zRightBoundary = halfKitchenLength - 0.05;
-      
-      const itemsOnLeftZ = otherItems.filter(item => 
-        item.position.z < position.z - 0.1
-      );
-      const itemsOnRightZ = otherItems.filter(item => 
-        item.position.z > position.z + 0.1
-      );
-      
-      let zLeftBoundaryFinal = zLeftBoundary;
-      if (itemsOnLeftZ.length > 0) {
-        const closestLeft = itemsOnLeftZ.reduce((closest, item) => 
-          item.position.z > closest.position.z ? item : closest
-        );
-        zLeftBoundaryFinal = closestLeft.position.z + closestLeft.dimensions.depth / 2 + buffer;
-      }
-      
-      if (itemsOnRightZ.length > 0) {
-        const closestRight = itemsOnRightZ.reduce((closest, item) => 
-          item.position.z < closest.position.z ? item : closest
-        );
-        zRightBoundary = closestRight.position.z - closestRight.dimensions.depth / 2 - buffer;
-      }
-      
-      const zAxisSpace = zRightBoundary - zLeftBoundaryFinal;
-      
-      console.log('X axis space:', xAxisSpace, 'Z axis space:', zAxisSpace);
-      
       // Choose the axis with more available space
-      if (xAxisSpace >= zAxisSpace) {
-        workingAxis = 'x';
-        // leftBoundary and rightBoundary already set for X axis
+      if (xAxisSpace >= zAxisSpace && xAxisSpace > 0.6) {
+        finalWidth = Math.max(0.3, Math.min(xAxisSpace, 4.0));
+        chosenAxis = 'x';
+      } else if (zAxisSpace > 0.6) {
+        finalWidth = Math.max(0.3, Math.min(zAxisSpace, 4.0));
+        chosenAxis = 'z';
       } else {
-        workingAxis = 'z';
-        cabinetPosition = position.z;
-        leftBoundary = zLeftBoundaryFinal;
-        rightBoundary = zRightBoundary;
+        // Both spaces are limited, choose the larger one
+        if (xAxisSpace >= zAxisSpace) {
+          finalWidth = Math.max(0.3, Math.min(xAxisSpace, 4.0));
+          chosenAxis = 'x';
+        } else {
+          finalWidth = Math.max(0.3, Math.min(zAxisSpace, 4.0));
+          chosenAxis = 'z';
+        }
       }
     }
     
-    const availableSpace = rightBoundary - leftBoundary;
-    const finalWidth = Math.max(0.3, Math.min(availableSpace, 4.0));
-    
-    console.log('Final calculation:', {
-      workingAxis,
-      cabinetPosition,
-      leftBoundary,
-      rightBoundary,
-      availableSpace,
-      finalWidth
+    console.log('Final decision:', {
+      chosenAxis,
+      finalWidth: finalWidth.toFixed(2),
+      hasItemsOnBothSidesX,
+      hasItemsOnBothSidesZ
     });
     
     return finalWidth;
