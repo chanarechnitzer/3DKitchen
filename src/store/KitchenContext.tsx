@@ -303,8 +303,11 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     const itemIndex = availableItems.findIndex(item => item.id === itemId);
     
     if (itemIndex !== -1) {
+      // Check if this is an updated item from selectedItem (with modified dimensions)
+      const sourceItem = selectedItem && selectedItem.id === itemId ? selectedItem : availableItems[itemIndex];
+      
       const item = { 
-        ...availableItems[itemIndex], 
+        ...sourceItem, 
         position: new Vector3(position.x, position.y, position.z),
         placed: true,
         rotation

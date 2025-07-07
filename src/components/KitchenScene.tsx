@@ -499,7 +499,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
       // ✅ NEW: Check if this is a countertop - show options dialog first
-      if (selectedItem.type === 'countertop') {
+      if (selectedItem.type === KitchenItemType.COUNTERTOP) {
         setPendingCabinetPlacement({
           position: { x: finalPos.x, z: finalPos.z },
           rotation: finalRotation
@@ -509,9 +509,9 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       }
       
       // ✅ NEW: Check for oven stacking opportunity
-      if (selectedItem.type === 'oven') {
+      if (selectedItem.type === KitchenItemType.OVEN) {
         const existingOven = placedItems.find(item => 
-          item.type === 'oven' && 
+          item.type === KitchenItemType.OVEN && 
           Math.abs(item.position.x - finalPos.x) < 0.1 && 
           Math.abs(item.position.z - finalPos.z) < 0.1
         );
@@ -871,6 +871,10 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
               }
             };
             
+            // Update the selected item first
+            setSelectedItem(updatedItem);
+            
+            // Then place it
             placeItem(
               updatedItem.id,
               new THREE.Vector3(pendingCabinetPlacement.position.x, 0, pendingCabinetPlacement.position.z),
