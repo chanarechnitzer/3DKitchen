@@ -107,9 +107,9 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <cylinderGeometry args={[dimensions.width * 0.35, dimensions.width * 0.3, 0.12, 20]} />
               <meshStandardMaterial 
-                color="#c0c0c0" 
-                metalness={0.9} 
-                roughness={0.15} 
+                color="#e8e8e8" 
+                metalness={0.95} 
+                roughness={0.05} 
                 transparent 
                 opacity={opacity} 
               />
@@ -122,8 +122,23 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <cylinderGeometry args={[dimensions.width * 0.32, dimensions.width * 0.27, 0.08, 20]} />
               <meshStandardMaterial 
-                color="#a8a8a8" 
+                color="#d0d0d0" 
                 metalness={0.95} 
+                roughness={0.08} 
+                transparent 
+                opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* ✅ NEW: Bright sink rim for better visibility on dark countertops */}
+            <mesh 
+              position={[0, baseHeight + 0.025, 0]} 
+              castShadow
+            >
+              <cylinderGeometry args={[dimensions.width * 0.37, dimensions.width * 0.36, 0.02, 20]} />
+              <meshStandardMaterial 
+                color="#f5f5f5" 
+                metalness={0.9} 
                 roughness={0.1} 
                 transparent 
                 opacity={opacity} 
@@ -137,7 +152,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <cylinderGeometry args={[0.03, 0.025, 0.02, 12]} />
               <meshStandardMaterial 
-                color="#808080" 
+                color="#a0a0a0" 
                 metalness={0.9} 
                 roughness={0.2} 
                 transparent 
@@ -152,9 +167,9 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <cylinderGeometry args={[0.04, 0.05, 0.12, 12]} />
               <meshStandardMaterial 
-                color="#f0f0f0" 
+                color="#ffffff" 
                 metalness={0.95} 
-                roughness={0.05} 
+                roughness={0.02} 
                 transparent 
                 opacity={opacity} 
               />
@@ -168,9 +183,9 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <cylinderGeometry args={[0.02, 0.025, 0.25, 12]} />
               <meshStandardMaterial 
-                color="#f0f0f0" 
+                color="#ffffff" 
                 metalness={0.95} 
-                roughness={0.05} 
+                roughness={0.02} 
                 transparent 
                 opacity={opacity} 
               />
@@ -183,11 +198,26 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             >
               <cylinderGeometry args={[0.015, 0.02, 0.06, 8]} />
               <meshStandardMaterial 
-                color="#e0e0e0" 
+                color="#f8f8f8" 
                 metalness={0.8} 
-                roughness={0.1} 
+                roughness={0.05} 
                 transparent 
                 opacity={opacity} 
+              />
+            </mesh>
+            
+            {/* ✅ NEW: Additional sink highlights for better visibility */}
+            <mesh 
+              position={[0, baseHeight + 0.04, 0]} 
+              castShadow
+            >
+              <torusGeometry args={[dimensions.width * 0.33, 0.01, 8, 16]} />
+              <meshStandardMaterial 
+                color="#ffffff" 
+                metalness={0.9} 
+                roughness={0.05} 
+                transparent 
+                opacity={opacity * 0.8} 
               />
             </mesh>
             

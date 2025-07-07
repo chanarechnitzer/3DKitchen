@@ -71,7 +71,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   const calculateFillWidth = () => {
     const wallMargin = 0.05;
-    const buffer = 0.005; // ✅ FIXED: Very small buffer for tight fitting
+    const buffer = 0.01; // ✅ FIXED: Slightly larger buffer for proper snapping
     
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
@@ -88,14 +88,15 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         // ✅ CRITICAL: Skip the cabinet we're trying to place
         if (item.id === cabinetId) continue;
         
-        if (Math.abs(item.position.x - position.x) < 0.5) { // ✅ FIXED: More generous alignment check
+        // ✅ CRITICAL: Check if item is in the same row (Z alignment for rotated cabinets)
+        if (Math.abs(item.position.x - position.x) < 0.3) { // ✅ FIXED: Tighter alignment check for proper row detection
           const itemEdge = item.position.z;
           const itemHalfSize = (isRotated ? item.dimensions.width : item.dimensions.depth) / 2;
           
           if (itemEdge < position.z) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer); // ✅ FIXED: Snap to right edge of left item
           } else if (itemEdge > position.z) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer); // ✅ FIXED: Snap to left edge of right item
           }
         }
       }
@@ -114,7 +115,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           continue;
         }
         
-        if (Math.abs(item.position.z - position.z) < 0.5) { // ✅ FIXED: Even more generous alignment check
+        // ✅ CRITICAL: Check if item is in the same row (Z alignment for normal cabinets)
+        if (Math.abs(item.position.z - position.z) < 0.3) { // ✅ FIXED: Tighter alignment check for proper row detection
           const itemEdge = item.position.x;
           
           // ✅ FIXED: Account for item rotation
@@ -127,9 +129,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           const itemHalfSize = (isRotated ? itemRotatedDepth : itemRotatedWidth) / 2;
           
           if (itemEdge < position.x) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize - 0.01); // ✅ FIXED: Allow slight overlap for tight fitting
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer); // ✅ FIXED: Snap to right edge of left item
           } else if (itemEdge > position.x) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize + 0.01); // ✅ FIXED: Allow slight overlap for tight fitting
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer); // ✅ FIXED: Snap to left edge of right item
           }
         }
       }
@@ -138,16 +140,17 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     const availableWidth = rightBoundary - leftBoundary;
     console.log('Available width calculation:', availableWidth, 'between', leftBoundary, 'and', rightBoundary);
     
-    // ✅ FIXED: Center the cabinet in the available space
+    // ✅ CRITICAL: Position cabinet to fill the gap properly
     const centerPosition = (leftBoundary + rightBoundary) / 2;
     
-    // ✅ FIXED: Always center if there's space, regardless of amount
-    if (availableWidth > 0.2) { // Center if there's any meaningful space
+    // ✅ CRITICAL: Only reposition if there's a meaningful gap to fill
+    if (availableWidth > 0.4) { // Only center if there's a significant gap
       if (isRotated) {
         position.z = centerPosition;
       } else {
         position.x = centerPosition;
       }
+      console.log('Repositioned cabinet to center of gap at:', centerPosition.toFixed(2));
     }
     
     console.log('Fill calculation:', {
@@ -159,7 +162,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     });
     
     // ✅ FIXED: Better width calculation with minimum viable size
-    return Math.max(0.10, Math.min(4.0, availableWidth + 0.02)); // ✅ FIXED: Add small margin to allow tight fitting
+    return Math.max(0.10, Math.min(4.0, availableWidth - 0.02)); // ✅ FIXED: Subtract buffer to ensure proper fit
   };
 
   const validateCabinetPlacement = (width: number) => {

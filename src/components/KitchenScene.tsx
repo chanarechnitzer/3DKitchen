@@ -164,7 +164,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     if (!selectedItem) return null;
     
     const snapDistance = 0.03; // ✅ FIXED: Smaller distance from walls for corner placement
-    const itemSnapDistance = 0.01; // Distance for item snapping
+    const itemSnapDistance = 0.005; // ✅ FIXED: Even smaller distance for tight item snapping
     const snapThreshold = 0.5; // Threshold for easier snapping
     const halfWidth = kitchenDimensions.width / 2;
     const halfLength = kitchenDimensions.length / 2;
@@ -255,7 +255,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         
         // ✅ FIXED: When snapping to items, face AWAY from walls, not the item
         // Snap to right side of placed item
-        const rightSnapX = placedItem.position.x + placedHalfWidth + itemHalfWidth + itemSnapDistance;
+        const rightSnapX = placedItem.position.x + placedHalfWidth + itemHalfWidth + itemSnapDistance; // ✅ FIXED: Snap right next to item
         if (Math.abs(x - rightSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
           snapX = rightSnapX;
           snapZ = placedItem.position.z;
@@ -280,7 +280,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         }
         
         // Snap to left side of placed item
-        const leftSnapX = placedItem.position.x - placedHalfWidth - itemHalfWidth - itemSnapDistance;
+        const leftSnapX = placedItem.position.x - placedHalfWidth - itemHalfWidth - itemSnapDistance; // ✅ FIXED: Snap right next to item
         if (Math.abs(x - leftSnapX) < snapThreshold && Math.abs(z - placedItem.position.z) < snapThreshold) {
           snapX = leftSnapX;
           snapZ = placedItem.position.z;
@@ -305,7 +305,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         }
         
         // Snap to front of placed item
-        const frontSnapZ = placedItem.position.z + placedHalfDepth + itemHalfDepth + itemSnapDistance;
+        const frontSnapZ = placedItem.position.z + placedHalfDepth + itemHalfDepth + itemSnapDistance; // ✅ FIXED: Snap right next to item
         if (Math.abs(z - frontSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
           snapX = placedItem.position.x;
           snapZ = frontSnapZ;
@@ -330,7 +330,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         }
         
         // Snap to back of placed item
-        const backSnapZ = placedItem.position.z - placedHalfDepth - itemHalfDepth - itemSnapDistance;
+        const backSnapZ = placedItem.position.z - placedHalfDepth - itemHalfDepth - itemSnapDistance; // ✅ FIXED: Snap right next to item
         if (Math.abs(z - backSnapZ) < snapThreshold && Math.abs(x - placedItem.position.x) < snapThreshold) {
           snapX = placedItem.position.x;
           snapZ = backSnapZ;
