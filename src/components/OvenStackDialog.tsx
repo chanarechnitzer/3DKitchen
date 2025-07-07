@@ -25,19 +25,19 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
 
   const handleConfirm = () => {
     if (selectedOption === 'stack') {
-      // ✅ FIXED: Place oven on top of existing oven at correct height
+      // ✅ CRITICAL: Place oven at SAME position but mark as stacked
       const stackedPosition = new Vector3(
         baseOven.position.x,
-        baseOven.dimensions.height, // ✅ CRITICAL: Set Y to base oven height (not add to existing Y)
+        0, // ✅ FIXED: Keep Y at 0 - the DraggableObject will handle the height
         baseOven.position.z
       );
       
       placeItem(ovenId, stackedPosition, rotation);
       
-      // Mark both ovens as stacked
+      // ✅ CRITICAL: Mark both ovens as stacked IMMEDIATELY
       setTimeout(() => {
         updateOvenStack(baseOven.id, ovenId);
-      }, 100);
+      }, 50); // Faster update
       
     } else {
       // Replace existing oven

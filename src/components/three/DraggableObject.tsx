@@ -26,6 +26,10 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   stackedWith
 }) => {
   const { customization } = useKitchen();
+  
+  // ✅ CRITICAL: Calculate actual position based on stacking
+  const actualY = stackedOn ? 0.6 : 0; // If stacked on another oven, place at 0.6m height
+  const actualHeight = stackedOn ? baseHeight : baseHeight; // Keep same height regardless
 
   // Get cabinet color based on customization
   const getCabinetColor = () => {
@@ -259,31 +263,31 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
       case KitchenItemType.OVEN:
         return (
           <group>
-            {/* Oven body - adjust position if stacked */}
+            {/* ✅ FIXED: Oven body - properly positioned for stacking */}
             <mesh 
-              position={[0, baseHeight / 2, 0]}
+              position={[0, actualY + actualHeight / 2, 0]}
               castShadow 
               receiveShadow
             >
-              <boxGeometry args={[dimensions.width, baseHeight, dimensions.depth]} />
+              <boxGeometry args={[dimensions.width, actualHeight, dimensions.depth]} />
               <meshStandardMaterial color="#1f2937" transparent opacity={opacity} />
             </mesh>
             
-            {/* Oven door */}
+            {/* ✅ FIXED: Oven door - positioned relative to actual oven position */}
             <mesh 
-              position={[0, baseHeight / 2, dimensions.depth / 2 + 0.01]} 
+              position={[0, actualY + actualHeight / 2, dimensions.depth / 2 + 0.01]} 
               castShadow
             >
-              <boxGeometry args={[dimensions.width - 0.1, baseHeight - 0.1, 0.02]} />
+              <boxGeometry args={[dimensions.width - 0.1, actualHeight - 0.1, 0.02]} />
               <meshStandardMaterial color="#111827" transparent opacity={opacity} />
             </mesh>
             
-            {/* Oven window */}
+            {/* ✅ FIXED: Oven window - positioned relative to actual oven position */}
             <mesh 
-              position={[0, baseHeight * 0.6, dimensions.depth / 2 + 0.02]} 
+              position={[0, actualY + actualHeight * 0.6, dimensions.depth / 2 + 0.02]} 
               castShadow
             >
-              <boxGeometry args={[dimensions.width - 0.2, baseHeight * 0.4, 0.01]} />
+              <boxGeometry args={[dimensions.width - 0.2, actualHeight * 0.4, 0.01]} />
               <meshStandardMaterial 
                 color="#333333" 
                 transparent 
@@ -291,18 +295,18 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               />
             </mesh>
             
-            {/* Oven handle */}
+            {/* ✅ FIXED: Oven handle - positioned relative to actual oven position */}
             <mesh 
-              position={[0, baseHeight * 0.3, dimensions.depth / 2 + 0.03]} 
+              position={[0, actualY + actualHeight * 0.3, dimensions.depth / 2 + 0.03]} 
               castShadow
             >
               <boxGeometry args={[dimensions.width - 0.3, 0.05, 0.02]} />
               <meshStandardMaterial color="#fb923c" transparent opacity={opacity} />
             </mesh>
             
-            {/* Control panel */}
+            {/* ✅ FIXED: Control panel - positioned relative to actual oven position */}
             <mesh 
-              position={[0, baseHeight - 0.05, dimensions.depth / 2 + 0.02]}
+              position={[0, actualY + actualHeight - 0.05, dimensions.depth / 2 + 0.02]}
               castShadow
             >
               <boxGeometry args={[dimensions.width - 0.1, 0.08, 0.01]} />
