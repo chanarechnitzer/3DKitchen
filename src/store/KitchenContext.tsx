@@ -67,6 +67,7 @@ interface KitchenContextType {
   placeItem: (itemId: string, position: Vector3, rotation?: number) => void;
   removeItem: (itemId: string) => void;
   updateCabinetSize: (itemId: string, newWidth: number) => void;
+  updateOvenStack: (baseOvenId: string, topOvenId: string) => void;
   triangleValidation: TriangleValidation | null;
   validateTriangle: () => void;
   gameCompleted: boolean;
@@ -95,6 +96,7 @@ const defaultContext: KitchenContextType = {
   placeItem: () => {},
   removeItem: () => {},
   updateCabinetSize: () => {},
+  updateOvenStack: () => {},
   triangleValidation: null,
   validateTriangle: () => {},
   gameCompleted: false,
@@ -344,6 +346,25 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     setTimeout(validateTriangle, 200);
   };
 
+  // Update oven stack - mark ovens as stacked
+  const updateOvenStack = (baseOvenId: string, topOvenId: string) => {
+    console.log('Creating oven stack:', baseOvenId, 'with', topOvenId, 'on top');
+    setPlacedItems(prev => prev.map(item => {
+      if (item.id === baseOvenId) {
+        return {
+          ...item,
+          stackedWith: topOvenId // Mark base oven as having something stacked on it
+        };
+      } else if (item.id === topOvenId) {
+        return {
+          ...item,
+          stackedOn: baseOvenId // Mark top oven as being stacked on something
+        };
+      }
+      return item;
+    }));
+  };
+
   // Validate the kitchen triangle - NEVER auto-complete the game
   const validateTriangle = () => {
     const sinks = placedItems.filter(item => item.type === KitchenItemType.SINK);
@@ -415,6 +436,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     placeItem,
     removeItem,
     updateCabinetSize,
+    updateOvenStack,
     triangleValidation,
     validateTriangle,
     gameCompleted,

@@ -8,6 +8,7 @@ import TriangleLines from './three/TriangleLines';
 import DistanceLines from './three/DistanceLines';
 import SnapGuides from './three/SnapGuides';
 import CabinetOptionsDialog from './CabinetOptionsDialog';
+import OvenStackDialog from './OvenStackDialog';
 import { useKitchen, WindowPlacement } from '../store/KitchenContext';
 
 interface KitchenSceneProps {
@@ -38,6 +39,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
   const [showCabinetDialog, setShowCabinetDialog] = useState(false);
   const [pendingCabinet, setPendingCabinet] = useState<{id: string, position: Vector3, rotation: number} | null>(null);
+  const [showOvenDialog, setShowOvenDialog] = useState(false);
+  const [pendingOven, setPendingOven] = useState<{id: string, position: Vector3, rotation: number, baseOven?: any} | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
@@ -490,7 +493,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snapPosition || validatePosition(position.x, position.z);
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
-      // Check if it's a countertop/cabinet
+      // Check if it's a countertop/cabinet  
       if (selectedItem.type === 'countertop') {
         // Store cabinet info and show options dialog
         setPendingCabinet({
@@ -499,6 +502,32 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           rotation: finalRotation
         });
         setShowCabinetDialog(true);
+        setShowCabinetDialog(true);
+      } else if (selectedItem.type === 'oven') {
+        // Check if placing oven on another oven
+        const baseOven = placedItems.find(item => 
+          item.type === 'oven' && 
+          Math.abs(item.position.x - finalPos.x) < 0.3 && 
+          Math.abs(item.position.z - finalPos.z) < 0.3
+        );
+        
+        if (baseOven) {
+          // Show oven stacking dialog
+          setPendingOven({
+            id: selectedItem.id,
+            position: new THREE.Vector3(finalPos.x, 0, finalPos.z),
+            rotation: finalRotation,
+            baseOven
+          });
+          setShowOvenDialog(true);
+        } else {
+          // Place oven normally
+          placeItem(
+            selectedItem.id, 
+            new THREE.Vector3(finalPos.x, 0, finalPos.z),
+            finalRotation
+          );
+        }
       } else {
         // Place other items normally
         placeItem(
@@ -526,6 +555,12 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const handleCabinetDialogClose = () => {
     setShowCabinetDialog(false);
     setPendingCabinet(null);
+  };
+
+  // Handle oven dialog close
+  const handleOvenDialogClose = () => {
+    setShowOvenDialog(false);
+    setPendingOven(null);
   };
 
   // Handle cabinet placement after dialog
@@ -622,6 +657,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             isPlaced={true}
             dimensions={item.dimensions}
             rotation={item.rotation || 0}
+            stackedOn={(item as any).stackedOn}
+            stackedWith={(item as any).stackedWith}
           />
         ))}
         
@@ -783,6 +820,18 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           cabinetId={pendingCabinet.id}
           position={pendingCabinet.position}
           rotation={pendingCabinet.rotation}
+        />
+      )}
+      
+      {/* Oven Stack Dialog */}
+      {showOvenDialog && pendingOven && (
+        <OvenStackDialog
+          isOpen={showOvenDialog}
+          onClose={handleOvenDialogClose}
+          ovenId={pendingOven.id}
+          position={pendingOven.position}
+          rotation={pendingOven.rotation}
+          baseOven={pendingOven.baseOven}
         />
       )}
     </div>

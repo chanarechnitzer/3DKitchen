@@ -12,6 +12,8 @@ interface DraggableObjectProps {
     height: number;
   };
   rotation?: number;
+  stackedOn?: string; // ID of item this is stacked on
+  stackedWith?: string; // ID of item stacked on this
 }
 
 const DraggableObject: React.FC<DraggableObjectProps> = ({ 
@@ -19,7 +21,9 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   type, 
   isPlaced, 
   dimensions,
-  rotation = 0
+  rotation = 0,
+  stackedOn,
+  stackedWith
 }) => {
   const { customization } = useKitchen();
 
@@ -255,9 +259,9 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
       case KitchenItemType.OVEN:
         return (
           <group>
-            {/* Oven body */}
+            {/* Oven body - adjust position if stacked */}
             <mesh 
-              position={[0, baseHeight / 2, 0]} 
+              position={[0, baseHeight / 2, 0]}
               castShadow 
               receiveShadow
             >
@@ -298,12 +302,23 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             
             {/* Control panel */}
             <mesh 
-              position={[0, baseHeight - 0.05, dimensions.depth / 2 + 0.02]} 
+              position={[0, baseHeight - 0.05, dimensions.depth / 2 + 0.02]}
               castShadow
             >
               <boxGeometry args={[dimensions.width - 0.1, 0.08, 0.01]} />
               <meshStandardMaterial color="#374151" transparent opacity={opacity} />
             </mesh>
+            
+            {/* Stack indicator if this oven is stacked */}
+            {(stackedOn || stackedWith) && (
+              <mesh 
+                position={[0, baseHeight + 0.02, 0]}
+                castShadow
+              >
+                <cylinderGeometry args={[0.05, 0.05, 0.02, 8]} />
+                <meshStandardMaterial color="#22c55e" transparent opacity={opacity} />
+              </mesh>
+            )}
           </group>
         );
         
