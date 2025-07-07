@@ -188,6 +188,28 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
               </div>
             )}
 
+            {/* ✅ NEW: Show options when design is complete but triangle is incomplete (missing items) */}
+            {designPhaseComplete && !gameCompleted && triangleValidation && !triangleValidation.isComplete && (
+              <div className="w-full space-y-2">
+                <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 text-center">
+                  <p className="text-sm font-medium text-yellow-800 mb-1">
+                    🎯 המשולש לא הושלם
+                  </p>
+                  <p className="text-xs text-yellow-600 mb-2">
+                    נדרשים כיור, כיריים ומקרר כדי ליצור משולש זהב
+                  </p>
+                </div>
+                
+                {/* Back to editing button */}
+                <button
+                  onClick={handleBackToEditing}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
+                >
+                  <Edit3 size={16} />
+                  חזור לעריכה (הוסף רכיבים)
+                </button>
+              </div>
+            )}
             {/* ✅ NEW: Show options when design is complete and triangle is valid */}
             {designPhaseComplete && gameCompleted && triangleValidation?.isValid && (
               <div className="w-full space-y-2">

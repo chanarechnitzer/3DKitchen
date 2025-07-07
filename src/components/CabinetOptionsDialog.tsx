@@ -43,7 +43,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   const calculateFillWidth = () => {
     const wallMargin = 0.05;
-    const buffer = 0.02;
+    const buffer = 0.01; // ✅ FIXED: Smaller buffer for better space utilization
     
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
@@ -54,9 +54,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       rightBoundary = kitchenDimensions.length / 2 - wallMargin;
       
       for (const item of placedItems) {
-        if (Math.abs(item.position.x - position.x) < 1.0) {
+        if (Math.abs(item.position.x - position.x) < 0.8) { // ✅ FIXED: More precise alignment check
           const itemEdge = item.position.z;
-          const itemHalfSize = Math.max(item.dimensions.width, item.dimensions.depth) / 2;
+          const itemHalfSize = (isRotated ? item.dimensions.width : item.dimensions.depth) / 2;
           
           if (itemEdge < position.z) {
             leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
@@ -70,9 +70,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       rightBoundary = kitchenDimensions.width / 2 - wallMargin;
       
       for (const item of placedItems) {
-        if (Math.abs(item.position.z - position.z) < 1.0) {
+        if (Math.abs(item.position.z - position.z) < 0.8) { // ✅ FIXED: More precise alignment check
           const itemEdge = item.position.x;
-          const itemHalfSize = Math.max(item.dimensions.width, item.dimensions.depth) / 2;
+          const itemHalfSize = (isRotated ? item.dimensions.depth : item.dimensions.width) / 2;
           
           if (itemEdge < position.x) {
             leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
@@ -85,12 +85,22 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     const availableWidth = rightBoundary - leftBoundary;
     
+    // ✅ FIXED: Only center if there's enough space, otherwise keep original position
     const centerPosition = (leftBoundary + rightBoundary) / 2;
+    const halfCabinetSize = availableWidth / 2;
     
-    if (isRotated) {
-      position.z = centerPosition;
-    } else {
-      position.x = centerPosition;
+    // ✅ FIXED: Only adjust position if cabinet fits and there's benefit to centering
+    if (availableWidth > 0.4) { // Only center if there's meaningful space
+      if (isRotated) {
+        // Check if centering would keep cabinet within bounds
+        if (centerPosition - halfCabinetSize >= leftBoundary && centerPosition + halfCabinetSize <= rightBoundary) {
+          position.z = centerPosition;
+        }
+      } else {
+        if (centerPosition - halfCabinetSize >= leftBoundary && centerPosition + halfCabinetSize <= rightBoundary) {
+          position.x = centerPosition;
+        }
+      }
     }
     
     console.log('Fill calculation:', {
@@ -101,7 +111,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       centerPosition: centerPosition.toFixed(2)
     });
     
-    return Math.max(0.3, Math.min(4.0, availableWidth));
+    // ✅ FIXED: Better width calculation with minimum viable size
+    return Math.max(0.2, Math.min(4.0, availableWidth - 0.02)); // Small margin for safety
   };
 
   const validateCabinetPlacement = (width: number) => {
@@ -134,7 +145,10 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       return { valid: false, reason: 'יוצא מגבולות המטבח (אורך)' };
     }
     
-    const collision = checkForCollisions(position, width);
+    // ✅ FIXED: Use appropriate depth based on rotation
+    const depth = isRotated ? width : 0.6;
+    const actualWidth = isRotated ? 0.6 : width;
+    const collision = checkForCollisions(position, actualWidth, depth);
     if (collision) {
       return { valid: false, reason: `יתנגש עם ${collision.name}` };
     }
@@ -279,9 +293,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
             <div className="flex-1">
               <div className="font-medium text-gray-900">מלא את החלל</div>
               <div className="text-sm text-gray-600">
-                {fillValidation.valid && fillWidth >= 0.6 
+                {fillValidation.valid && fillWidth >= 0.4 
                   ? `ימלא ${fillWidth.toFixed(1)} מטר בין הרכיבים`
-                  : fillValidation.valid && fillWidth >= 0.3
+                  : fillValidation.valid && fillWidth >= 0.2
                     ? `ימלא ${fillWidth.toFixed(1)} מטר (מקום מוגבל)`
                     : !fillValidation.valid
                       ? `לא ניתן: ${fillValidation.reason}`
@@ -293,7 +307,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
                   ❌ {fillValidation.reason}
                 </div>
               )}
-              {fillValidation.valid && fillWidth < 0.6 && fillWidth >= 0.3 && (
+              {fillValidation.valid && fillWidth < 0.4 && fillWidth >= 0.2 && (
                 <div className="text-xs text-yellow-600 mt-1">
                   ⚠️ מקום מוגבל - ארון קטן מהסטנדרט
                 </div>
@@ -312,9 +326,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           </button>
           <button 
             onClick={handleConfirm}
-            disabled={(selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.3))}
+            disabled={(selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.2))}
             className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
-              (selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.3))
+              (selectedOption === 'fill' && (!fillValidation.valid || fillWidth < 0.2))
                 ? 'text-gray-500 bg-gray-200 cursor-not-allowed'
                 : 'text-white bg-gradient-to-r from-primary to-yellow-500 hover:shadow-lg transform hover:scale-105'
             }`}
