@@ -35,32 +35,39 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const calculateFillWidth = () => {
     if (!position || !kitchenDimensions) return defaultWidth;
     
-    // ✅ FIXED: Proper boundary calculation
+    // חישוב גבולות נכון
     const halfWidth = kitchenDimensions.width / 2;
-    const halfLength = kitchenDimensions.length / 2;
     const snapDistance = 0.05;
     
     let leftBoundary = -halfWidth + snapDistance;
     let rightBoundary = halfWidth - snapDistance;
     
+    // מצא רכיבים באותו שורה (Z דומה)
     placedItems?.forEach(item => {
+      // דלג על הפריט הנוכחי אם הוא כבר קיים
+      if (item.position && Math.abs(item.position.x - position.x) < 0.1 && Math.abs(item.position.z - position.z) < 0.1) {
+        return;
+      }
+      
       const itemLeft = item.position.x - item.dimensions.width / 2;
       const itemRight = item.position.x + item.dimensions.width / 2;
       
-      // ✅ FIXED: Better proximity check for same row
-      if (Math.abs(item.position.z - position.z) < 0.5) {
-        if (itemRight < position.x && itemRight > leftBoundary) {
-          leftBoundary = itemRight + 0.02; // Small gap between items
+      // בדוק אם הפריט באותו שורה (מרחק Z קטן מ-0.7 מטר)
+      if (Math.abs(item.position.z - position.z) < 0.7) {
+        // אם הפריט משמאל למיקום הנוכחי
+        if (itemRight <= position.x && itemRight > leftBoundary) {
+          leftBoundary = itemRight + 0.01; // רווח קטן בין פריטים
         }
-        if (itemLeft > position.x && itemLeft < rightBoundary) {
-          rightBoundary = itemLeft - 0.02; // Small gap between items
+        // אם הפריט מימין למיקום הנוכחי
+        if (itemLeft >= position.x && itemLeft < rightBoundary) {
+          rightBoundary = itemLeft - 0.01; // רווח קטן בין פריטים
         }
       }
     });
     
     const availableWidth = rightBoundary - leftBoundary;
-    // ✅ FIXED: Proper min/max constraints
-    return Math.max(0.3, Math.min(1.5, availableWidth)); // Min 30cm, max 150cm
+    // הגבל בין 30 ס"מ ל-200 ס"מ
+    return Math.max(0.3, Math.min(2.0, availableWidth));
   };
 
   const fillWidth = calculateFillWidth();

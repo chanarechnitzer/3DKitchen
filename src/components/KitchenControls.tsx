@@ -369,7 +369,6 @@ const KitchenControls: React.FC = () => {
               } else if (option === 'fill' && customWidth) {
                 finalWidth = customWidth;
               }
-              // option === 'keep' uses current width
               
               updateCabinetSize(selectedCabinetId, finalWidth);
             }
@@ -379,7 +378,7 @@ const KitchenControls: React.FC = () => {
           defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
           placedItems={placedItems}
           position={placedItems.find(item => item.id === selectedCabinetId)?.position}
-          kitchenDimensions={{ width: 6, length: 6 }}
+          kitchenDimensions={kitchenDimensions}
         />
       )}
     </div>

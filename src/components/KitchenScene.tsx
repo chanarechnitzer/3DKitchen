@@ -861,16 +861,15 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             } else if (option === 'fill' && customWidth) {
               finalWidth = customWidth;
             }
-            // option === 'keep' uses current width
             
-            // ✅ FIXED: Update the item dimensions in the available items list BEFORE placing
+            // עדכן את מידות הפריט ברשימת הפריטים הזמינים לפני ההנחה
             setAvailableItems(prev => prev.map(item => 
               item.id === selectedItem.id 
                 ? { ...item, dimensions: { ...item.dimensions, width: finalWidth } }
                 : item
             ));
             
-            // Place the item with updated dimensions
+            // הנח את הפריט עם המידות המעודכנות
             placeItem(
               selectedItem.id,
               new THREE.Vector3(pendingCabinetPlacement.position.x, 0, pendingCabinetPlacement.position.z),
@@ -886,7 +885,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             setShowCabinetOptionsDialog(false);
             setPendingCabinetPlacement(null);
             
-            // ✅ Haptic feedback for mobile
+            // משוב הפטי למובייל
             if (navigator.vibrate) {
               navigator.vibrate(50);
             }
