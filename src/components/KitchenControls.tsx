@@ -188,7 +188,7 @@ const KitchenControls: React.FC = () => {
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         group.count > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
-                        {group.count} יחידות
+                        {group.items[0]?.customWidth ? `${group.items[0].customWidth}מ'` : '0.6מ\''}
                       </span>
                       {isCountertopLimitReached && (
                         <AlertCircle size={12} className="text-warning" />
