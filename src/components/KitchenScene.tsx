@@ -862,21 +862,16 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             }
             // option === 'keep' uses current width
             
-            // Place the item with the chosen width
-            const updatedItem = {
-              ...selectedItem,
-              dimensions: {
-                ...selectedItem.dimensions,
-                width: finalWidth
-              }
-            };
+            // ✅ FIXED: Update the item dimensions in the available items list BEFORE placing
+            setAvailableItems(prev => prev.map(item => 
+              item.id === selectedItem.id 
+                ? { ...item, dimensions: { ...item.dimensions, width: finalWidth } }
+                : item
+            ));
             
-            // Update the selected item first
-            setSelectedItem(updatedItem);
-            
-            // Then place it
+            // Place the item with updated dimensions
             placeItem(
-              updatedItem.id,
+              selectedItem.id,
               new THREE.Vector3(pendingCabinetPlacement.position.x, 0, pendingCabinetPlacement.position.z),
               pendingCabinetPlacement.rotation
             );
