@@ -33,6 +33,11 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   // ✅ CRITICAL: Calculate actual position based on stacking
   const actualY = stackedOn ? 0.6 : 0; // If stacked on another oven, place at 0.6m height
   const actualHeight = stackedOn ? baseHeight : baseHeight; // Keep same height regardless
+  
+  // ✅ CRITICAL: Don't render stacked ovens separately - they should be rendered as one unit
+  if (stackedOn && type === KitchenItemType.OVEN) {
+    return null; // Don't render the top oven separately
+  }
 
   // Get cabinet color based on customization
   const getCabinetColor = () => {
@@ -314,6 +319,61 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               <boxGeometry args={[dimensions.width - 0.1, 0.08, 0.01]} />
               <meshStandardMaterial color="#374151" transparent opacity={opacity} />
             </mesh>
+            
+            {/* ✅ NEW: If this oven has another oven stacked on it, render the stacked oven */}
+            {stackedWith && (
+              <group position={[0, 0.6, 0]}>
+                {/* Stacked oven body */}
+                <mesh 
+                  position={[0, actualHeight / 2, 0]}
+                  castShadow 
+                  receiveShadow
+                >
+                  <boxGeometry args={[dimensions.width, actualHeight, dimensions.depth]} />
+                  <meshStandardMaterial color="#1f2937" transparent opacity={opacity} />
+                </mesh>
+                
+                {/* Stacked oven door */}
+                <mesh 
+                  position={[0, actualHeight / 2, dimensions.depth / 2 + 0.01]} 
+                  castShadow
+                >
+                  <boxGeometry args={[dimensions.width - 0.1, actualHeight - 0.1, 0.02]} />
+                  <meshStandardMaterial color="#111827" transparent opacity={opacity} />
+                </mesh>
+                
+                {/* Stacked oven window */}
+                <mesh 
+                  position={[0, actualHeight * 0.6, dimensions.depth / 2 + 0.02]} 
+                  castShadow
+                >
+                  <boxGeometry args={[dimensions.width - 0.2, actualHeight * 0.4, 0.01]} />
+                  <meshStandardMaterial 
+                    color="#333333" 
+                    transparent 
+                    opacity={opacity * 0.8} 
+                  />
+                </mesh>
+                
+                {/* Stacked oven handle */}
+                <mesh 
+                  position={[0, actualHeight * 0.3, dimensions.depth / 2 + 0.03]} 
+                  castShadow
+                >
+                  <boxGeometry args={[dimensions.width - 0.3, 0.05, 0.02]} />
+                  <meshStandardMaterial color="#fb923c" transparent opacity={opacity} />
+                </mesh>
+                
+                {/* Stacked oven control panel */}
+                <mesh 
+                  position={[0, actualHeight - 0.05, dimensions.depth / 2 + 0.02]}
+                  castShadow
+                >
+                  <boxGeometry args={[dimensions.width - 0.1, 0.08, 0.01]} />
+                  <meshStandardMaterial color="#374151" transparent opacity={opacity} />
+                </mesh>
+              </group>
+            )}
           </group>
         );
         

@@ -69,6 +69,31 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
     if (!selectedItem) return null;
     
+    // ✅ CRITICAL: For countertops, be much more permissive with collisions
+    if (selectedItem.type === 'countertop') {
+      // Only check for actual overlaps, not adjacency
+      const buffer = -0.1; // Large negative buffer allows countertops to fill gaps
+      
+      for (const placedItem of placedItems) {
+        if (placedItem.id === selectedItem.id) continue;
+        
+        const xOverlap = Math.abs(x - placedItem.position.x) < (itemWidth/2 + placedItem.dimensions.width/2 + buffer);
+        const zOverlap = Math.abs(z - placedItem.position.z) < (itemDepth/2 + placedItem.dimensions.depth/2 + buffer);
+        
+        // Only warn if there's significant overlap (not just touching)
+        if (xOverlap && zOverlap) {
+          const xDistance = Math.abs(x - placedItem.position.x) - (itemWidth/2 + placedItem.dimensions.width/2);
+          const zDistance = Math.abs(z - placedItem.position.z) - (itemDepth/2 + placedItem.dimensions.depth/2);
+          
+          // Only show warning if overlapping by more than 5cm
+          if (xDistance < -0.05 && zDistance < -0.05) {
+            return placedItem.name;
+          }
+        }
+      }
+      return null;
+    }
+    
     // Calculate rotated dimensions
     const rotatedWidth = Math.abs(Math.cos(rotation)) * itemWidth + Math.abs(Math.sin(rotation)) * itemDepth;
     const rotatedDepth = Math.abs(Math.sin(rotation)) * itemWidth + Math.abs(Math.cos(rotation)) * itemDepth;
@@ -89,13 +114,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const placedHalfWidth = placedRotatedWidth / 2;
       const placedHalfDepth = placedRotatedDepth / 2;
       
-      // ✅ FIXED: Smart collision detection based on item types
-      let buffer = 0.02; // Default small buffer
-      
-      // ✅ NEW: Allow countertops to be placed adjacent to any item
-      if (selectedItem.type === 'countertop') {
-        buffer = -0.05; // Negative buffer allows countertops to be placed adjacent/overlapping slightly
-      }
+      // ✅ FIXED: Standard collision detection for non-countertop items
+      const buffer = 0.02; // Small buffer for other items
       
       // ✅ FIXED: Don't prevent oven collision here - let the dialog handle it
       if (selectedItem.type === 'oven' && placedItem.type === 'oven') {
@@ -513,21 +533,21 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         // ✅ FIXED: Check if placing oven on another oven - more precise detection
         const baseOven = placedItems.find(item => 
           item.type === 'oven' && 
-          Math.abs(item.position.x - finalPos.x) < 0.1 && 
-          Math.abs(item.position.z - finalPos.z) < 0.1
+          Math.abs(item.position.x - finalPos.x) < 0.05 && 
+          Math.abs(item.position.z - finalPos.z) < 0.05
         );
         
         if (baseOven) {
-          // ✅ FIXED: Only show dialog if ovens are at exact same position
+          // Show stacking dialog
           setPendingOven({
             id: selectedItem.id,
-            position: new THREE.Vector3(finalPos.x, 0, finalPos.z),
-            rotation: finalRotation,
+            position: new THREE.Vector3(baseOven.position.x, 0, baseOven.position.z), // Use base oven position
+            rotation: baseOven.rotation || 0, // Use base oven rotation
             baseOven
           });
           setShowOvenDialog(true);
         } else {
-          // ✅ FIXED: Place oven normally at the intended position
+          // Place oven normally
           placeItem(
             selectedItem.id, 
             new THREE.Vector3(finalPos.x, 0, finalPos.z),
