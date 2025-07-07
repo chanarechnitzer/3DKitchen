@@ -25,10 +25,10 @@ const OvenStackDialog: React.FC<OvenStackDialogProps> = ({
 
   const handleConfirm = () => {
     if (selectedOption === 'stack') {
-      // Place oven on top of existing oven
+      // ✅ FIXED: Place oven on top of existing oven at correct height
       const stackedPosition = new Vector3(
         baseOven.position.x,
-        baseOven.position.y + baseOven.dimensions.height, // Stack on top
+        baseOven.dimensions.height, // ✅ CRITICAL: Set Y to base oven height (not add to existing Y)
         baseOven.position.z
       );
       
