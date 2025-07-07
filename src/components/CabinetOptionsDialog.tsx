@@ -45,8 +45,67 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   // ✅ COMPLETELY REWRITTEN: Much more accurate fill calculation
   const calculateFillWidth = () => {
-    // ✅ SIMPLE: Just return a safe default size
-    return 1.2; // 1.2 meters - safe size that usually fits
+    const halfKitchenWidth = kitchenDimensions.width / 2;
+    const halfKitchenLength = kitchenDimensions.length / 2;
+    const wallMargin = 0.05; // 5cm from wall
+    const cabinetDepth = 0.6;
+    const cabinetHalfDepth = cabinetDepth / 2;
+    
+    // Determine cabinet orientation based on rotation
+    const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
+    
+    let availableWidth = 0;
+    
+    if (isRotated) {
+      // Cabinet faces left/right - calculate available space along Z axis
+      let minZ = -halfKitchenLength + wallMargin + cabinetHalfDepth;
+      let maxZ = halfKitchenLength - wallMargin - cabinetHalfDepth;
+      
+      // Find closest items on both sides
+      for (const item of placedItems) {
+        const itemHalfDepth = item.dimensions.depth / 2;
+        const buffer = 0.02; // 2cm buffer
+        
+        // Check if item is in the same X corridor (within cabinet width)
+        if (Math.abs(item.position.x - position.x) < 0.8) {
+          if (item.position.z < position.z) {
+            // Item is behind cabinet
+            minZ = Math.max(minZ, item.position.z + itemHalfDepth + buffer);
+          } else if (item.position.z > position.z) {
+            // Item is in front of cabinet
+            maxZ = Math.min(maxZ, item.position.z - itemHalfDepth - buffer);
+          }
+        }
+      }
+      
+      availableWidth = Math.max(0, maxZ - minZ);
+    } else {
+      // Cabinet faces front/back - calculate available space along X axis
+      let minX = -halfKitchenWidth + wallMargin + cabinetHalfDepth;
+      let maxX = halfKitchenWidth - wallMargin - cabinetHalfDepth;
+      
+      // Find closest items on both sides
+      for (const item of placedItems) {
+        const itemHalfWidth = item.dimensions.width / 2;
+        const buffer = 0.02; // 2cm buffer
+        
+        // Check if item is in the same Z corridor (within cabinet depth)
+        if (Math.abs(item.position.z - position.z) < 0.8) {
+          if (item.position.x < position.x) {
+            // Item is to the left of cabinet
+            minX = Math.max(minX, item.position.x + itemHalfWidth + buffer);
+          } else if (item.position.x > position.x) {
+            // Item is to the right of cabinet
+            maxX = Math.min(maxX, item.position.x - itemHalfWidth - buffer);
+          }
+        }
+      }
+      
+      availableWidth = Math.max(0, maxX - minX);
+    }
+    
+    // Return the calculated width, minimum 0.3m, maximum 4.0m
+    return Math.max(0.3, Math.min(4.0, availableWidth));
   };
 
   // ✅ Calculate fill width when dialog opens
@@ -59,7 +118,50 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   // ✅ IMPROVED: Better validation before placing cabinet
   const validateCabinetPlacement = (width: number) => {
-    // ✅ SIMPLE: Always allow placement - let the game handle boundaries
+    const halfKitchenWidth = kitchenDimensions.width / 2;
+    const halfKitchenLength = kitchenDimensions.length / 2;
+    const wallMargin = 0.05;
+    const cabinetHalfWidth = width / 2;
+    const cabinetHalfDepth = 0.3; // Half of 0.6m depth
+    
+    // Determine cabinet orientation
+    const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
+    
+    // Check kitchen boundaries
+    if (isRotated) {
+      // Cabinet is rotated - width extends along Z axis
+      const minZ = position.z - cabinetHalfWidth;
+      const maxZ = position.z + cabinetHalfWidth;
+      const minX = position.x - cabinetHalfDepth;
+      const maxX = position.x + cabinetHalfDepth;
+      
+      if (minZ < -halfKitchenLength + wallMargin || maxZ > halfKitchenLength - wallMargin) {
+        return { valid: false, reason: 'הארון יוצא מגבולות המטבח (אורך)' };
+      }
+      if (minX < -halfKitchenWidth + wallMargin || maxX > halfKitchenWidth - wallMargin) {
+        return { valid: false, reason: 'הארון יוצא מגבולות המטבח (רוחב)' };
+      }
+    } else {
+      // Cabinet is normal - width extends along X axis
+      const minX = position.x - cabinetHalfWidth;
+      const maxX = position.x + cabinetHalfWidth;
+      const minZ = position.z - cabinetHalfDepth;
+      const maxZ = position.z + cabinetHalfDepth;
+      
+      if (minX < -halfKitchenWidth + wallMargin || maxX > halfKitchenWidth - wallMargin) {
+        return { valid: false, reason: 'הארון יוצא מגבולות המטבח (רוחב)' };
+      }
+      if (minZ < -halfKitchenLength + wallMargin || maxZ > halfKitchenLength - wallMargin) {
+        return { valid: false, reason: 'הארון יוצא מגבולות המטבח (אורך)' };
+      }
+    }
+    
+    // Check for collisions with existing items
+    const collision = checkForCollisions(position, width);
+    if (collision) {
+      return { valid: false, reason: `יתנגש עם ${collision.name}` };
+    }
+    
     return { valid: true, reason: '' };
   };
 
