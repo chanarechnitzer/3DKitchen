@@ -69,12 +69,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
     if (!selectedItem) return null;
     
-    // ✅ CRITICAL: If item is near a wall, don't check for collisions
-    // Items against walls should never show collision warnings
-    if (isNearWall(x, z)) {
-      return null;
-    }
-    
     // Calculate rotated dimensions
     const rotatedWidth = Math.abs(Math.cos(rotation)) * itemWidth + Math.abs(Math.sin(rotation)) * itemDepth;
     const rotatedDepth = Math.abs(Math.sin(rotation)) * itemWidth + Math.abs(Math.cos(rotation)) * itemDepth;
@@ -96,7 +90,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const placedHalfDepth = placedRotatedDepth / 2;
       
       // ✅ FIXED: Smart collision detection based on item types
-      let buffer = 0.01; // Default small buffer
+      let buffer = 0.02; // Default small buffer
       
       // ✅ NEW: Allow specific item combinations to be placed adjacent
       if (selectedItem.type === 'sink' && placedItem.type === 'sink') {
@@ -105,7 +99,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       // ✅ NEW: Allow countertops to be placed adjacent to any item
       if (selectedItem.type === 'countertop') {
-        buffer = -0.02; // Small negative buffer allows countertops to be adjacent
+        buffer = -0.05; // Negative buffer allows countertops to be placed adjacent/overlapping slightly
       }
       
       // ✅ NEW: Allow ovens to be placed on top of each other (handled separately)
@@ -117,12 +111,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const zOverlap = Math.abs(z - placedItem.position.z) < (itemHalfDepth + placedHalfDepth + buffer);
       
       if (xOverlap && zOverlap) {
-        // ✅ NEW: Don't show collision for allowed adjacent placements
-        if (selectedItem.type === 'countertop' || 
-            (selectedItem.type === 'sink' && placedItem.type === 'sink') ||
-            (selectedItem.type === 'oven' && placedItem.type === 'oven')) {
-          continue; // Skip this collision - it's allowed
-        }
         return placedItem.name; // Return the name of the colliding item
       }
     }

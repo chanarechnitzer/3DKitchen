@@ -25,9 +25,12 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const checkForCollisions = (cabinetPos: Vector3, width: number, depth: number = 0.6) => {
     const cabinetHalfWidth = width / 2;
     const cabinetHalfDepth = depth / 2;
-    const buffer = 0.01;
+    const buffer = -0.02; // ✅ FIXED: Negative buffer allows slight overlap for better space utilization
     
     for (const item of placedItems) {
+      // ✅ CRITICAL: Skip the cabinet we're trying to place
+      if (item.id === cabinetId) continue;
+      
       const itemHalfWidth = item.dimensions.width / 2;
       const itemHalfDepth = item.dimensions.depth / 2;
       
@@ -43,7 +46,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   const calculateFillWidth = () => {
     const wallMargin = 0.05;
-    const buffer = 0.01; // ✅ FIXED: Smaller buffer for better space utilization
+    const buffer = 0.02; // Small buffer between items
     
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
@@ -54,7 +57,10 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       rightBoundary = kitchenDimensions.length / 2 - wallMargin;
       
       for (const item of placedItems) {
-        if (Math.abs(item.position.x - position.x) < 0.8) { // ✅ FIXED: More precise alignment check
+        // ✅ CRITICAL: Skip the cabinet we're trying to place
+        if (item.id === cabinetId) continue;
+        
+        if (Math.abs(item.position.x - position.x) < 0.4) { // ✅ FIXED: More precise alignment check
           const itemEdge = item.position.z;
           const itemHalfSize = (isRotated ? item.dimensions.width : item.dimensions.depth) / 2;
           
@@ -70,7 +76,10 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       rightBoundary = kitchenDimensions.width / 2 - wallMargin;
       
       for (const item of placedItems) {
-        if (Math.abs(item.position.z - position.z) < 0.8) { // ✅ FIXED: More precise alignment check
+        // ✅ CRITICAL: Skip the cabinet we're trying to place
+        if (item.id === cabinetId) continue;
+        
+        if (Math.abs(item.position.z - position.z) < 0.4) { // ✅ FIXED: More precise alignment check
           const itemEdge = item.position.x;
           const itemHalfSize = (isRotated ? item.dimensions.depth : item.dimensions.width) / 2;
           
@@ -84,7 +93,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     }
     
     const availableWidth = rightBoundary - leftBoundary;
-    
+    console.log('Available width calculation:', availableWidth, 'between', leftBoundary, 'and', rightBoundary);
     // ✅ FIXED: Only center if there's enough space, otherwise keep original position
     const centerPosition = (leftBoundary + rightBoundary) / 2;
     const halfCabinetSize = availableWidth / 2;
@@ -112,7 +121,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     });
     
     // ✅ FIXED: Better width calculation with minimum viable size
-    return Math.max(0.2, Math.min(4.0, availableWidth - 0.02)); // Small margin for safety
+    return Math.max(0.2, Math.min(4.0, availableWidth - 0.04)); // Small margin for safety
   };
 
   const validateCabinetPlacement = (width: number) => {
@@ -148,7 +157,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     // ✅ FIXED: Use appropriate depth based on rotation
     const depth = isRotated ? width : 0.6;
     const actualWidth = isRotated ? 0.6 : width;
-    const collision = checkForCollisions(position, actualWidth, depth);
+    const collision = checkForCollisions(position, actualWidth, depth); 
     if (collision) {
       return { valid: false, reason: `יתנגש עם ${collision.name}` };
     }
