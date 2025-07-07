@@ -95,8 +95,14 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const placedHalfWidth = placedRotatedWidth / 2;
       const placedHalfDepth = placedRotatedDepth / 2;
       
-      // ✅ FIXED: Much smaller buffer - only prevent actual overlap, allow touching
-      const buffer = 0.01; // Only 1cm buffer - allows items to be adjacent
+      // ✅ FIXED: Allow sinks to be placed adjacent to each other
+      let buffer = 0.01; // Only 1cm buffer - allows items to be adjacent
+      
+      // ✅ NEW: Special case for sinks - allow them to be placed right next to each other
+      if (selectedItem.type === 'sink' && placedItem.type === 'sink') {
+        buffer = -0.05; // Negative buffer allows slight overlap for sinks
+      }
+      
       const xOverlap = Math.abs(x - placedItem.position.x) < (itemHalfWidth + placedHalfWidth + buffer);
       const zOverlap = Math.abs(z - placedItem.position.z) < (itemHalfDepth + placedHalfDepth + buffer);
       
