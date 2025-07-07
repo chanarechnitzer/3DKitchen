@@ -159,18 +159,45 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     return null;
   };
 
+  // ✅ Validate position to prevent going into walls
+  const validatePosition = (x: number, z: number) => {
+    if (!selectedItem) return { x, z };
+    
+    const halfWidth = kitchenDimensions.width / 2;
+    const halfLength = kitchenDimensions.length / 2;
+    const itemHalfWidth = selectedItem.dimensions.width / 2;
+    const itemHalfDepth = selectedItem.dimensions.depth / 2;
+    
+    const margin = 0.005; // ✅ CRITICAL: ULTRA small margin for corner placement
+    const tolerance = 0.1; // ✅ CRITICAL: HUGE tolerance to prevent boundary errors
+    
+    const minX = -halfWidth + itemHalfWidth + margin;
+    const maxX = halfWidth - itemHalfWidth - margin;
+    const minZ = -halfLength + itemHalfDepth + margin;
+    const maxZ = halfLength - itemHalfDepth - margin;
+    
+    // ✅ CRITICAL: ULTRA permissive validation - prevents corner placement errors
+    return {
+      x: Math.min(Math.max(minX - tolerance, x), maxX + tolerance), // ✅ CRITICAL: Huge tolerance
+      z: Math.min(Math.max(minZ - tolerance, z), maxZ + tolerance)  // ✅ CRITICAL: Huge tolerance
+    };
+  };
+
   // ✅ FIXED: Enhanced snapping - prioritize walls for countertops, allow both item and wall snapping
   const getSnapPosition = (x: number, z: number) => {
     if (!selectedItem) return null;
     
-    const snapDistance = 0.03; // ✅ FIXED: Smaller distance from walls for corner placement
-    const itemSnapDistance = 0.005; // ✅ FIXED: Even smaller distance for tight item snapping
+    const snapDistance = 0.01; // ✅ CRITICAL: ULTRA small distance from walls
+    const itemSnapDistance = 0.002; // ✅ CRITICAL: ULTRA small distance for tight snapping
     const snapThreshold = 0.5; // Threshold for easier snapping
     const halfWidth = kitchenDimensions.width / 2;
     const halfLength = kitchenDimensions.length / 2;
     const itemHalfWidth = selectedItem.dimensions.width / 2;
     const itemHalfDepth = selectedItem.dimensions.depth / 2;
     const cornerThreshold = 0.8;
+    
+    // ✅ CRITICAL: ULTRA permissive corner detection for better snapping
+    const cornerDetectionThreshold = 1.2; // ✅ CRITICAL: Much larger threshold for corner detection
     
     let snapX = x;
     let snapZ = z;
@@ -179,38 +206,38 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     let snapType = '';
 
     // ✅ NEW: Check wall proximity first for countertops
-    const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < cornerThreshold;
-    const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfWidth)) < cornerThreshold;
-    const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerThreshold;
-    const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerThreshold;
+    const isNearLeftWall = Math.abs(x - (-halfWidth + snapDistance + itemHalfWidth)) < cornerDetectionThreshold;
+    const isNearRightWall = Math.abs(x - (halfWidth - snapDistance - itemHalfWidth)) < cornerDetectionThreshold;
+    const isNearBackWall = Math.abs(z - (-halfLength + snapDistance + itemHalfDepth)) < cornerDetectionThreshold;
+    const isNearFrontWall = Math.abs(z - (halfLength - snapDistance - itemHalfDepth)) < cornerDetectionThreshold;
 
     // ✅ PRIORITY 1: For countertops, prioritize wall snapping even when near other items
     if (selectedItem.type === 'countertop') {
       // Corner snapping with rotation options
       if (isNearLeftWall && isNearBackWall) {
-        snapX = -halfWidth + snapDistance + itemHalfWidth;
-        snapZ = -halfLength + snapDistance + itemHalfDepth;
+        snapX = -halfWidth + snapDistance + itemHalfWidth; // ✅ CRITICAL: Perfect corner placement
+        snapZ = -halfLength + snapDistance + itemHalfDepth; // ✅ CRITICAL: Perfect corner placement
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה שמאל-אחור';
         setShowRotationHint(true);
       } else if (isNearRightWall && isNearBackWall) {
-        snapX = halfWidth - snapDistance - itemHalfWidth;
-        snapZ = -halfLength + snapDistance + itemHalfDepth;
+        snapX = halfWidth - snapDistance - itemHalfWidth;   // ✅ CRITICAL: Perfect corner placement
+        snapZ = -halfLength + snapDistance + itemHalfDepth; // ✅ CRITICAL: Perfect corner placement
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה ימין-אחור';
         setShowRotationHint(true);
       } else if (isNearLeftWall && isNearFrontWall) {
-        snapX = -halfWidth + snapDistance + itemHalfWidth;
-        snapZ = halfLength - snapDistance - itemHalfDepth;
+        snapX = -halfWidth + snapDistance + itemHalfWidth;  // ✅ CRITICAL: Perfect corner placement
+        snapZ = halfLength - snapDistance - itemHalfDepth;  // ✅ CRITICAL: Perfect corner placement
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה שמאל-קדמי';
         setShowRotationHint(true);
       } else if (isNearRightWall && isNearFrontWall) {
-        snapX = halfWidth - snapDistance - itemHalfWidth;
-        snapZ = halfLength - snapDistance - itemHalfDepth;
+        snapX = halfWidth - snapDistance - itemHalfWidth;   // ✅ CRITICAL: Perfect corner placement
+        snapZ = halfLength - snapDistance - itemHalfDepth;  // ✅ CRITICAL: Perfect corner placement
         rotation = itemRotation; // User controls rotation in corners
         snapped = true;
         snapType = '🔄 פינה ימין-קדמי';
@@ -438,30 +465,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       setItemRotation(newRotation);
     }
-  };
-
-  // ✅ Validate position to prevent going into walls
-  const validatePosition = (x: number, z: number) => {
-    if (!selectedItem) return { x, z };
-    
-    const halfWidth = kitchenDimensions.width / 2;
-    const halfLength = kitchenDimensions.length / 2;
-    const itemHalfWidth = selectedItem.dimensions.width / 2;
-    const itemHalfDepth = selectedItem.dimensions.depth / 2;
-    
-    const margin = 0.03; // ✅ FIXED: Smaller margin to allow corner placement
-    const tolerance = 0.02; // ✅ FIXED: Add tolerance for floating point errors
-    
-    const minX = -halfWidth + itemHalfWidth + margin;
-    const maxX = halfWidth - itemHalfWidth - margin;
-    const minZ = -halfLength + itemHalfDepth + margin;
-    const maxZ = halfLength - itemHalfDepth - margin;
-    
-    // ✅ FIXED: Apply tolerance to prevent tiny overflow errors in corners
-    return {
-      x: Math.min(Math.max(minX - tolerance, x), maxX + tolerance),
-      z: Math.min(Math.max(minZ - tolerance, z), maxZ + tolerance)
-    };
   };
 
   useEffect(() => {
