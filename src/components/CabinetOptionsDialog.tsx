@@ -75,9 +75,12 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
+    console.log('Fill calculation - rotation:', (rotation * 180 / Math.PI).toFixed(1) + '°', 'isRotated:', isRotated);
+    
     let leftBoundary, rightBoundary;
     
     if (isRotated) {
+      // ✅ FIXED: When rotated, we're filling along the Z-axis (length direction)
       leftBoundary = -kitchenDimensions.length / 2 + wallMargin;
       rightBoundary = kitchenDimensions.length / 2 - wallMargin;
       
@@ -97,6 +100,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         }
       }
     } else {
+      // ✅ FIXED: Normal orientation - filling along X-axis (width direction)
       leftBoundary = -kitchenDimensions.width / 2 + wallMargin;
       rightBoundary = kitchenDimensions.width / 2 - wallMargin;
       
@@ -133,21 +137,16 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     const availableWidth = rightBoundary - leftBoundary;
     console.log('Available width calculation:', availableWidth, 'between', leftBoundary, 'and', rightBoundary);
-    // ✅ FIXED: Only center if there's enough space, otherwise keep original position
-    const centerPosition = (leftBoundary + rightBoundary) / 2;
-    const halfCabinetSize = availableWidth / 2;
     
-    // ✅ FIXED: Only adjust position if cabinet fits and there's benefit to centering
-    if (availableWidth > 0.4) { // Only center if there's meaningful space
+    // ✅ FIXED: Center the cabinet in the available space
+    const centerPosition = (leftBoundary + rightBoundary) / 2;
+    
+    // ✅ FIXED: Always center if there's space, regardless of amount
+    if (availableWidth > 0.2) { // Center if there's any meaningful space
       if (isRotated) {
-        // Check if centering would keep cabinet within bounds
-        if (centerPosition - halfCabinetSize >= leftBoundary && centerPosition + halfCabinetSize <= rightBoundary) {
-          position.z = centerPosition;
-        }
+        position.z = centerPosition;
       } else {
-        if (centerPosition - halfCabinetSize >= leftBoundary && centerPosition + halfCabinetSize <= rightBoundary) {
-          position.x = centerPosition;
-        }
+        position.x = centerPosition;
       }
     }
     
@@ -167,36 +166,53 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     const wallMargin = 0.05;
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
+    // ✅ CRITICAL: Calculate actual dimensions based on rotation
+    let actualWidth, actualDepth;
+    if (isRotated) {
+      // When rotated 90°, width becomes depth and depth becomes width
+      actualWidth = 0.6; // Cabinet depth becomes the width when rotated
+      actualDepth = width; // Cabinet width becomes the depth when rotated
+    } else {
+      // Normal orientation
+      actualWidth = width;
+      actualDepth = 0.6;
+    }
+    
     let minX, maxX, minZ, maxZ;
     
-    if (isRotated) {
-      minX = position.x - 0.3;
-      maxX = position.x + 0.3;
-      minZ = position.z - width / 2;
-      maxZ = position.z + width / 2;
-    } else {
-      minX = position.x - width / 2;
-      maxX = position.x + width / 2;
-      minZ = position.z - 0.3;
-      maxZ = position.z + 0.3;
-    }
+    // ✅ FIXED: Use actual dimensions for boundary calculation
+    minX = position.x - actualWidth / 2;
+    maxX = position.x + actualWidth / 2;
+    minZ = position.z - actualDepth / 2;
+    maxZ = position.z + actualDepth / 2;
     
     const kitchenMinX = -kitchenDimensions.width / 2 + wallMargin;
     const kitchenMaxX = kitchenDimensions.width / 2 - wallMargin;
     const kitchenMinZ = -kitchenDimensions.length / 2 + wallMargin;
     const kitchenMaxZ = kitchenDimensions.length / 2 - wallMargin;
     
+    console.log('Boundary validation:', {
+      rotation: (rotation * 180 / Math.PI).toFixed(1) + '°',
+      isRotated,
+      requestedWidth: width,
+      actualWidth,
+      actualDepth,
+      position: { x: position.x.toFixed(2), z: position.z.toFixed(2) },
+      bounds: { minX: minX.toFixed(2), maxX: maxX.toFixed(2), minZ: minZ.toFixed(2), maxZ: maxZ.toFixed(2) },
+      kitchen: { minX: kitchenMinX.toFixed(2), maxX: kitchenMaxX.toFixed(2), minZ: kitchenMinZ.toFixed(2), maxZ: kitchenMaxZ.toFixed(2) }
+    });
+    
     if (minX < kitchenMinX || maxX > kitchenMaxX) {
-      return { valid: false, reason: 'יוצא מגבולות המטבח (רוחב)' };
+      const overflow = minX < kitchenMinX ? (kitchenMinX - minX).toFixed(2) : (maxX - kitchenMaxX).toFixed(2);
+      return { valid: false, reason: `יוצא מגבולות המטבח (רוחב) ב-${overflow}מ'` };
     }
     if (minZ < kitchenMinZ || maxZ > kitchenMaxZ) {
-      return { valid: false, reason: 'יוצא מגבולות המטבח (אורך)' };
+      const overflow = minZ < kitchenMinZ ? (kitchenMinZ - minZ).toFixed(2) : (maxZ - kitchenMaxZ).toFixed(2);
+      return { valid: false, reason: `יוצא מגבולות המטבח (אורך) ב-${overflow}מ'` };
     }
     
-    // ✅ FIXED: Use appropriate depth based on rotation
-    const depth = isRotated ? width : 0.6;
-    const actualWidth = isRotated ? 0.6 : width;
-    const collision = checkForCollisions(position, actualWidth, depth); 
+    // ✅ FIXED: Use calculated actual dimensions for collision check
+    const collision = checkForCollisions(position, actualWidth, actualDepth); 
     if (collision) {
       return { valid: false, reason: `יתנגש עם ${collision.name}` };
     }
