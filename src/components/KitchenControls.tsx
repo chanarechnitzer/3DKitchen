@@ -10,7 +10,9 @@ const KitchenControls: React.FC = () => {
     setSelectedItem, 
     placedItems,
     removeItem,
-    selectedItem
+    selectedItem,
+    updateCabinetSize,
+    updateOvenStack
   } = useKitchen();
 
   const [previewItem, setPreviewItem] = useState<string | null>(null);
