@@ -47,11 +47,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     position: { x: number; z: number };
     rotation: number;
   } | null>(null);
-  const [showCabinetOptionsDialog, setShowCabinetOptionsDialog] = useState(false);
-  const [pendingCabinetPlacement, setPendingCabinetPlacement] = useState<{
-    position: { x: number; z: number };
-    rotation: number;
-  } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
