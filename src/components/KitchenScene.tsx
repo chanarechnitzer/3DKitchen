@@ -8,6 +8,7 @@ import TriangleLines from './three/TriangleLines';
 import DistanceLines from './three/DistanceLines';
 import SnapGuides from './three/SnapGuides';
 import { useKitchen, WindowPlacement } from '../store/KitchenContext';
+import OvenStackDialog from './OvenStackDialog';
 
 interface KitchenSceneProps {
   windowPlacement: WindowPlacement;
@@ -35,6 +36,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const [itemRotation, setItemRotation] = useState(0);
   const [showRotationHint, setShowRotationHint] = useState(false);
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
+  const [showOvenStackDialog, setShowOvenStackDialog] = useState(false);
+  const [conflictingOven, setConflictingOven] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
@@ -483,25 +486,43 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
 
   // ✅ Handle placing item - only if no collision
   const handlePlaceItem = () => {
-    if (selectedItem && !collisionWarning) {
+    if (selectedItem) {
       const finalPos = snapPosition || validatePosition(position.x, position.z);
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
-      placeItem(
-        selectedItem.id, 
-        new THREE.Vector3(finalPos.x, 0, finalPos.z),
-        finalRotation
-      );
-      setSelectedItem(null);
-      setIsDragging(false);
-      setSnapPosition(null);
-      setItemRotation(0);
-      setShowRotationHint(false);
-      setCollisionWarning(null);
+      // ✅ NEW: Check for oven stacking opportunity
+      if (selectedItem.type === 'oven') {
+        const existingOven = placedItems.find(item => 
+          item.type === 'oven' && 
+          Math.abs(item.position.x - finalPos.x) < 0.1 && 
+          Math.abs(item.position.z - finalPos.z) < 0.1
+        );
+        
+        if (existingOven) {
+          setConflictingOven(existingOven.id);
+          setShowOvenStackDialog(true);
+          return; // Don't place yet, wait for user decision
+        }
+      }
       
-      // ✅ Haptic feedback for mobile
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
+      // ✅ FIXED: Only place if no collision warning
+      if (!collisionWarning) {
+        placeItem(
+          selectedItem.id, 
+          new THREE.Vector3(finalPos.x, 0, finalPos.z),
+          finalRotation
+        );
+        setSelectedItem(null);
+        setIsDragging(false);
+        setSnapPosition(null);
+        setItemRotation(0);
+        setShowRotationHint(false);
+        setCollisionWarning(null);
+        
+        // ✅ Haptic feedback for mobile
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
       }
     }
   };
@@ -756,6 +777,51 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             </div>
           </div>
         </div>
+      )}
+      
+      {/* ✅ NEW: Oven Stack Dialog */}
+      {showOvenStackDialog && conflictingOven && selectedItem && (
+        <OvenStackDialog
+          onClose={() => {
+            setShowOvenStackDialog(false);
+            setConflictingOven(null);
+          }}
+          onConfirm={(shouldStack) => {
+            const finalPos = snapPosition || validatePosition(position.x, position.z);
+            const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
+            
+            if (shouldStack && conflictingOven && selectedItem) {
+              // Place the new oven and create stack
+              placeItem(
+                selectedItem.id, 
+                new THREE.Vector3(finalPos.x, 0, finalPos.z),
+                finalRotation
+              );
+              // Create the stack relationship
+              setTimeout(() => {
+                updateOvenStack(conflictingOven, selectedItem.id);
+              }, 100);
+            } else if (conflictingOven && selectedItem) {
+              // Replace existing oven
+              removeItem(conflictingOven);
+              placeItem(
+                selectedItem.id, 
+                new THREE.Vector3(finalPos.x, 0, finalPos.z),
+                finalRotation
+              );
+            }
+            
+            setSelectedItem(null);
+            setIsDragging(false);
+            setSnapPosition(null);
+            setItemRotation(0);
+            setShowRotationHint(false);
+            setCollisionWarning(null);
+            setShowOvenStackDialog(false);
+            setConflictingOven(null);
+          }}
+          baseOvenName={placedItems.find(item => item.id === conflictingOven)?.name || 'תנור'}
+        />
       )}
     </div>
   );
