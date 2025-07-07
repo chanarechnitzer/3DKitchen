@@ -53,38 +53,25 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     console.log('=== IMPROVED Cabinet Fill Calculation ===');
     console.log('Cabinet position:', { x: position.x, z: position.z });
     
-    // ✅ STEP 1: Check if cabinet is near walls (corner detection)
-    const cabinetHalfWidth = 0.3; // Default cabinet half-width for positioning
-    const wallProximity = 0.2; // Consider "near wall" if within 20cm
+    // ✅ STEP 1: Set initial boundaries to kitchen walls
+    let leftBoundary = -halfKitchenWidth + wallBuffer;
+    let rightBoundary = halfKitchenWidth - wallBuffer;
+    let backBoundary = -halfKitchenLength + wallBuffer;
+    let frontBoundary = halfKitchenLength - wallBuffer;
     
-    const nearLeftWall = Math.abs(position.x - (-halfKitchenWidth + wallBuffer + cabinetHalfWidth)) < wallProximity;
-    const nearRightWall = Math.abs(position.x - (halfKitchenWidth - wallBuffer - cabinetHalfWidth)) < wallProximity;
-    const nearBackWall = Math.abs(position.z - (-halfKitchenLength + wallBuffer + cabinetHalfWidth)) < wallProximity;
-    const nearFrontWall = Math.abs(position.z - (halfKitchenLength - wallBuffer - cabinetHalfWidth)) < wallProximity;
-    
-    console.log('Wall proximity:', { nearLeftWall, nearRightWall, nearBackWall, nearFrontWall });
-    
-    // ✅ STEP 2: Set boundaries based on wall proximity
-    // If near a wall, don't try to expand through it!
-    let leftBoundary = nearLeftWall ? position.x - cabinetHalfWidth : -halfKitchenWidth + wallBuffer;
-    let rightBoundary = nearRightWall ? position.x + cabinetHalfWidth : halfKitchenWidth - wallBuffer;
-    let backBoundary = nearBackWall ? position.z - cabinetHalfWidth : -halfKitchenLength + wallBuffer;
-    let frontBoundary = nearFrontWall ? position.z + cabinetHalfWidth : halfKitchenLength - wallBuffer;
-    
-    console.log('Initial boundaries (considering walls):', {
+    console.log('Kitchen boundaries:', {
       left: leftBoundary.toFixed(2),
       right: rightBoundary.toFixed(2),
       back: backBoundary.toFixed(2),
       front: frontBoundary.toFixed(2)
     });
     
-    // ✅ STEP 3: Find items that could limit our expansion in each direction
+    // ✅ STEP 2: Find items that could limit our expansion in each direction
     const findLimitingItems = () => {
-      const tolerance = 1.0; // 1 meter tolerance for considering items "in line"
+      const tolerance = 0.4; // 40cm tolerance for considering items "in line" (cabinet depth)
       
       const leftItems = placedItems.filter(item => {
-        const itemRightEdge = item.position.x + item.dimensions.width / 2;
-        return itemRightEdge <= position.x - cabinetHalfWidth - 0.01 && // Item is to the left
+        return item.position.x < position.x && // Item is to the left
                Math.abs(item.position.z - position.z) <= tolerance; // In same line
       }).sort((a, b) => {
         const aRightEdge = a.position.x + a.dimensions.width / 2;
@@ -93,8 +80,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       });
       
       const rightItems = placedItems.filter(item => {
-        const itemLeftEdge = item.position.x - item.dimensions.width / 2;
-        return itemLeftEdge >= position.x + cabinetHalfWidth + 0.01 && // Item is to the right
+        return item.position.x > position.x && // Item is to the right
                Math.abs(item.position.z - position.z) <= tolerance; // In same line
       }).sort((a, b) => {
         const aLeftEdge = a.position.x - a.dimensions.width / 2;
@@ -103,8 +89,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       });
       
       const backItems = placedItems.filter(item => {
-        const itemFrontEdge = item.position.z + item.dimensions.depth / 2;
-        return itemFrontEdge <= position.z - cabinetHalfWidth - 0.01 && // Item is behind
+        return item.position.z < position.z && // Item is behind
                Math.abs(item.position.x - position.x) <= tolerance; // In same line
       }).sort((a, b) => {
         const aFrontEdge = a.position.z + a.dimensions.depth / 2;
@@ -113,8 +98,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       });
       
       const frontItems = placedItems.filter(item => {
-        const itemBackEdge = item.position.z - item.dimensions.depth / 2;
-        return itemBackEdge >= position.z + cabinetHalfWidth + 0.01 && // Item is in front
+        return item.position.z > position.z && // Item is in front
                Math.abs(item.position.x - position.x) <= tolerance; // In same line
       }).sort((a, b) => {
         const aBackEdge = a.position.z - a.dimensions.depth / 2;
@@ -134,25 +118,33 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       front: frontItems.length
     });
     
-    // ✅ STEP 4: Update boundaries based on nearby items (only if not blocked by walls)
+    // ✅ STEP 3: Update boundaries based on nearby items
     if (leftItems.length > 0) {
       const closestLeftItem = leftItems[0];
-      leftBoundary = Math.max(leftBoundary, closestLeftItem.position.x + closestLeftItem.dimensions.width / 2 + itemBuffer);
+      const itemRightEdge = closestLeftItem.position.x + closestLeftItem.dimensions.width / 2;
+      leftBoundary = Math.max(leftBoundary, itemRightEdge + itemBuffer);
+      console.log('Left boundary limited by:', closestLeftItem.name, 'at', itemRightEdge.toFixed(2));
     }
     
     if (rightItems.length > 0) {
       const closestRightItem = rightItems[0];
-      rightBoundary = Math.min(rightBoundary, closestRightItem.position.x - closestRightItem.dimensions.width / 2 - itemBuffer);
+      const itemLeftEdge = closestRightItem.position.x - closestRightItem.dimensions.width / 2;
+      rightBoundary = Math.min(rightBoundary, itemLeftEdge - itemBuffer);
+      console.log('Right boundary limited by:', closestRightItem.name, 'at', itemLeftEdge.toFixed(2));
     }
     
     if (backItems.length > 0) {
       const closestBackItem = backItems[0];
-      backBoundary = Math.max(backBoundary, closestBackItem.position.z + closestBackItem.dimensions.depth / 2 + itemBuffer);
+      const itemFrontEdge = closestBackItem.position.z + closestBackItem.dimensions.depth / 2;
+      backBoundary = Math.max(backBoundary, itemFrontEdge + itemBuffer);
+      console.log('Back boundary limited by:', closestBackItem.name, 'at', itemFrontEdge.toFixed(2));
     }
     
     if (frontItems.length > 0) {
       const closestFrontItem = frontItems[0];
-      frontBoundary = Math.min(frontBoundary, closestFrontItem.position.z - closestFrontItem.dimensions.depth / 2 - itemBuffer);
+      const itemBackEdge = closestFrontItem.position.z - closestFrontItem.dimensions.depth / 2;
+      frontBoundary = Math.min(frontBoundary, itemBackEdge - itemBuffer);
+      console.log('Front boundary limited by:', closestFrontItem.name, 'at', itemBackEdge.toFixed(2));
     }
     
     console.log('Final boundaries (after items):', {
@@ -162,69 +154,70 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       front: frontBoundary.toFixed(2)
     });
     
-    // ✅ STEP 5: Calculate available space in each direction
-    const availableSpaceX = Math.max(0, rightBoundary - leftBoundary);
-    const availableSpaceZ = Math.max(0, frontBoundary - backBoundary);
+    // ✅ STEP 4: Calculate maximum possible width in each direction from cabinet center
+    const maxWidthLeft = Math.max(0, position.x - leftBoundary) * 2; // Distance to left boundary * 2
+    const maxWidthRight = Math.max(0, rightBoundary - position.x) * 2; // Distance to right boundary * 2
+    const maxWidthBack = Math.max(0, position.z - backBoundary) * 2; // Distance to back boundary * 2
+    const maxWidthFront = Math.max(0, frontBoundary - position.z) * 2; // Distance to front boundary * 2
+    
+    // Take the smaller of left/right for X direction, smaller of back/front for Z direction
+    const availableSpaceX = Math.min(maxWidthLeft, maxWidthRight);
+    const availableSpaceZ = Math.min(maxWidthBack, maxWidthFront);
     
     console.log('Available spaces:', {
       X: availableSpaceX.toFixed(2),
-      Z: availableSpaceZ.toFixed(2)
+      Z: availableSpaceZ.toFixed(2),
+      maxWidths: {
+        left: maxWidthLeft.toFixed(2),
+        right: maxWidthRight.toFixed(2),
+        back: maxWidthBack.toFixed(2),
+        front: maxWidthFront.toFixed(2)
+      }
     });
     
-    // ✅ STEP 6: Choose the best direction with wall-aware logic
+    // ✅ STEP 5: Choose the best direction
     let finalWidth = 0.6;
     let chosenDirection = 'none';
     
-    // ✅ NEW: Priority 1 - If near walls, only expand in the free direction
-    if ((nearLeftWall || nearRightWall) && !nearBackWall && !nearFrontWall && availableSpaceZ >= 0.6) {
-      finalWidth = Math.min(availableSpaceZ, 4.0);
-      chosenDirection = 'Z (wall constraint X)';
-    } else if ((nearBackWall || nearFrontWall) && !nearLeftWall && !nearRightWall && availableSpaceX >= 0.6) {
-      finalWidth = Math.min(availableSpaceX, 4.0);
-      chosenDirection = 'X (wall constraint Z)';
-    }
-    // Priority 2: If there are items on both sides in one direction, prefer that
-    else {
-      const hasItemsBothSidesX = leftItems.length > 0 && rightItems.length > 0;
-      const hasItemsBothSidesZ = backItems.length > 0 && frontItems.length > 0;
+    // Priority 1: If there are items on both sides in one direction, prefer that
+    const hasItemsBothSidesX = leftItems.length > 0 && rightItems.length > 0;
+    const hasItemsBothSidesZ = backItems.length > 0 && frontItems.length > 0;
     
-      if (hasItemsBothSidesX && !hasItemsBothSidesZ && availableSpaceX >= 0.6) {
+    if (hasItemsBothSidesX && !hasItemsBothSidesZ && availableSpaceX >= 0.6) {
+      finalWidth = Math.min(availableSpaceX, 4.0);
+      chosenDirection = 'X (items both sides)';
+    } else if (hasItemsBothSidesZ && !hasItemsBothSidesX && availableSpaceZ >= 0.6) {
+      finalWidth = Math.min(availableSpaceZ, 4.0);
+      chosenDirection = 'Z (items both sides)';
+    } 
+    // Priority 2: Choose direction with more space
+    else if (availableSpaceX >= 0.6 || availableSpaceZ >= 0.6) {
+      if (availableSpaceX >= availableSpaceZ && availableSpaceX >= 0.6) {
         finalWidth = Math.min(availableSpaceX, 4.0);
-        chosenDirection = 'X (items both sides)';
-      } else if (hasItemsBothSidesZ && !hasItemsBothSidesX && availableSpaceZ >= 0.6) {
+        chosenDirection = 'X (more space)';
+      } else if (availableSpaceZ >= 0.6) {
         finalWidth = Math.min(availableSpaceZ, 4.0);
-        chosenDirection = 'Z (items both sides)';
-      } 
-      // Priority 3: Choose direction with more space
-      else if (availableSpaceX >= 0.6 || availableSpaceZ >= 0.6) {
-        if (availableSpaceX >= availableSpaceZ && availableSpaceX >= 0.6) {
-          finalWidth = Math.min(availableSpaceX, 4.0);
-          chosenDirection = 'X (more space)';
-        } else if (availableSpaceZ >= 0.6) {
-          finalWidth = Math.min(availableSpaceZ, 4.0);
-          chosenDirection = 'Z (more space)';
-        }
+        chosenDirection = 'Z (more space)';
       }
-      // Priority 4: Take any available space above minimum
-      else if (availableSpaceX >= 0.3) {
-        finalWidth = Math.min(availableSpaceX, 4.0);
-        chosenDirection = 'X (limited)';
-      } else if (availableSpaceZ >= 0.3) {
-        finalWidth = Math.min(availableSpaceZ, 4.0);
-        chosenDirection = 'Z (limited)';
-      } else {
-        finalWidth = 0.3;
-        chosenDirection = 'minimum';
-      }
+    }
+    // Priority 3: Take any available space above minimum
+    else if (availableSpaceX >= 0.3) {
+      finalWidth = Math.min(availableSpaceX, 4.0);
+      chosenDirection = 'X (limited)';
+    } else if (availableSpaceZ >= 0.3) {
+      finalWidth = Math.min(availableSpaceZ, 4.0);
+      chosenDirection = 'Z (limited)';
+    } else {
+      finalWidth = 0.3;
+      chosenDirection = 'minimum';
     }
     
     console.log('Final decision:', {
       chosenDirection,
-      finalWidth: finalWidth.toFixed(2),
-      wallConstraints: { nearLeftWall, nearRightWall, nearBackWall, nearFrontWall }
+      finalWidth: finalWidth.toFixed(2)
     });
     
-    // ✅ STEP 7: Validate that the chosen size won't cause collisions
+    // ✅ STEP 6: Validate that the chosen size won't cause collisions
     const collision = checkForCollisions(position, finalWidth);
     if (collision) {
       console.log('Collision detected with:', collision.name, '- reducing size');
@@ -250,10 +243,10 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       return { valid: false, reason: `יתנגש עם ${collision.name}` };
     }
     
-    // ✅ IMPROVED: Check if cabinet stays within kitchen bounds (but allow wall-adjacent placement)
+    // ✅ IMPROVED: Check if cabinet stays within kitchen bounds
     const halfWidth = width / 2;
     const halfDepth = 0.3; // Cabinet depth / 2
-    const wallBuffer = 0.02; // Reduced buffer - allow closer to walls
+    const wallBuffer = 0.05; // 5cm from walls
     
     const leftEdge = position.x - halfWidth;
     const rightEdge = position.x + halfWidth;
