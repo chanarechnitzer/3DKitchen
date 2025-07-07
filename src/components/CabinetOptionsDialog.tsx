@@ -352,3 +352,5 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 };
 
 export default CabinetOptionsDialog;
+
+export default CabinetOptionsDialog
