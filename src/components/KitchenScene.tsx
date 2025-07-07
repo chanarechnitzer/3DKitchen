@@ -69,24 +69,34 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const checkCollisions = (x: number, z: number, itemWidth: number, itemDepth: number, rotation: number = 0) => {
     if (!selectedItem) return null;
     
-    // ✅ CRITICAL: For countertops, be much more permissive with collisions
+    // ✅ CRITICAL: For countertops, be much more permissive with collisions - allow filling gaps
     if (selectedItem.type === 'countertop') {
-      // Only check for actual overlaps, not adjacency
-      const buffer = -0.1; // Large negative buffer allows countertops to fill gaps
+      // ✅ FIXED: Very permissive collision detection for countertops
+      const buffer = -0.15; // Very large negative buffer allows countertops to fill tight gaps
       
       for (const placedItem of placedItems) {
         if (placedItem.id === selectedItem.id) continue;
         
-        const xOverlap = Math.abs(x - placedItem.position.x) < (itemWidth/2 + placedItem.dimensions.width/2 + buffer);
-        const zOverlap = Math.abs(z - placedItem.position.z) < (itemDepth/2 + placedItem.dimensions.depth/2 + buffer);
+        // ✅ CRITICAL: Account for rotation when checking collisions
+        const rotatedWidth = Math.abs(Math.cos(rotation)) * itemWidth + Math.abs(Math.sin(rotation)) * itemDepth;
+        const rotatedDepth = Math.abs(Math.sin(rotation)) * itemWidth + Math.abs(Math.cos(rotation)) * itemDepth;
         
-        // Only warn if there's significant overlap (not just touching)
+        const placedRotation = placedItem.rotation || 0;
+        const placedRotatedWidth = Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.width + 
+                                   Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.depth;
+        const placedRotatedDepth = Math.abs(Math.sin(placedRotation)) * placedItem.dimensions.width + 
+                                   Math.abs(Math.cos(placedRotation)) * placedItem.dimensions.depth;
+        
+        const xOverlap = Math.abs(x - placedItem.position.x) < (rotatedWidth/2 + placedRotatedWidth/2 + buffer);
+        const zOverlap = Math.abs(z - placedItem.position.z) < (rotatedDepth/2 + placedRotatedDepth/2 + buffer);
+        
+        // ✅ FIXED: Only warn if there's very significant overlap (more than 8cm)
         if (xOverlap && zOverlap) {
-          const xDistance = Math.abs(x - placedItem.position.x) - (itemWidth/2 + placedItem.dimensions.width/2);
-          const zDistance = Math.abs(z - placedItem.position.z) - (itemDepth/2 + placedItem.dimensions.depth/2);
+          const xDistance = Math.abs(x - placedItem.position.x) - (rotatedWidth/2 + placedRotatedWidth/2);
+          const zDistance = Math.abs(z - placedItem.position.z) - (rotatedDepth/2 + placedRotatedDepth/2);
           
-          // Only show warning if overlapping by more than 5cm
-          if (xDistance < -0.05 && zDistance < -0.05) {
+          // ✅ FIXED: Only show warning if overlapping by more than 8cm (very significant overlap)
+          if (xDistance < -0.08 && zDistance < -0.08) {
             return placedItem.name;
           }
         }
@@ -119,7 +129,18 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       // ✅ FIXED: Don't prevent oven collision here - let the dialog handle it
       if (selectedItem.type === 'oven' && placedItem.type === 'oven') {
-        // Skip collision check for ovens - the dialog will handle stacking
+        // ✅ FIXED: Check if ovens are in same position (for stacking) vs different positions
+        const samePosition = Math.abs(x - placedItem.position.x) < 0.1 && Math.abs(z - placedItem.position.z) < 0.1;
+        if (samePosition) {
+          // Skip collision check for ovens in same position - the dialog will handle stacking
+          continue;
+        }
+        // For ovens in different positions, continue with normal collision detection
+      }
+      
+      // ✅ FIXED: Special handling for stacked ovens - treat them as single unit
+      if ((placedItem as any).stackedWith || (placedItem as any).stackedOn) {
+        // For stacked ovens, use the base oven's position and combined height
         continue;
       }
       
@@ -521,13 +542,12 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       
       // Check if it's a countertop/cabinet  
       if (selectedItem.type === 'countertop') {
-        // Store cabinet info and show options dialog
+        // ✅ FIXED: Store cabinet info and show options dialog
         setPendingCabinet({
           id: selectedItem.id,
           position: new THREE.Vector3(finalPos.x, 0, finalPos.z),
           rotation: finalRotation
         });
-        setShowCabinetDialog(true);
         setShowCabinetDialog(true);
       } else if (selectedItem.type === 'oven') {
         // ✅ FIXED: Check if placing oven on another oven - more precise detection

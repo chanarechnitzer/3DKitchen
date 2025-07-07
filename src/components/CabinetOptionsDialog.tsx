@@ -25,25 +25,41 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   const checkForCollisions = (cabinetPos: Vector3, width: number, depth: number = 0.6) => {
     const cabinetHalfWidth = width / 2;
     const cabinetHalfDepth = depth / 2;
-    const buffer = -0.08; // ✅ FIXED: More permissive buffer allows filling gaps between items
+    const buffer = -0.12; // ✅ FIXED: Even more permissive buffer for tight gap filling
     
     for (const item of placedItems) {
       // ✅ CRITICAL: Skip the cabinet we're trying to place
       if (item.id === cabinetId) continue;
       
-      const itemHalfWidth = item.dimensions.width / 2;
-      const itemHalfDepth = item.dimensions.depth / 2;
+      // ✅ FIXED: Account for item rotation in collision detection
+      const itemRotation = item.rotation || 0;
+      const itemRotatedWidth = Math.abs(Math.cos(itemRotation)) * item.dimensions.width + 
+                               Math.abs(Math.sin(itemRotation)) * item.dimensions.depth;
+      const itemRotatedDepth = Math.abs(Math.sin(itemRotation)) * item.dimensions.width + 
+                               Math.abs(Math.cos(itemRotation)) * item.dimensions.depth;
+      
+      const itemHalfWidth = itemRotatedWidth / 2;
+      const itemHalfDepth = itemRotatedDepth / 2;
+      
+      // ✅ FIXED: Special handling for stacked ovens - treat as single unit
+      if ((item as any).stackedWith) {
+        // This is a base oven with something stacked on it - use normal collision detection
+        // The visual height doesn't affect horizontal collision
+      } else if ((item as any).stackedOn) {
+        // This is a stacked oven - skip collision check as it's handled by the base oven
+        continue;
+      }
       
       const xOverlap = Math.abs(cabinetPos.x - item.position.x) < (cabinetHalfWidth + itemHalfWidth + buffer);
       const zOverlap = Math.abs(cabinetPos.z - item.position.z) < (cabinetHalfDepth + itemHalfDepth + buffer);
       
-      // ✅ FIXED: Only report collision if there's significant overlap
+      // ✅ FIXED: Only report collision if there's very significant overlap
       if (xOverlap && zOverlap) {
         const xDistance = Math.abs(cabinetPos.x - item.position.x) - (cabinetHalfWidth + itemHalfWidth);
         const zDistance = Math.abs(cabinetPos.z - item.position.z) - (cabinetHalfDepth + itemHalfDepth);
         
-        // Only report collision if overlapping by more than 3cm
-        if (xDistance < -0.03 && zDistance < -0.03) {
+        // ✅ FIXED: Only report collision if overlapping by more than 6cm (very significant)
+        if (xDistance < -0.06 && zDistance < -0.06) {
           return item;
         }
       }
@@ -86,14 +102,28 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         // ✅ CRITICAL: Skip the cabinet we're trying to place
         if (item.id === cabinetId) continue;
         
-        if (Math.abs(item.position.z - position.z) < 0.35) { // ✅ FIXED: More precise alignment check
+        // ✅ FIXED: Special handling for stacked ovens
+        if ((item as any).stackedOn) {
+          // Skip stacked ovens - they don't create boundaries, the base oven does
+          continue;
+        }
+        
+        if (Math.abs(item.position.z - position.z) < 0.4) { // ✅ FIXED: More generous alignment check
           const itemEdge = item.position.x;
-          const itemHalfSize = (isRotated ? item.dimensions.depth : item.dimensions.width) / 2;
+          
+          // ✅ FIXED: Account for item rotation
+          const itemRotation = item.rotation || 0;
+          const itemRotatedWidth = Math.abs(Math.cos(itemRotation)) * item.dimensions.width + 
+                                   Math.abs(Math.sin(itemRotation)) * item.dimensions.depth;
+          const itemRotatedDepth = Math.abs(Math.sin(itemRotation)) * item.dimensions.width + 
+                                   Math.abs(Math.cos(itemRotation)) * item.dimensions.depth;
+          
+          const itemHalfSize = (isRotated ? itemRotatedDepth : itemRotatedWidth) / 2;
           
           if (itemEdge < position.x) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + 0.01); // Minimal gap
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + 0.005); // Very minimal gap
           } else if (itemEdge > position.x) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - 0.01); // Minimal gap
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - 0.005); // Very minimal gap
           }
         }
       }
@@ -128,7 +158,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     });
     
     // ✅ FIXED: Better width calculation with minimum viable size
-    return Math.max(0.2, Math.min(4.0, availableWidth - 0.02)); // Minimal margin for safety
+    return Math.max(0.15, Math.min(4.0, availableWidth - 0.01)); // Very minimal margin for tight fitting
   };
 
   const validateCabinetPlacement = (width: number) => {
