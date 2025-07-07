@@ -7,6 +7,7 @@ import DraggableObject from './three/DraggableObject';
 import TriangleLines from './three/TriangleLines';
 import DistanceLines from './three/DistanceLines';
 import SnapGuides from './three/SnapGuides';
+import CabinetOptionsDialog from './CabinetOptionsDialog';
 import { useKitchen, WindowPlacement } from '../store/KitchenContext';
 
 interface KitchenSceneProps {
@@ -35,6 +36,8 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const [itemRotation, setItemRotation] = useState(0);
   const [showRotationHint, setShowRotationHint] = useState(false);
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
+  const [showCabinetDialog, setShowCabinetDialog] = useState(false);
+  const [pendingCabinet, setPendingCabinet] = useState<{id: string, position: Vector3, rotation: number} | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
@@ -487,12 +490,24 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snapPosition || validatePosition(position.x, position.z);
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
-      placeItem(
-        selectedItem.id, 
-        new THREE.Vector3(finalPos.x, 0, finalPos.z),
-        finalRotation
-      );
-      
+      // Check if it's a countertop/cabinet
+      if (selectedItem.type === 'countertop') {
+        // Store cabinet info and show options dialog
+        setPendingCabinet({
+          id: selectedItem.id,
+          position: new THREE.Vector3(finalPos.x, 0, finalPos.z),
+          rotation: finalRotation
+        });
+        setShowCabinetDialog(true);
+      } else {
+        // Place other items normally
+        placeItem(
+          selectedItem.id, 
+          new THREE.Vector3(finalPos.x, 0, finalPos.z),
+          finalRotation
+        );
+      }
+
       setSelectedItem(null);
       setIsDragging(false);
       setSnapPosition(null);
@@ -506,6 +521,15 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       }
     }
   };
+
+  // Handle cabinet dialog close
+  const handleCabinetDialogClose = () => {
+    setShowCabinetDialog(false);
+    setPendingCabinet(null);
+  };
+
+  // Handle cabinet placement after dialog
+  // This is now handled inside the CabinetOptionsDialog component
 
   const handleMouseMove = (event: React.MouseEvent) => {
     if (!canvasRef.current || !selectedItem) return;
@@ -749,6 +773,17 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Cabinet Options Dialog */}
+      {showCabinetDialog && pendingCabinet && (
+        <CabinetOptionsDialog
+          isOpen={showCabinetDialog}
+          onClose={handleCabinetDialogClose}
+          cabinetId={pendingCabinet.id}
+          position={pendingCabinet.position}
+          rotation={pendingCabinet.rotation}
+        />
       )}
     </div>
   );

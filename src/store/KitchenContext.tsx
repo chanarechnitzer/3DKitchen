@@ -66,6 +66,7 @@ interface KitchenContextType {
   setSelectedItem: (item: KitchenItem | null) => void;
   placeItem: (itemId: string, position: Vector3, rotation?: number) => void;
   removeItem: (itemId: string) => void;
+  updateCabinetSize: (itemId: string, newWidth: number) => void;
   triangleValidation: TriangleValidation | null;
   validateTriangle: () => void;
   gameCompleted: boolean;
@@ -93,6 +94,7 @@ const defaultContext: KitchenContextType = {
   setSelectedItem: () => {},
   placeItem: () => {},
   removeItem: () => {},
+  updateCabinetSize: () => {},
   triangleValidation: null,
   validateTriangle: () => {},
   gameCompleted: false,
@@ -321,6 +323,22 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  // Update cabinet size
+  const updateCabinetSize = (itemId: string, newWidth: number) => {
+    setPlacedItems(prev => prev.map(item => {
+      if (item.id === itemId && item.type === KitchenItemType.COUNTERTOP) {
+        return {
+          ...item,
+          dimensions: {
+            ...item.dimensions,
+            width: newWidth
+          }
+        };
+      }
+      return item;
+    }));
+  };
+
   // Validate the kitchen triangle - NEVER auto-complete the game
   const validateTriangle = () => {
     const sinks = placedItems.filter(item => item.type === KitchenItemType.SINK);
@@ -391,6 +409,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     setSelectedItem,
     placeItem,
     removeItem,
+    updateCabinetSize,
     triangleValidation,
     validateTriangle,
     gameCompleted,
