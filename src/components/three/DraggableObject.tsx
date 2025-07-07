@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh } from 'three';
+import { Mesh, Vector3 } from 'three';
 import { useKitchen, KitchenItemType } from '../../store/KitchenContext';
 
 interface DraggableObjectProps {
@@ -24,6 +24,9 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
 }) => {
   const meshRef = useRef<Mesh>(null);
   const { customization } = useKitchen();
+  
+  // ✅ CRITICAL: Force re-render when dimensions change
+  const dimensionsKey = `${dimensions.width}-${dimensions.depth}-${dimensions.height}`;
 
   // Get colors based on customization
   const getCabinetColor = () => {
@@ -63,10 +66,12 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
     }
   });
 
-  // Memoize the component based on type
+  // ✅ CRITICAL: Include dimensions in dependency array to force re-render
   const component = useMemo(() => {
     const [x, y, z] = position;
     const { width, depth, height } = dimensions;
+    
+    console.log('🎨 Rendering DraggableObject:', { type, width, height, depth, position });
 
     switch (type) {
       case KitchenItemType.SINK:
@@ -296,7 +301,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
           </mesh>
         );
     }
-  }, [position, type, dimensions, rotation, customization, getCabinetColor, getCountertopColor]);
+  }, [position, type, dimensions, rotation, customization, getCabinetColor, getCountertopColor, dimensionsKey]);
 
   return (
     <group ref={meshRef}>

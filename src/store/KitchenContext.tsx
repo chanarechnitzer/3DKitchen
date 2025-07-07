@@ -315,11 +315,14 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     
     console.log('✅ Cabinet size updated successfully');
     
-    // Force re-validation after size change
+    // ✅ CRITICAL: Force immediate re-render and validation
     setTimeout(() => {
       console.log('🔄 Re-validating triangle after size change');
       validateTriangle();
-    }, 100);
+      
+      // Force React to re-render by updating a dummy state
+      setGameCompleted(prev => prev);
+    }, 50);
   };
 
   // Update oven stack
