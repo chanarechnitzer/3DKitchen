@@ -10,7 +10,6 @@ import SnapGuides from './three/SnapGuides';
 import { useKitchen, WindowPlacement, KitchenItemType } from '../store/KitchenContext';
 import OvenStackDialog from './OvenStackDialog';
 import CabinetOptionsDialog from './CabinetOptionsDialog';
-import CabinetOptionsDialog from './CabinetOptionsDialog';
 
 interface KitchenSceneProps {
   windowPlacement: WindowPlacement;
@@ -31,7 +30,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     triangleValidation,
     getDragValidation,
     updateOvenStack,
-    setAvailableItems,
     setAvailableItems,
   } = useKitchen();
   
@@ -915,66 +913,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         />
       )}
       
-      {/* ✅ NEW: Cabinet Options Dialog - Auto-opens when placing countertop */}
-      {showCabinetOptionsDialog && selectedItem && pendingCabinetPlacement && (
-        <CabinetOptionsDialog
-          onClose={() => {
-            console.log('❌ User cancelled cabinet options');
-            setShowCabinetOptionsDialog(false);
-            setPendingCabinetPlacement(null);
-            // Don't place the item if user cancels
-          }}
-          onConfirm={(option, customWidth) => {
-            console.log('✅ Cabinet options confirmed:', { option, customWidth });
-            if (!selectedItem || !pendingCabinetPlacement) return;
-            
-            let finalWidth = selectedItem.dimensions.width;
-            
-            if (option === 'custom' && customWidth) {
-              finalWidth = customWidth;
-              console.log('📏 Using custom width:', finalWidth);
-            } else if (option === 'fill' && customWidth) {
-              finalWidth = customWidth;
-              console.log('🔧 Using fill width:', finalWidth);
-            } else {
-              console.log('✋ Keeping current width:', finalWidth);
-            }
-            
-            // עדכן את מידות הפריט ברשימת הפריטים הזמינים לפני ההנחה
-            setAvailableItems(prev => prev.map(item => 
-              item.id === selectedItem.id 
-                ? { ...item, dimensions: { ...item.dimensions, width: finalWidth } }
-                : item
-            ));
-            
-            // הנח את הפריט עם המידות המעודכנות
-            console.log('🎯 Placing item with final width:', finalWidth);
-            placeItem(
-              selectedItem.id,
-              new THREE.Vector3(pendingCabinetPlacement.position.x, 0, pendingCabinetPlacement.position.z),
-              pendingCabinetPlacement.rotation
-            );
-            
-            setSelectedItem(null);
-            setIsDragging(false);
-            setSnapPosition(null);
-            setItemRotation(0);
-            setShowRotationHint(false);
-            setCollisionWarning(null);
-            setShowCabinetOptionsDialog(false);
-            setPendingCabinetPlacement(null);
-            
-            // משוב הפטי למובייל
-            if (navigator.vibrate) {
-              navigator.vibrate(50);
-            }
-          }}
-          defaultWidth={selectedItem.dimensions.width}
-          placedItems={placedItems}
-          position={pendingCabinetPlacement.position}
-          kitchenDimensions={kitchenDimensions}
-        />
-      )}
     </div>
   );
 };

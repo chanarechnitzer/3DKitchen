@@ -175,22 +175,9 @@ const KitchenControls: React.FC = () => {
               };
               setSelectedItem(updatedItem);
             }
-            if (finalWidth !== selectedItem.dimensions.width) {
-              const updatedItem = {
-                ...selectedItem,
-                dimensions: {
-                  ...selectedItem.dimensions,
-                  width: finalWidth
-                }
-              };
-              setSelectedItem(updatedItem);
-            }
             setShowCabinetDialog(false);
           }}
           defaultWidth={selectedItem.dimensions.width}
-          placedItems={placedItems}
-          position={selectedItem ? { x: 0, z: 0 } : undefined}
-          kitchenDimensions={kitchenDimensions}
           placedItems={placedItems}
           position={selectedItem ? { x: 0, z: 0 } : undefined}
           kitchenDimensions={kitchenDimensions}
@@ -385,26 +372,11 @@ const KitchenControls: React.FC = () => {
               }
               
               updateCabinetSize(selectedCabinetId, finalWidth);
-              let finalWidth = currentItem?.dimensions.width || 0.6;
-              
-              if (option === 'custom' && customWidth) {
-                finalWidth = customWidth;
-              } else if (option === 'fill' && customWidth) {
-                finalWidth = customWidth;
-              }
-              
-              updateCabinetSize(selectedCabinetId, finalWidth);
             }
             setShowCabinetDialog(false);
             setSelectedCabinetId(null);
           }}
           defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
-          placedItems={placedItems}
-          position={placedItems.find(item => item.id === selectedCabinetId)?.position ? {
-            x: placedItems.find(item => item.id === selectedCabinetId)!.position.x,
-            z: placedItems.find(item => item.id === selectedCabinetId)!.position.z
-          } : undefined}
-          kitchenDimensions={kitchenDimensions}
           placedItems={placedItems}
           position={placedItems.find(item => item.id === selectedCabinetId)?.position ? {
             x: placedItems.find(item => item.id === selectedCabinetId)!.position.x,
