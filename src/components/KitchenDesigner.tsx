@@ -43,8 +43,13 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
     console.log('User clicked finish designing button');
     console.log('Triangle validation:', triangleValidation);
     
-    // ✅ CRITICAL: Clear selected item when finishing design
+    // ✅ CRITICAL: Force clear ALL selection state when finishing design
     setSelectedItem(null);
+    
+    // ✅ CRITICAL: Add small delay to ensure state is cleared
+    setTimeout(() => {
+      setSelectedItem(null); // Double-clear to ensure it sticks
+    }, 50);
     
     // Always mark design phase as complete when user clicks the button
     setDesignPhaseComplete(true);
@@ -63,8 +68,14 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
 
   // ✅ NEW: Handle going back to editing mode - allows user to move items after finishing
   const handleBackToEditing = () => {
-    // ✅ CRITICAL: Clear selected item when going back to editing
+    // ✅ CRITICAL: Force clear ALL selection state when going back to editing
     setSelectedItem(null);
+    
+    // ✅ CRITICAL: Add small delay to ensure state is cleared
+    setTimeout(() => {
+      setSelectedItem(null); // Double-clear to ensure it sticks
+    }, 50);
+    
     setDesignPhaseComplete(false);
     setGameCompleted(false);
   };
@@ -130,15 +141,15 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
           )}
           
           {/* Kitchen Controls - Only show if no item is being dragged */}
-          {/* ✅ FIXED: Always show kitchen controls unless design is complete */}
-          {!designPhaseComplete && (
+          {/* ✅ FIXED: Show kitchen controls when design is not complete AND no item is selected */}
+          {!designPhaseComplete && !selectedItem && (
             <div className="flex-1 min-h-0 overflow-hidden">
               <KitchenControls />
             </div>
           )}
           
           {/* ✅ NEW: Show simplified controls when design is complete but user is editing */}
-          {designPhaseComplete && !gameCompleted && (
+          {designPhaseComplete && !gameCompleted && !selectedItem && (
             <div className="flex-1 min-h-0 overflow-hidden">
               <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 h-full flex flex-col">
                 <div className="flex items-center gap-2 mb-3">
@@ -184,8 +195,31 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
             </div>
           )}
           
+          {/* ✅ NEW: Show message when item is selected during any phase */}
+          {selectedItem && (
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <div className="bg-white rounded-xl shadow-lg p-3 border border-gray-100 h-full flex flex-col justify-center items-center">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white text-lg">🎯</span>
+                  </div>
+                  <h3 className="text-base font-bold text-gray-900 mb-2">מוכן להנחה</h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    גרור את {selectedItem.name} למיקום הרצוי במטבח
+                  </p>
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-2 border border-blue-200">
+                    <p className="text-xs text-blue-700">
+                      💡 לחץ במטבח כדי למקם או ESC לביטול
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Action Buttons - Fixed at bottom */}
-          {/* ✅ FIXED: Always show action buttons, only hide kitchen controls when dragging */}
+          {/* ✅ FIXED: Always show action buttons, but hide when item is selected */}
+          {!selectedItem && (
           <div className="flex-shrink-0 space-y-2 bg-white rounded-xl p-3 border border-gray-100 shadow-lg">
             {/* Message when triangle items are missing */}
             {!hasTriangleItems() && !designPhaseComplete && (
@@ -307,6 +341,7 @@ const KitchenDesigner: React.FC<KitchenDesignerProps> = ({ onBackToCustomize }) 
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
       

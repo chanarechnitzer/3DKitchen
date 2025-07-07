@@ -71,7 +71,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
 
   const calculateFillWidth = () => {
     const wallMargin = 0.05;
-    const buffer = 0.005; // ✅ FIXED: Smaller buffer for tighter snapping
+    const buffer = 0.01; // ✅ FIXED: Minimal buffer for tight fitting
     
     const isRotated = Math.abs(rotation) > Math.PI / 4 && Math.abs(rotation) < 3 * Math.PI / 4;
     
@@ -81,29 +81,34 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     if (isRotated) {
       // ✅ FIXED: When rotated, we're filling along the Z-axis (length direction)
-      leftBoundary = -kitchenDimensions.length / 2 + wallMargin + 0.3; // ✅ FIXED: Add cabinet half-depth
-      rightBoundary = kitchenDimensions.length / 2 - wallMargin - 0.3; // ✅ FIXED: Subtract cabinet half-depth
+      leftBoundary = -kitchenDimensions.length / 2 + wallMargin;
+      rightBoundary = kitchenDimensions.length / 2 - wallMargin;
       
       for (const item of placedItems) {
         // ✅ CRITICAL: Skip the cabinet we're trying to place
         if (item.id === cabinetId) continue;
         
         // ✅ CRITICAL: Check if item is in the same row (Z alignment for rotated cabinets)
-        if (Math.abs(item.position.x - position.x) < 0.2) { // ✅ FIXED: Even tighter alignment check
+        if (Math.abs(item.position.x - position.x) < 0.4) { // ✅ FIXED: More generous alignment check
           const itemEdge = item.position.z;
-          const itemHalfSize = item.dimensions.depth / 2; // ✅ FIXED: Use depth for Z-axis calculation
+          
+          // ✅ FIXED: Account for item rotation
+          const itemRotation = item.rotation || 0;
+          const itemRotatedDepth = Math.abs(Math.sin(itemRotation)) * item.dimensions.width + 
+                                   Math.abs(Math.cos(itemRotation)) * item.dimensions.depth;
+          const itemHalfSize = itemRotatedDepth / 2;
           
           if (itemEdge < position.z) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer); // ✅ FIXED: Snap to right edge of left item
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
           } else if (itemEdge > position.z) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer); // ✅ FIXED: Snap to left edge of right item
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
           }
         }
       }
     } else {
       // ✅ FIXED: Normal orientation - filling along X-axis (width direction)
-      leftBoundary = -kitchenDimensions.width / 2 + wallMargin + 0.3; // ✅ FIXED: Add cabinet half-depth
-      rightBoundary = kitchenDimensions.width / 2 - wallMargin - 0.3; // ✅ FIXED: Subtract cabinet half-depth
+      leftBoundary = -kitchenDimensions.width / 2 + wallMargin;
+      rightBoundary = kitchenDimensions.width / 2 - wallMargin;
       
       for (const item of placedItems) {
         // ✅ CRITICAL: Skip the cabinet we're trying to place
@@ -116,7 +121,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         }
         
         // ✅ CRITICAL: Check if item is in the same row (Z alignment for normal cabinets)
-        if (Math.abs(item.position.z - position.z) < 0.2) { // ✅ FIXED: Even tighter alignment check
+        if (Math.abs(item.position.z - position.z) < 0.4) { // ✅ FIXED: More generous alignment check
           const itemEdge = item.position.x;
           
           // ✅ FIXED: Account for item rotation
@@ -129,9 +134,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
           const itemHalfSize = itemRotatedWidth / 2; // ✅ FIXED: Use width for X-axis calculation
           
           if (itemEdge < position.x) {
-            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer); // ✅ FIXED: Snap to right edge of left item
+            leftBoundary = Math.max(leftBoundary, itemEdge + itemHalfSize + buffer);
           } else if (itemEdge > position.x) {
-            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer); // ✅ FIXED: Snap to left edge of right item
+            rightBoundary = Math.min(rightBoundary, itemEdge - itemHalfSize - buffer);
           }
         }
       }
@@ -140,22 +145,11 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     const availableWidth = rightBoundary - leftBoundary;
     console.log('Available width calculation:', availableWidth, 'between', leftBoundary, 'and', rightBoundary);
     
-    // ✅ CRITICAL: Don't reposition cabinet - keep it where user placed it
-    // Only calculate the width needed to fill the space
+    // ✅ CRITICAL: Calculate the FULL width needed to fill from left to right boundary
+    const widthToFill = availableWidth;
     
-    // ✅ FIXED: Calculate width from current position to nearest boundary
-    let widthToFill;
-    if (isRotated) {
-      // For rotated cabinets, calculate distance to nearest Z boundary
-      const distanceToLeft = position.z - leftBoundary;
-      const distanceToRight = rightBoundary - position.z;
-      widthToFill = Math.min(distanceToLeft, distanceToRight) * 2; // Fill in both directions
-    } else {
-      // For normal cabinets, calculate distance to nearest X boundary
-      const distanceToLeft = position.x - leftBoundary;
-      const distanceToRight = rightBoundary - position.x;
-      widthToFill = Math.min(distanceToLeft, distanceToRight) * 2; // Fill in both directions
-    }
+    // ✅ CRITICAL: Also calculate the new position to center the cabinet in the available space
+    const newCenterPosition = (leftBoundary + rightBoundary) / 2;
     
     console.log('Fill calculation:', {
       isRotated,
@@ -163,11 +157,17 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       rightBoundary: rightBoundary.toFixed(2),
       availableWidth: availableWidth.toFixed(2),
       widthToFill: widthToFill.toFixed(2),
+      newCenterPosition: newCenterPosition.toFixed(2),
       position: { x: position.x.toFixed(2), z: position.z.toFixed(2) }
     });
     
-    // ✅ FIXED: Return the calculated width, ensuring it's within reasonable bounds
-    return Math.max(0.10, Math.min(4.0, widthToFill - 0.02)); // ✅ FIXED: Use calculated width instead of full available width
+    // ✅ FIXED: Return both width and new position
+    return {
+      width: Math.max(0.10, Math.min(4.0, widthToFill - 0.02)),
+      newPosition: isRotated ? 
+        new Vector3(position.x, position.y, newCenterPosition) : 
+        new Vector3(newCenterPosition, position.y, position.z)
+    };
   };
 
   const validateCabinetPlacement = (width: number) => {
@@ -241,10 +241,12 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   };
 
   const [fillWidth, setFillWidth] = useState(0.6);
+  const [fillPosition, setFillPosition] = useState(position);
   
   useEffect(() => {
-    const calculatedWidth = calculateFillWidth();
-    setFillWidth(calculatedWidth);
+    const fillData = calculateFillWidth();
+    setFillWidth(fillData.width);
+    setFillPosition(fillData.newPosition);
   }, [position, placedItems, kitchenDimensions]);
 
   const handleConfirm = () => {
@@ -259,6 +261,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         break;
       case 'fill':
         newWidth = fillWidth;
+        // ✅ CRITICAL: Update position for fill option
+        position = fillPosition;
         break;
     }
     
@@ -412,9 +416,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
               <div className="font-medium text-gray-900">מלא את החלל</div>
               <div className="text-sm text-gray-600">
                {fillValidation.valid && fillWidth >= 0.3 
-                  ? `ימלא ${fillWidth.toFixed(1)} מטר בין הרכיבים`
+                  ? `ימלא ${fillWidth.toFixed(1)} מטר - מלא את כל החלל הפנוי`
                  : fillValidation.valid && fillWidth >= 0.2
-                    ? `ימלא ${fillWidth.toFixed(1)} מטר (ארון קטן)`
+                    ? `ימלא ${fillWidth.toFixed(1)} מטר - מלא את כל החלל הפנוי`
                     : !fillValidation.valid
                       ? `לא ניתן: ${fillValidation.reason}`
                       : 'אין מספיק מקום למילוי'

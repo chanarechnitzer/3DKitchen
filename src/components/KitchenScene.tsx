@@ -557,6 +557,11 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           rotation: finalRotation
         });
         setShowCabinetDialog(true);
+        
+        // ✅ CRITICAL: Don't clear selected item here - let dialog handle it
+        
+        // ✅ CRITICAL: Don't clear selected item here - let dialog handle it
+        // This prevents the "stuck" state when dialog opens
       } else if (selectedItem.type === 'oven') {
         // ✅ FIXED: Check if placing oven on another oven - more precise detection
         const baseOven = placedItems.find(item => 
@@ -615,13 +620,16 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     console.log('Cabinet dialog closing - resetting selection state');
     setShowCabinetDialog(false);
     setPendingCabinet(null);
-    // ✅ CRITICAL: Reset selection state when dialog is closed
-    setSelectedItem(null);
-    setIsDragging(false);
-    setSnapPosition(null);
-    setItemRotation(0);
-    setShowRotationHint(false);
-    setCollisionWarning(null);
+    
+    // ✅ CRITICAL: Force reset ALL selection state with delay
+    setTimeout(() => {
+      setSelectedItem(null);
+      setIsDragging(false);
+      setSnapPosition(null);
+      setItemRotation(0);
+      setShowRotationHint(false);
+      setCollisionWarning(null);
+    }, 100);
   };
 
   // Handle oven dialog close
@@ -629,13 +637,16 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     console.log('Oven dialog closing - resetting selection state');
     setShowOvenDialog(false);
     setPendingOven(null);
-    // Reset selection state when dialog is closed
-    setSelectedItem(null);
-    setIsDragging(false);
-    setSnapPosition(null);
-    setItemRotation(0);
-    setShowRotationHint(false);
-    setCollisionWarning(null);
+    
+    // ✅ CRITICAL: Force reset ALL selection state with delay
+    setTimeout(() => {
+      setSelectedItem(null);
+      setIsDragging(false);
+      setSnapPosition(null);
+      setItemRotation(0);
+      setShowRotationHint(false);
+      setCollisionWarning(null);
+    }, 100);
   };
 
   // ✅ CRITICAL: Handle cabinet placement success - called from dialog
@@ -643,12 +654,16 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     console.log('Cabinet placed successfully');
     setShowCabinetDialog(false);
     setPendingCabinet(null);
-    setSelectedItem(null);
-    setIsDragging(false);
-    setSnapPosition(null);
-    setItemRotation(0);
-    setShowRotationHint(false);
-    setCollisionWarning(null);
+    
+    // ✅ CRITICAL: Force reset ALL selection state with delay
+    setTimeout(() => {
+      setSelectedItem(null);
+      setIsDragging(false);
+      setSnapPosition(null);
+      setItemRotation(0);
+      setShowRotationHint(false);
+      setCollisionWarning(null);
+    }, 100);
   };
 
   const handleMouseMove = (event: React.MouseEvent) => {
