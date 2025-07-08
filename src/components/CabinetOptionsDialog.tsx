@@ -3,7 +3,7 @@ import { X, Ruler, Check, Maximize2, Settings } from 'lucide-react';
 
 interface CabinetOptionsDialogProps {
   onClose: () => void;
-  onConfirm: (option: 'keep' | 'custom' | 'fill', customWidth?: number) => void;
+  onConfirm: (option: 'keep' | 'custom' | 'fill', customWidth?: number, fillPosition?: { x: number; z: number }) => void;
   defaultWidth: number;
   placedItems?: any[];
   position?: { x: number; z: number };
@@ -120,7 +120,62 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     return finalWidth;
   };
 
+  // ✅ NEW: חישוב המיקום הנכון למילוי השטח
+  const calculateFillPosition = () => {
+    if (!position || !kitchenDimensions) {
+      return position;
+    }
+    
+    const halfWidth = kitchenDimensions.width / 2;
+    const margin = 0.05;
+    
+    let leftBound = -halfWidth + margin;
+    let rightBound = halfWidth - margin;
+    
+    // Find actual boundaries based on placed items
+    placedItems.forEach(item => {
+      if (!item.position || !item.dimensions) return;
+      
+      const zDiff = Math.abs(item.position.z - position.z);
+      if (zDiff > 0.5) return; // Different row
+      
+      const isSame = Math.abs(item.position.x - position.x) < 0.1;
+      if (isSame) return; // Same position
+      
+      const itemLeft = item.position.x - item.dimensions.width / 2;
+      const itemRight = item.position.x + item.dimensions.width / 2;
+      
+      if (itemRight < position.x) {
+        const newLeft = itemRight + 0.01;
+        if (newLeft > leftBound) {
+          leftBound = newLeft;
+        }
+      }
+      
+      if (itemLeft > position.x) {
+        const newRight = itemLeft - 0.01;
+        if (newRight < rightBound) {
+          rightBound = newRight;
+        }
+      }
+    });
+    
+    // ✅ CRITICAL: Calculate position so cabinet fills from left bound to right bound
+    const fillWidth = calculateFillWidth();
+    const centerX = leftBound + fillWidth / 2;
+    
+    console.log('📍 Fill position calculation:', {
+      leftBound,
+      rightBound,
+      fillWidth,
+      centerX,
+      originalPosition: position.x
+    });
+    
+    return { x: centerX, z: position.z };
+  };
   const fillWidth = calculateFillWidth();
+  const fillPosition = calculateFillPosition();
 
   const handleConfirm = () => {
     console.log('🎯 User confirmed option:', selectedOption);
@@ -129,7 +184,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       onConfirm(selectedOption, customWidth);
     } else if (selectedOption === 'fill') {
       console.log('🔧 Fill width:', fillWidth);
-      onConfirm(selectedOption, fillWidth);
+      console.log('📍 Fill position:', fillPosition);
+      onConfirm(selectedOption, fillWidth, fillPosition);
     } else {
       console.log('✋ Keep current width:', defaultWidth);
       onConfirm(selectedOption);

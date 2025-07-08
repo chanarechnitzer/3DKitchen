@@ -367,13 +367,14 @@ const KitchenControls: React.FC = () => {
             setShowCabinetDialog(false);
             setSelectedCabinetId(null);
           }}
-          onConfirm={(option, customWidth) => {
+          onConfirm={(option, customWidth, fillPosition) => {
             if (selectedCabinetId) {
               const currentItem = placedItems.find(item => item.id === selectedCabinetId);
               console.log('🎯 Updating placed cabinet:', currentItem?.name);
               console.log('📏 Current item width:', currentItem?.dimensions.width);
               console.log('🔧 Selected option:', option);
               console.log('📐 Custom width received:', customWidth);
+              console.log('📍 Fill position received:', fillPosition);
               
               let finalWidth = currentItem?.dimensions.width || 0.6;
               
@@ -383,6 +384,15 @@ const KitchenControls: React.FC = () => {
               } else if (option === 'fill' && customWidth) {
                 finalWidth = customWidth;
                 console.log('📐 Using fill width:', finalWidth);
+                
+                // ✅ CRITICAL: For fill option, also update position
+                if (fillPosition && currentItem) {
+                  console.log('📍 Updating position for fill option');
+                  updateCabinetSize(selectedCabinetId, finalWidth, fillPosition);
+                  setShowCabinetDialog(false);
+                  setSelectedCabinetId(null);
+                  return;
+                }
               } else if (option === 'keep') {
                 console.log('✋ Keeping current width:', finalWidth);
               }

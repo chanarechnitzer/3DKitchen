@@ -851,15 +851,16 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             setPendingCabinetPlacement(null);
             // Don't place the item if user cancels
           }}
-          onConfirm={(option, customWidth) => {
+          onConfirm={(option, customWidth, fillPosition) => {
             if (!selectedItem || !pendingCabinetPlacement) return;
             
             console.log('🎯 Cabinet placement confirmed with option:', option);
             console.log('📍 Placement position:', pendingCabinetPlacement.position);
             console.log('📏 Custom width:', customWidth);
+            console.log('📍 Fill position:', fillPosition);
             
             let finalWidth = selectedItem.dimensions.width;
-            let finalPosition = pendingCabinetPlacement.position;
+            let finalPosition = fillPosition || pendingCabinetPlacement.position;
             
             if (option === 'custom' && customWidth) {
               finalWidth = customWidth;
@@ -867,53 +868,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             } else if (option === 'fill' && customWidth) {
               finalWidth = customWidth;
               console.log('📐 Using fill width:', finalWidth);
-              
-              // ✅ CRITICAL: Calculate the correct position for fill option
-              // When filling space, we need to center the cabinet in the available space
-              const halfWidth = kitchenDimensions.width / 2;
-              const margin = 0.05;
-              
-              let leftBound = -halfWidth + margin;
-              let rightBound = halfWidth - margin;
-              
-              // Find actual boundaries based on placed items
-              placedItems.forEach(item => {
-                if (!item.position || !item.dimensions) return;
-                
-                const zDiff = Math.abs(item.position.z - finalPosition.z);
-                if (zDiff > 0.5) return; // Different row
-                
-                const isSame = Math.abs(item.position.x - finalPosition.x) < 0.1;
-                if (isSame) return; // Same position
-                
-                const itemLeft = item.position.x - item.dimensions.width / 2;
-                const itemRight = item.position.x + item.dimensions.width / 2;
-                
-                if (itemRight < finalPosition.x) {
-                  const newLeft = itemRight + 0.01;
-                  if (newLeft > leftBound) {
-                    leftBound = newLeft;
-                  }
-                }
-                
-                if (itemLeft > finalPosition.x) {
-                  const newRight = itemLeft - 0.01;
-                  if (newRight < rightBound) {
-                    rightBound = newRight;
-                  }
-                }
-              });
-              
-              // ✅ CRITICAL: Center the cabinet in the available space
-              const centerX = (leftBound + rightBound) / 2;
-              finalPosition = { x: centerX, z: finalPosition.z };
-              
-              console.log('🎯 Calculated fill position:', {
-                leftBound,
-                rightBound,
-                centerX,
-                finalPosition
-              });
+              console.log('📍 Using calculated fill position:', finalPosition);
             }
             
             console.log('✅ Final cabinet width:', finalWidth);

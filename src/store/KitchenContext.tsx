@@ -73,6 +73,7 @@ interface KitchenContextType {
   setGameCompleted: (completed: boolean) => void;
   getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
   updateCabinetSize: (itemId: string, newWidth: number) => void;
+  updateCabinetSizeAndPosition: (itemId: string, newWidth: number, newPosition: { x: number; z: number }) => void;
   updateOvenStack: (baseOvenId: string, newOvenId: string) => void;
 }
 
@@ -103,6 +104,7 @@ const defaultContext: KitchenContextType = {
   setGameCompleted: () => {},
   getDragValidation: () => ({ isValid: false, distances: {} }),
   updateCabinetSize: () => {},
+  updateCabinetSizeAndPosition: () => {},
   updateOvenStack: () => {},
 };
 
@@ -279,8 +281,11 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // Update cabinet size
-  const updateCabinetSize = (itemId: string, newWidth: number) => {
+  const updateCabinetSize = (itemId: string, newWidth: number, newPosition?: { x: number; z: number }) => {
     console.log('🔧 updateCabinetSize called with:', { itemId, newWidth });
+    if (newPosition) {
+      console.log('📍 New position provided:', newPosition);
+    }
     console.log('📋 Current placed items:', placedItems.map(item => ({ id: item.id, name: item.name, width: item.dimensions.width })));
     
     setPlacedItems(prev => {
@@ -289,8 +294,12 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
           console.log('🎯 Found item to update:', item.name);
           console.log('📏 Old width:', item.dimensions.width);
           console.log('📐 New width:', newWidth);
+          if (newPosition) {
+            console.log('📍 Old position:', item.position.x);
+            console.log('📍 New position:', newPosition.x);
+          }
           
-          // ✅ CRITICAL: For fill option, also update position to center the cabinet
+          // ✅ CRITICAL: Update both width and position if provided
           let updatedItem = { 
             ...item, 
             dimensions: { 
@@ -299,55 +308,12 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
             } 
           };
           
-          // If this is a significant width change (fill operation), recalculate position
-          const widthDifference = Math.abs(newWidth - item.dimensions.width);
-          if (widthDifference > 0.1) { // More than 10cm difference
-            console.log('🎯 Significant width change detected, recalculating position');
-            
-            // Find the available space and center the cabinet
-            const halfKitchenWidth = kitchenDimensions.width / 2;
-            const margin = 0.05;
-            
-            let leftBound = -halfKitchenWidth + margin;
-            let rightBound = halfKitchenWidth - margin;
-            
-            // Check other items in the same row
-            prev.forEach(otherItem => {
-              if (otherItem.id === itemId || !otherItem.position || !otherItem.dimensions) return;
-              
-              const zDiff = Math.abs(otherItem.position.z - item.position.z);
-              if (zDiff > 0.5) return; // Different row
-              
-              const otherLeft = otherItem.position.x - otherItem.dimensions.width / 2;
-              const otherRight = otherItem.position.x + otherItem.dimensions.width / 2;
-              
-              if (otherRight < item.position.x) {
-                const newLeft = otherRight + 0.01;
-                if (newLeft > leftBound) {
-                  leftBound = newLeft;
-                }
-              }
-              
-              if (otherLeft > item.position.x) {
-                const newRight = otherLeft - 0.01;
-                if (newRight < rightBound) {
-                  rightBound = newRight;
-                }
-              }
-            });
-            
-            // Center the cabinet in the available space
-            const centerX = (leftBound + rightBound) / 2;
-            updatedItem.position = new Vector3(centerX, item.position.y, item.position.z);
-            
-            console.log('📍 Updated position for fill:', {
-              oldPosition: item.position.x,
-              newPosition: centerX,
-              leftBound,
-              rightBound,
-              availableWidth: rightBound - leftBound
-            });
+          // ✅ CRITICAL: If new position is provided, use it
+          if (newPosition) {
+            updatedItem.position = new Vector3(newPosition.x, item.position.y, newPosition.z);
+            console.log('📍 Position updated to:', newPosition);
           }
+          
           console.log('✅ Updated item:', updatedItem.dimensions);
           return updatedItem;
         }
@@ -375,6 +341,10 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     }, 50);
   };
 
+  // ✅ NEW: Separate function for updating both size and position
+  const updateCabinetSizeAndPosition = (itemId: string, newWidth: number, newPosition: { x: number; z: number }) => {
+    updateCabinetSize(itemId, newWidth, newPosition);
+  };
   // Update oven stack
   const updateOvenStack = (baseOvenId: string, newOvenId: string) => {
     setPlacedItems(prev => prev.map(item => {
@@ -514,6 +484,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     setGameCompleted,
     getDragValidation,
     updateCabinetSize,
+    updateCabinetSizeAndPosition,
     updateOvenStack,
   };
 
