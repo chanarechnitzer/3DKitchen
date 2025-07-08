@@ -25,8 +25,15 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   const meshRef = useRef<Mesh>(null);
   const { customization } = useKitchen();
   
-  // ✅ CRITICAL: Force re-render when dimensions change
-  const dimensionsKey = `${dimensions.width}-${dimensions.depth}-${dimensions.height}`;
+  // ✅ CRITICAL: Add console log to track dimension changes
+  console.log('🎨 DraggableObject render:', {
+    type,
+    width: dimensions.width,
+    depth: dimensions.depth,
+    height: dimensions.height,
+    position,
+    isPlaced
+  });
 
   // Get colors based on customization
   const getCabinetColor = () => {
@@ -66,12 +73,12 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
     }
   });
 
-  // ✅ CRITICAL: Include dimensions in dependency array to force re-render
-  const component = useMemo(() => {
+  // ✅ CRITICAL: Remove useMemo to ensure re-render on every dimension change
+  const component = (() => {
     const [x, y, z] = position;
     const { width, depth, height } = dimensions;
     
-    console.log('🎨 Rendering DraggableObject:', { type, width, height, depth, position });
+    console.log('🎨 Creating component geometry:', { type, width, height, depth, position });
 
     switch (type) {
       case KitchenItemType.SINK:
@@ -301,7 +308,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
           </mesh>
         );
     }
-  }, [position, type, dimensions, rotation, customization, getCabinetColor, getCountertopColor, dimensionsKey]);
+  })();
 
   return (
     <group ref={meshRef}>

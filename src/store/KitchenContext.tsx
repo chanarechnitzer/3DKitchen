@@ -360,25 +360,39 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Place an item in the kitchen
   const placeItem = (itemId: string, position: Vector3, rotation: number = 0) => {
+    console.log('🎯 placeItem called with:', { itemId, position, rotation });
+    
     const itemIndex = availableItems.findIndex(item => item.id === itemId);
+    console.log('📦 Found item at index:', itemIndex);
     
     if (itemIndex !== -1) {
+      const originalItem = availableItems[itemIndex];
+      console.log('📏 Original item dimensions:', originalItem.dimensions);
+      
       const item = { 
-        ...availableItems[itemIndex], 
+        ...originalItem, 
         position: new Vector3(position.x, position.y, position.z),
         placed: true,
         rotation
       };
       
+      console.log('📏 Placed item dimensions:', item.dimensions);
+      console.log('📍 Placed item position:', item.position);
+      
       if (item.type === KitchenItemType.COUNTERTOP) {
         const placedCabinets = placedItems.filter(i => i.type === KitchenItemType.COUNTERTOP).length;
         if (placedCabinets >= 10) {
+          console.log('❌ Cabinet limit reached');
           return;
         }
       }
       
-      setAvailableItems(prev => prev.filter(item => item.id !== itemId));
+      // ✅ CRITICAL: Remove by original ID, not the potentially updated ID
+      const originalId = originalItem.id.replace('-updated', '');
+      setAvailableItems(prev => prev.filter(item => item.id !== itemId && item.id !== originalId));
       setPlacedItems(prev => [...prev, item]);
+      
+      console.log('✅ Item placed successfully with dimensions:', item.dimensions);
       
       // CRITICAL: Only validate triangle, NEVER auto-complete the game
       setTimeout(validateTriangle, 100);

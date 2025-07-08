@@ -172,8 +172,10 @@ const KitchenControls: React.FC = () => {
             console.log('✅ Final width to apply:', finalWidth);
             
             if (finalWidth !== selectedItem.dimensions.width) {
+              console.log('🔄 Creating new selectedItem with updated dimensions');
               const updatedItem = {
                 ...selectedItem,
+                id: selectedItem.id + '-updated', // ✅ CRITICAL: Force new key to trigger re-render
                 dimensions: {
                   ...selectedItem.dimensions,
                   width: finalWidth
@@ -181,6 +183,11 @@ const KitchenControls: React.FC = () => {
               };
               setSelectedItem(updatedItem);
               console.log('🔄 Updated selected item with new width');
+              
+              // ✅ CRITICAL: Force a small delay to ensure state update
+              setTimeout(() => {
+                console.log('🎨 Selected item after update:', updatedItem);
+              }, 100);
             }
             setShowCabinetDialog(false);
           }}
