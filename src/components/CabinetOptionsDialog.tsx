@@ -40,18 +40,19 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     
     console.log('🎯 Calculating fill width for position:', position);
     console.log('🏠 Kitchen dimensions:', kitchenDimensions);
+    console.log('📦 Placed items count:', placedItems.length);
     
-    // ✅ SIMPLE: חישוב גבולות המטבח
+    // Calculate kitchen bounds
     const halfWidth = kitchenDimensions.width / 2;
     const margin = 0.05; // מרחק מהקירות
     
-    // ✅ SIMPLE: התחל מהקירות
+    // Start with wall boundaries
     let leftBound = -halfWidth + margin;
     let rightBound = halfWidth - margin;
     
     console.log('🏠 Kitchen bounds:', { leftBound, rightBound, totalWidth: rightBound - leftBound });
     
-    // ✅ SIMPLE: מצא את הפריט הקרוב ביותר משמאל ומימין
+    // Find closest items on left and right
     let closestLeft = leftBound;
     let closestRight = rightBound;
     
@@ -62,14 +63,14 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       
       console.log('📦 Checking item:', item.name, 'at position:', item.position);
       
-      // ✅ SIMPLE: רק פריטים באותו שורה (Z דומה)
+      // Only items in the same row (similar Z coordinate)
       const zDiff = Math.abs(item.position.z - position.z);
       if (zDiff > 0.5) {
         console.log('⏭️ Skipping', item.name, '- different row (zDiff:', zDiff, ')');
-        return; // לא באותו שורה
+        return;
       }
       
-      // ✅ SIMPLE: דלג על הפריט הנוכחי
+      // Skip the current item if it's the same position
       const isSame = Math.abs(item.position.x - position.x) < 0.1;
       if (isSame) {
         console.log('⏭️ Skipping', item.name, '- same position');
@@ -81,18 +82,18 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       
       console.log('📏 Item bounds:', { itemLeft, itemRight, itemCenter: item.position.x });
       
-      // ✅ SIMPLE: אם הפריט משמאל למיקום הנוכחי
+      // If item is to the left of current position
       if (itemRight < position.x) {
-        const newLeft = itemRight + 0.02; // 2 ס"מ מרווח
+        const newLeft = itemRight + 0.01; // 1cm gap
         if (newLeft > closestLeft) {
           closestLeft = newLeft;
           console.log('⬅️ Updated closest left to:', closestLeft, 'from item:', item.name);
         }
       }
       
-      // ✅ SIMPLE: אם הפריט מימין למיקום הנוכחי
+      // If item is to the right of current position
       if (itemLeft > position.x) {
-        const newRight = itemLeft - 0.02; // 2 ס"מ מרווח
+        const newRight = itemLeft - 0.01; // 1cm gap
         if (newRight < closestRight) {
           closestRight = newRight;
           console.log('➡️ Updated closest right to:', closestRight, 'from item:', item.name);
@@ -100,7 +101,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       }
     });
     
-    // ✅ SIMPLE: חישוב הרוחב הזמין
+    // Calculate available width
     const availableWidth = closestRight - closestLeft;
     
     console.log('📐 Fill calculation:', {
@@ -111,7 +112,7 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
       availableWidthCm: Math.round(availableWidth * 100)
     });
     
-    // ✅ SIMPLE: הגבל בין 30 ס"מ ל-300 ס"מ
+    // Limit between 30cm and 300cm
     const finalWidth = Math.max(0.3, Math.min(3.0, availableWidth));
     
     console.log('✅ Final width:', Math.round(finalWidth * 100), 'cm');

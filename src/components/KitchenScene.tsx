@@ -859,6 +859,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             console.log('📏 Custom width:', customWidth);
             
             let finalWidth = selectedItem.dimensions.width;
+            let finalPosition = pendingCabinetPlacement.position;
             
             if (option === 'custom' && customWidth) {
               finalWidth = customWidth;
@@ -866,11 +867,59 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             } else if (option === 'fill' && customWidth) {
               finalWidth = customWidth;
               console.log('📐 Using fill width:', finalWidth);
+              
+              // ✅ CRITICAL: Calculate the correct position for fill option
+              // When filling space, we need to center the cabinet in the available space
+              const halfWidth = kitchenDimensions.width / 2;
+              const margin = 0.05;
+              
+              let leftBound = -halfWidth + margin;
+              let rightBound = halfWidth - margin;
+              
+              // Find actual boundaries based on placed items
+              placedItems.forEach(item => {
+                if (!item.position || !item.dimensions) return;
+                
+                const zDiff = Math.abs(item.position.z - finalPosition.z);
+                if (zDiff > 0.5) return; // Different row
+                
+                const isSame = Math.abs(item.position.x - finalPosition.x) < 0.1;
+                if (isSame) return; // Same position
+                
+                const itemLeft = item.position.x - item.dimensions.width / 2;
+                const itemRight = item.position.x + item.dimensions.width / 2;
+                
+                if (itemRight < finalPosition.x) {
+                  const newLeft = itemRight + 0.01;
+                  if (newLeft > leftBound) {
+                    leftBound = newLeft;
+                  }
+                }
+                
+                if (itemLeft > finalPosition.x) {
+                  const newRight = itemLeft - 0.01;
+                  if (newRight < rightBound) {
+                    rightBound = newRight;
+                  }
+                }
+              });
+              
+              // ✅ CRITICAL: Center the cabinet in the available space
+              const centerX = (leftBound + rightBound) / 2;
+              finalPosition = { x: centerX, z: finalPosition.z };
+              
+              console.log('🎯 Calculated fill position:', {
+                leftBound,
+                rightBound,
+                centerX,
+                finalPosition
+              });
             }
             
             console.log('✅ Final cabinet width:', finalWidth);
+            console.log('📍 Final cabinet position:', finalPosition);
             
-            // עדכן את מידות הפריט ברשימת הפריטים הזמינים לפני ההנחה
+            // Update item dimensions in available items before placement
             setAvailableItems(prev => prev.map(item => 
               item.id === selectedItem.id 
                 ? { ...item, dimensions: { ...item.dimensions, width: finalWidth } }
@@ -879,10 +928,10 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             
             console.log('🔄 Updated available items with new width');
             
-            // הנח את הפריט עם המידות המעודכנות
+            // Place the item with updated dimensions and position
             placeItem(
               selectedItem.id,
-              new THREE.Vector3(pendingCabinetPlacement.position.x, 0, pendingCabinetPlacement.position.z),
+              new THREE.Vector3(finalPosition.x, 0, finalPosition.z),
               pendingCabinetPlacement.rotation
             );
             
@@ -897,7 +946,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
             setShowCabinetOptionsDialog(false);
             setPendingCabinetPlacement(null);
             
-            // משוב הפטי למובייל
+            // Haptic feedback for mobile
             if (navigator.vibrate) {
               navigator.vibrate(50);
             }
