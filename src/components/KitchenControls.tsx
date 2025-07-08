@@ -12,8 +12,7 @@ const KitchenControls: React.FC = () => {
     removeItem,
     selectedItem,
     updateCabinetSize,
-    updateOvenStack,
-    kitchenDimensions
+    updateOvenStack
   } = useKitchen();
 
   const [previewItem, setPreviewItem] = useState<string | null>(null);
@@ -155,46 +154,19 @@ const KitchenControls: React.FC = () => {
       {showCabinetDialog && selectedItem && (
         <CabinetOptionsDialog
           onClose={() => setShowCabinetDialog(false)}
-          onConfirm={(option, customWidth) => {
-            let finalWidth = selectedItem.dimensions.width;
-            
-            console.log('🎯 Cabinet option selected:', option);
-            console.log('📏 Current width:', finalWidth);
-            
-            if (option === 'custom' && customWidth) {
-              finalWidth = customWidth;
-              console.log('🔧 Using custom width:', finalWidth);
-            } else if (option === 'fill' && customWidth) {
-              finalWidth = customWidth;
-              console.log('📐 Using fill width:', finalWidth);
-            }
-            
-            console.log('✅ Final width to apply:', finalWidth);
-            
-            if (finalWidth !== selectedItem.dimensions.width) {
-              console.log('🔄 Creating new selectedItem with updated dimensions');
-              const updatedItem = {
-                ...selectedItem,
-                id: `${selectedItem.id}-updated-${Date.now()}`, // ✅ Force new key with timestamp
-                dimensions: {
-                  ...selectedItem.dimensions,
-                  width: finalWidth
-                }
-              };
-              setSelectedItem(updatedItem);
-              console.log('🔄 Updated selected item with new width');
-              
-              // ✅ Small delay to ensure state update
-              setTimeout(() => {
-                console.log('🎨 Selected item after update:', updatedItem);
-              }, 100);
-            }
+          onConfirm={(width) => {
+            // Update the selected item's width before placing
+            const updatedItem = {
+              ...selectedItem,
+              dimensions: {
+                ...selectedItem.dimensions,
+                width: width
+              }
+            };
+            setSelectedItem(updatedItem);
             setShowCabinetDialog(false);
           }}
           defaultWidth={selectedItem.dimensions.width}
-          placedItems={placedItems}
-          position={undefined} // For new items, position will be determined during placement
-          kitchenDimensions={kitchenDimensions}
         />
       )}
       
@@ -317,7 +289,7 @@ const KitchenControls: React.FC = () => {
           
           <div className="mb-2 p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
             <p className="text-xs text-green-700 font-medium text-center">
-              💡 לחץ על "אפשרויות" לשינוי גודל או "הסר" להזזה
+              💡 לא במקום הנכון? לחץ "הסר" ולאחר מכן גרור שוב
             </p>
           </div>
           
@@ -340,19 +312,6 @@ const KitchenControls: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-1">
-                  {item.type === 'countertop' && (
-                    <button 
-                      className="text-xs text-primary hover:text-primary-dark hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors font-medium"
-                      onClick={() => {
-                        setSelectedCabinetId(item.id);
-                        setShowCabinetDialog(true);
-                      }}
-                      title="שנה גודל ארון"
-                    >
-                      🔧
-                    </button>
-                  )}
                   <button 
                     className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors font-medium"
                     onClick={() => removeItem(item.id)}
@@ -360,7 +319,6 @@ const KitchenControls: React.FC = () => {
                   >
                     הסר
                   </button>
-                </div>
               </div>
             ))}
           </div>
@@ -374,50 +332,14 @@ const KitchenControls: React.FC = () => {
             setShowCabinetDialog(false);
             setSelectedCabinetId(null);
           }}
-          onConfirm={(option, customWidth, fillPosition) => {
+          onConfirm={(width) => {
             if (selectedCabinetId) {
-              const currentItem = placedItems.find(item => item.id === selectedCabinetId);
-              console.log('🎯 Updating placed cabinet:', currentItem?.name);
-              console.log('📏 Current item width:', currentItem?.dimensions.width);
-              console.log('🔧 Selected option:', option);
-              console.log('📐 Custom width received:', customWidth);
-              console.log('📍 Fill position received:', fillPosition);
-              
-              let finalWidth = currentItem?.dimensions.width || 0.6;
-              
-              if (option === 'custom' && customWidth) {
-                finalWidth = customWidth;
-                console.log('🔧 Using custom width:', finalWidth);
-              } else if (option === 'fill' && customWidth) {
-                finalWidth = customWidth;
-                console.log('📐 Using fill width:', finalWidth);
-                
-                // ✅ CRITICAL: For fill option, also update position
-                if (fillPosition && currentItem) {
-                  console.log('📍 Updating position for fill option');
-                  updateCabinetSizeAndPosition(selectedCabinetId, finalWidth, fillPosition);
-                  setShowCabinetDialog(false);
-                  setSelectedCabinetId(null);
-                  return;
-                }
-              } else if (option === 'keep') {
-                console.log('✋ Keeping current width:', finalWidth);
-              }
-              
-              console.log('✅ Final width to apply:', finalWidth);
-              console.log('🔄 Calling updateCabinetSize with:', selectedCabinetId, finalWidth);
-              updateCabinetSize(selectedCabinetId, finalWidth);
+              updateCabinetSize(selectedCabinetId, width);
             }
             setShowCabinetDialog(false);
             setSelectedCabinetId(null);
           }}
           defaultWidth={placedItems.find(item => item.id === selectedCabinetId)?.dimensions.width || 0.6}
-          placedItems={placedItems}
-          position={placedItems.find(item => item.id === selectedCabinetId)?.position ? {
-            x: placedItems.find(item => item.id === selectedCabinetId)!.position.x,
-            z: placedItems.find(item => item.id === selectedCabinetId)!.position.z
-          } : undefined}
-          kitchenDimensions={kitchenDimensions}
         />
       )}
     </div>

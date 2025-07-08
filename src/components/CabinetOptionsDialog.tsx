@@ -1,25 +1,18 @@
 import React, { useState } from 'react';
-import { X, Ruler, Check, Maximize2, Settings } from 'lucide-react';
+import { X, Ruler, Check } from 'lucide-react';
 
 interface CabinetOptionsDialogProps {
   onClose: () => void;
-  onConfirm: (option: 'keep' | 'custom' | 'fill', customWidth?: number, fillPosition?: { x: number; z: number }) => void;
+  onConfirm: (width: number) => void;
   defaultWidth: number;
-  placedItems?: any[];
-  position?: { x: number; z: number };
-  kitchenDimensions?: { width: number; length: number };
 }
 
 const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({ 
   onClose, 
   onConfirm, 
-  defaultWidth,
-  placedItems = [],
-  position,
-  kitchenDimensions
+  defaultWidth 
 }) => {
-  const [selectedOption, setSelectedOption] = useState<'keep' | 'custom' | 'fill'>('keep');
-  const [customWidth, setCustomWidth] = useState(defaultWidth);
+  const [selectedWidth, setSelectedWidth] = useState(defaultWidth);
 
   const widthOptions = [
     { value: 0.3, label: '30 ס"מ', desc: 'צר - למקומות קטנים' },
@@ -31,165 +24,8 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     { value: 1.2, label: '120 ס"מ', desc: 'ארון גדול' },
   ];
 
-  // ✅ FIXED: חישוב נכון של השטח הזמין
-  const calculateFillWidth = () => {
-    if (!position || !kitchenDimensions) {
-      console.log('❌ Missing position or kitchen dimensions');
-      return defaultWidth;
-    }
-    
-    console.log('🎯 Calculating fill width for position:', position);
-    console.log('🏠 Kitchen dimensions:', kitchenDimensions);
-    console.log('📦 Placed items count:', placedItems.length);
-    
-    // Calculate kitchen bounds
-    const halfWidth = kitchenDimensions.width / 2;
-    const margin = 0.05; // מרחק מהקירות
-    
-    // Start with wall boundaries
-    let leftBound = -halfWidth + margin;
-    let rightBound = halfWidth - margin;
-    
-    console.log('🏠 Kitchen bounds:', { leftBound, rightBound, totalWidth: rightBound - leftBound });
-    
-    // Find closest items on left and right
-    let closestLeft = leftBound;
-    let closestRight = rightBound;
-    
-    console.log('🔍 Checking', placedItems.length, 'placed items');
-    
-    placedItems.forEach(item => {
-      if (!item.position || !item.dimensions) return;
-      
-      console.log('📦 Checking item:', item.name, 'at position:', item.position);
-      
-      // Only items in the same row (similar Z coordinate)
-      const zDiff = Math.abs(item.position.z - position.z);
-      if (zDiff > 0.5) {
-        console.log('⏭️ Skipping', item.name, '- different row (zDiff:', zDiff, ')');
-        return;
-      }
-      
-      // Skip the current item if it's the same position
-      const isSame = Math.abs(item.position.x - position.x) < 0.1;
-      if (isSame) {
-        console.log('⏭️ Skipping', item.name, '- same position');
-        return;
-      }
-      
-      const itemLeft = item.position.x - item.dimensions.width / 2;
-      const itemRight = item.position.x + item.dimensions.width / 2;
-      
-      console.log('📏 Item bounds:', { itemLeft, itemRight, itemCenter: item.position.x });
-      
-      // If item is to the left of current position
-      if (itemRight < position.x) {
-        const newLeft = itemRight + 0.01; // 1cm gap
-        if (newLeft > closestLeft) {
-          closestLeft = newLeft;
-          console.log('⬅️ Updated closest left to:', closestLeft, 'from item:', item.name);
-        }
-      }
-      
-      // If item is to the right of current position
-      if (itemLeft > position.x) {
-        const newRight = itemLeft - 0.01; // 1cm gap
-        if (newRight < closestRight) {
-          closestRight = newRight;
-          console.log('➡️ Updated closest right to:', closestRight, 'from item:', item.name);
-        }
-      }
-    });
-    
-    // Calculate available width
-    const availableWidth = closestRight - closestLeft;
-    
-    console.log('📐 Fill calculation:', {
-      position: position.x,
-      closestLeft,
-      closestRight,
-      availableWidth,
-      availableWidthCm: Math.round(availableWidth * 100)
-    });
-    
-    // Limit between 30cm and 300cm
-    const finalWidth = Math.max(0.3, Math.min(3.0, availableWidth));
-    
-    console.log('✅ Final width:', Math.round(finalWidth * 100), 'cm');
-    
-    return finalWidth;
-  };
-
-  // ✅ NEW: חישוב המיקום הנכון למילוי השטח
-  const calculateFillPosition = () => {
-    if (!position || !kitchenDimensions) {
-      return position;
-    }
-    
-    const halfWidth = kitchenDimensions.width / 2;
-    const margin = 0.05;
-    
-    let leftBound = -halfWidth + margin;
-    let rightBound = halfWidth - margin;
-    
-    // Find actual boundaries based on placed items
-    placedItems.forEach(item => {
-      if (!item.position || !item.dimensions) return;
-      
-      const zDiff = Math.abs(item.position.z - position.z);
-      if (zDiff > 0.5) return; // Different row
-      
-      const isSame = Math.abs(item.position.x - position.x) < 0.1;
-      if (isSame) return; // Same position
-      
-      const itemLeft = item.position.x - item.dimensions.width / 2;
-      const itemRight = item.position.x + item.dimensions.width / 2;
-      
-      if (itemRight < position.x) {
-        const newLeft = itemRight + 0.01;
-        if (newLeft > leftBound) {
-          leftBound = newLeft;
-        }
-      }
-      
-      if (itemLeft > position.x) {
-        const newRight = itemLeft - 0.01;
-        if (newRight < rightBound) {
-          rightBound = newRight;
-        }
-      }
-    });
-    
-    // ✅ CRITICAL: Calculate position so cabinet fills from left bound to right bound
-    const fillWidth = calculateFillWidth();
-    const centerX = leftBound + fillWidth / 2;
-    
-    console.log('📍 Fill position calculation:', {
-      leftBound,
-      rightBound,
-      fillWidth,
-      centerX,
-      originalPosition: position.x
-    });
-    
-    return { x: centerX, z: position.z };
-  };
-  const fillWidth = calculateFillWidth();
-  const fillPosition = calculateFillPosition();
-
   const handleConfirm = () => {
-    console.log('🎯 User confirmed option:', selectedOption);
-    if (selectedOption === 'custom') {
-      console.log('📏 Custom width:', customWidth);
-      onConfirm(selectedOption, customWidth);
-    } else if (selectedOption === 'fill') {
-      console.log('🔧 Fill width:', fillWidth);
-      console.log('📍 Fill position:', fillPosition);
-      onConfirm(selectedOption, fillWidth, fillPosition);
-    } else {
-      console.log('✋ Keep current width:', defaultWidth);
-      onConfirm(selectedOption);
-    }
+    onConfirm(selectedWidth);
   };
 
   return (
@@ -201,9 +37,9 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center">
-              <Settings className="text-white" size={20} />
+              <Ruler className="text-white" size={20} />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">אפשרויות ארון</h2>
+            <h2 className="text-xl font-bold text-gray-900">בחר רוחב ארון</h2>
           </div>
           <button 
             onClick={onClose}
@@ -215,113 +51,38 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
         </div>
         
         <p className="text-gray-600 mb-6">
-          בחר את האפשרות המתאימה לארון המטבח שלך
+          בחר את הרוחב המתאים לארון המטבח שלך
         </p>
         
         <div className="space-y-3 mb-6">
-          {/* Option 1: Keep current size */}
-          <label
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              selectedOption === 'keep'
-                ? 'border-primary bg-primary/5 shadow-lg'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <input
-              type="radio"
-              name="option"
-              checked={selectedOption === 'keep'}
-              onChange={() => setSelectedOption('keep')}
-              className="text-primary focus:ring-primary"
-            />
-            <div className="flex-1">
-              <div className="font-semibold text-gray-900 flex items-center gap-2">
-                <Check size={16} className="text-green-600" />
-                שמור על המידה הנוכחית
+          {widthOptions.map((option) => (
+            <label
+              key={option.value}
+              className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                selectedWidth === option.value
+                  ? 'border-primary bg-primary/5 shadow-lg'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="radio"
+                name="width"
+                value={option.value}
+                checked={selectedWidth === option.value}
+                onChange={(e) => setSelectedWidth(parseFloat(e.target.value))}
+                className="text-primary focus:ring-primary"
+              />
+              <div className="flex-1">
+                <div className="font-semibold text-gray-900">{option.label}</div>
+                <div className="text-sm text-gray-600">{option.desc}</div>
               </div>
-              <div className="text-sm text-gray-600">
-                {(defaultWidth * 100).toFixed(0)} ס"מ רוחב
-              </div>
-            </div>
-          </label>
-
-          {/* Option 2: Custom size */}
-          <label
-            className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              selectedOption === 'custom'
-                ? 'border-primary bg-primary/5 shadow-lg'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <input
-              type="radio"
-              name="option"
-              checked={selectedOption === 'custom'}
-              onChange={() => setSelectedOption('custom')}
-              className="mt-1 text-primary focus:ring-primary"
-            />
-            <div className="flex-1">
-              <div className="font-semibold text-gray-900 flex items-center gap-2 mb-2">
-                <Ruler size={16} className="text-blue-600" />
-                בחר מידה מותאמת אישית
-              </div>
-              
-              {selectedOption === 'custom' && (
-                <div className="grid grid-cols-2 gap-2">
-                  {widthOptions.map((option) => (
-                    <label
-                      key={option.value}
-                      className={`flex flex-col p-2 rounded-lg border cursor-pointer transition-all text-center ${
-                        customWidth === option.value
-                          ? 'border-primary bg-primary/10'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="customWidth"
-                        value={option.value}
-                        checked={customWidth === option.value}
-                        onChange={(e) => setCustomWidth(parseFloat(e.target.value))}
-                        className="sr-only"
-                      />
-                      <div className="font-medium text-xs">{option.label}</div>
-                      <div className="text-xs text-gray-500">{option.desc}</div>
-                    </label>
-                  ))}
+              {selectedWidth === option.value && (
+                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                  <Check size={14} className="text-white" />
                 </div>
               )}
-            </div>
-          </label>
-
-          {/* Option 3: Fill available space */}
-          <label
-            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              selectedOption === 'fill'
-                ? 'border-primary bg-primary/5 shadow-lg'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <input
-              type="radio"
-              name="option"
-              checked={selectedOption === 'fill'}
-              onChange={() => setSelectedOption('fill')}
-              className="text-primary focus:ring-primary"
-            />
-            <div className="flex-1">
-              <div className="font-semibold text-gray-900 flex items-center gap-2">
-                <Maximize2 size={16} className="text-purple-600" />
-                מלא את כל השטח הזמין
-              </div>
-              <div className="text-sm text-gray-600">
-                {(fillWidth * 100).toFixed(0)} ס"מ רוחב (בין רכיבים/קירות)
-              </div>
-              <div className="text-xs text-purple-600 mt-1">
-                💡 ימלא אוטומטית את השטח בין הרכיבים הקיימים
-              </div>
-            </div>
-          </label>
+            </label>
+          ))}
         </div>
         
         <div className="flex gap-3">

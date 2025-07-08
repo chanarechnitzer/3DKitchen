@@ -61,7 +61,6 @@ interface KitchenContextType {
   setCustomization: (options: CustomizationOptions) => void;
   updateCustomization: (category: keyof CustomizationOptions, value: string) => void;
   availableItems: KitchenItem[];
-  setAvailableItems: (items: KitchenItem[] | ((prev: KitchenItem[]) => KitchenItem[])) => void;
   placedItems: KitchenItem[];
   selectedItem: KitchenItem | null;
   setSelectedItem: (item: KitchenItem | null) => void;
@@ -73,7 +72,6 @@ interface KitchenContextType {
   setGameCompleted: (completed: boolean) => void;
   getDragValidation: (position: Vector3, type: KitchenItemType) => { isValid: boolean; distances: { [key: string]: number } };
   updateCabinetSize: (itemId: string, newWidth: number) => void;
-  updateCabinetSizeAndPosition: (itemId: string, newWidth: number, newPosition: { x: number; z: number }) => void;
   updateOvenStack: (baseOvenId: string, newOvenId: string) => void;
 }
 
@@ -92,7 +90,6 @@ const defaultContext: KitchenContextType = {
   setCustomization: () => {},
   updateCustomization: () => {},
   availableItems: [],
-  setAvailableItems: () => {},
   placedItems: [],
   selectedItem: null,
   setSelectedItem: () => {},
@@ -104,7 +101,6 @@ const defaultContext: KitchenContextType = {
   setGameCompleted: () => {},
   getDragValidation: () => ({ isValid: false, distances: {} }),
   updateCabinetSize: () => {},
-  updateCabinetSizeAndPosition: () => {},
   updateOvenStack: () => {},
 };
 
@@ -281,68 +277,14 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // Update cabinet size
-  const updateCabinetSize = (itemId: string, newWidth: number, newPosition?: { x: number; z: number }) => {
-    console.log('🔧 updateCabinetSize called with:', { itemId, newWidth });
-    if (newPosition) {
-      console.log('📍 New position provided:', newPosition);
-    }
-    console.log('📋 Current placed items:', placedItems.map(item => ({ id: item.id, name: item.name, width: item.dimensions.width })));
-    
-    setPlacedItems(prev => {
-      const updated = prev.map(item => {
-        if (item.id === itemId) {
-          console.log('🎯 Found item to update:', item.name);
-          console.log('📏 Old width:', item.dimensions.width);
-          console.log('📐 New width:', newWidth);
-          if (newPosition) {
-            console.log('📍 Old position:', item.position.x);
-            console.log('📍 New position:', newPosition.x);
-          }
-          
-          // ✅ CRITICAL: Create completely new object with new ID to force React re-render
-          let updatedItem = { 
-            ...item, 
-            id: `${item.id.split('-updated')[0]}-updated-${Date.now()}`, // ✅ Force new key but keep base ID clean
-            dimensions: { 
-              ...item.dimensions, 
-              width: newWidth 
-            } 
-          };
-          
-          // ✅ If new position is provided, use it
-          if (newPosition) {
-            updatedItem.position = new Vector3(newPosition.x, item.position.y, newPosition.z);
-            console.log('📍 Position updated to:', newPosition);
-          }
-          
-          console.log('✅ Updated item:', updatedItem.dimensions);
-          return updatedItem;
-        }
-        return item;
-      });
-      
-      console.log('🔄 All items after update:', updated.map(item => ({ 
-        id: item.id, 
-        name: item.name, 
-        width: item.dimensions.width 
-      })));
-      
-      return updated;
-    });
-    
-    console.log('✅ Cabinet size updated successfully');
-    
-    // ✅ Force immediate validation
-    setTimeout(() => {
-      console.log('🔄 Re-validating triangle after size change');
-      validateTriangle();
-    }, 50);
+  const updateCabinetSize = (itemId: string, newWidth: number) => {
+    setPlacedItems(prev => prev.map(item => 
+      item.id === itemId 
+        ? { ...item, dimensions: { ...item.dimensions, width: newWidth } }
+        : item
+    ));
   };
 
-  // ✅ NEW: Separate function for updating both size and position
-  const updateCabinetSizeAndPosition = (itemId: string, newWidth: number, newPosition: { x: number; z: number }) => {
-    updateCabinetSize(itemId, newWidth, newPosition);
-  };
   // Update oven stack
   const updateOvenStack = (baseOvenId: string, newOvenId: string) => {
     setPlacedItems(prev => prev.map(item => {
@@ -358,42 +300,25 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Place an item in the kitchen
   const placeItem = (itemId: string, position: Vector3, rotation: number = 0) => {
-    console.log('🎯 placeItem called with:', { itemId, position, rotation });
-    
     const itemIndex = availableItems.findIndex(item => item.id === itemId);
-    console.log('📦 Found item at index:', itemIndex);
     
     if (itemIndex !== -1) {
-      const originalItem = availableItems[itemIndex];
-      console.log('📏 Original item dimensions:', originalItem.dimensions);
-      
       const item = { 
-        ...originalItem, 
+        ...availableItems[itemIndex], 
         position: new Vector3(position.x, position.y, position.z),
         placed: true,
         rotation
       };
       
-      console.log('📏 Placed item dimensions:', item.dimensions);
-      console.log('📍 Placed item position:', item.position);
-      
       if (item.type === KitchenItemType.COUNTERTOP) {
         const placedCabinets = placedItems.filter(i => i.type === KitchenItemType.COUNTERTOP).length;
         if (placedCabinets >= 10) {
-          console.log('❌ Cabinet limit reached');
           return;
         }
       }
       
-      // ✅ CRITICAL: Remove by original ID, not the potentially updated ID
-      const baseId = originalItem.id.split('-updated')[0];
-      setAvailableItems(prev => prev.filter(item => {
-        const itemBaseId = item.id.split('-updated')[0];
-        return itemBaseId !== baseId;
-      }));
+      setAvailableItems(prev => prev.filter(item => item.id !== itemId));
       setPlacedItems(prev => [...prev, item]);
-      
-      console.log('✅ Item placed successfully with dimensions:', item.dimensions);
       
       // CRITICAL: Only validate triangle, NEVER auto-complete the game
       setTimeout(validateTriangle, 100);
@@ -487,7 +412,6 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     setCustomization,
     updateCustomization,
     availableItems,
-    setAvailableItems,
     placedItems,
     selectedItem,
     setSelectedItem,
@@ -499,7 +423,6 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     setGameCompleted,
     getDragValidation,
     updateCabinetSize,
-    updateCabinetSizeAndPosition,
     updateOvenStack,
   };
 

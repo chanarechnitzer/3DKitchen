@@ -7,9 +7,8 @@ import DraggableObject from './three/DraggableObject';
 import TriangleLines from './three/TriangleLines';
 import DistanceLines from './three/DistanceLines';
 import SnapGuides from './three/SnapGuides';
-import { useKitchen, WindowPlacement, KitchenItemType } from '../store/KitchenContext';
+import { useKitchen, WindowPlacement } from '../store/KitchenContext';
 import OvenStackDialog from './OvenStackDialog';
-import CabinetOptionsDialog from './CabinetOptionsDialog';
 
 interface KitchenSceneProps {
   windowPlacement: WindowPlacement;
@@ -29,8 +28,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
     removeItem,
     triangleValidation,
     getDragValidation,
-    updateOvenStack,
-    setAvailableItems,
+    updateOvenStack
   } = useKitchen();
   
   const [position, setPosition] = useState({ x: 0, z: 0 });
@@ -42,11 +40,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
   const [showOvenStackDialog, setShowOvenStackDialog] = useState(false);
   const [conflictingOven, setConflictingOven] = useState<string | null>(null);
-  const [showCabinetOptionsDialog, setShowCabinetOptionsDialog] = useState(false);
-  const [pendingCabinetPlacement, setPendingCabinetPlacement] = useState<{
-    position: { x: number; z: number };
-    rotation: number;
-  } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controlsRef = useRef<any>(null);
   const worldPosRef = useRef<THREE.Vector3>(new THREE.Vector3());
@@ -499,20 +492,10 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
       const finalPos = snapPosition || validatePosition(position.x, position.z);
       const finalRotation = snapPosition?.rotation !== undefined ? snapPosition.rotation : itemRotation;
       
-      // ✅ NEW: Check if this is a countertop - show options dialog first
-      if (selectedItem.type === KitchenItemType.COUNTERTOP) {
-        setPendingCabinetPlacement({
-          position: { x: finalPos.x, z: finalPos.z },
-          rotation: finalRotation
-        });
-        setShowCabinetOptionsDialog(true);
-        return; // Don't place yet, wait for user choice
-      }
-      
       // ✅ NEW: Check for oven stacking opportunity
-      if (selectedItem.type === KitchenItemType.OVEN) {
+      if (selectedItem.type === 'oven') {
         const existingOven = placedItems.find(item => 
-          item.type === KitchenItemType.OVEN && 
+          item.type === 'oven' && 
           Math.abs(item.position.x - finalPos.x) < 0.1 && 
           Math.abs(item.position.z - finalPos.z) < 0.1
         );
@@ -631,7 +614,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         
         {placedItems.map(item => (
           <DraggableObject
-            key={`placed-${item.id}-${item.dimensions.width.toFixed(3)}-${item.dimensions.depth.toFixed(3)}-${item.dimensions.height.toFixed(3)}-${item.rotation || 0}`}
+            key={item.id}
             position={[item.position.x, 0, item.position.z]}
             type={item.type}
             isPlaced={true}
@@ -643,7 +626,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         {selectedItem && (
           <>
             <DraggableObject
-              key={`selected-${selectedItem.id}-${selectedItem.dimensions.width.toFixed(3)}-${selectedItem.dimensions.depth.toFixed(3)}-${selectedItem.dimensions.height.toFixed(3)}-${finalRotation}`}
               position={[finalPosition.x, 0, finalPosition.z]}
               type={selectedItem.type}
               isPlaced={false}
@@ -843,77 +825,6 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           baseOvenName={placedItems.find(item => item.id === conflictingOven)?.name || 'תנור'}
         />
       )}
-      
-      {/* ✅ NEW: Cabinet Options Dialog - Auto-opens when placing countertop */}
-      {showCabinetOptionsDialog && selectedItem && pendingCabinetPlacement && (
-        <CabinetOptionsDialog
-          onClose={() => {
-            setShowCabinetOptionsDialog(false);
-            setPendingCabinetPlacement(null);
-            // Don't place the item if user cancels
-          }}
-          onConfirm={(option, customWidth, fillPosition) => {
-            if (!selectedItem || !pendingCabinetPlacement) return;
-            
-            console.log('🎯 Cabinet placement confirmed with option:', option);
-            console.log('📍 Placement position:', pendingCabinetPlacement.position);
-            console.log('📏 Custom width:', customWidth);
-            console.log('📍 Fill position:', fillPosition);
-            
-            let finalWidth = selectedItem.dimensions.width;
-            let finalPosition = fillPosition || pendingCabinetPlacement.position;
-            
-            if (option === 'custom' && customWidth) {
-              finalWidth = customWidth;
-              console.log('🔧 Using custom width:', finalWidth);
-            } else if (option === 'fill' && customWidth) {
-              finalWidth = customWidth;
-              console.log('📐 Using fill width:', finalWidth);
-              console.log('📍 Using calculated fill position:', finalPosition);
-            }
-            
-            console.log('✅ Final cabinet width:', finalWidth);
-            console.log('📍 Final cabinet position:', finalPosition);
-            
-            // Update item dimensions in available items before placement
-            setAvailableItems(prev => prev.map(item => 
-              item.id === selectedItem.id 
-                ? { ...item, dimensions: { ...item.dimensions, width: finalWidth } }
-                : item
-            ));
-            
-            console.log('🔄 Updated available items with new width');
-            
-            // Place the item with updated dimensions and position
-            placeItem(
-              selectedItem.id,
-              new THREE.Vector3(finalPosition.x, 0, finalPosition.z),
-              pendingCabinetPlacement.rotation
-            );
-            
-            console.log('✅ Item placed successfully');
-            
-            setSelectedItem(null);
-            setIsDragging(false);
-            setSnapPosition(null);
-            setItemRotation(0);
-            setShowRotationHint(false);
-            setCollisionWarning(null);
-            setShowCabinetOptionsDialog(false);
-            setPendingCabinetPlacement(null);
-            
-            // Haptic feedback for mobile
-            if (navigator.vibrate) {
-              navigator.vibrate(50);
-            }
-          }}
-          defaultWidth={selectedItem.dimensions.width}
-          placedItems={placedItems}
-          position={pendingCabinetPlacement ? pendingCabinetPlacement.position : { x: 0, z: 0 }}
-          kitchenDimensions={kitchenDimensions}
-        />
-      )}
-      
     </div>
   );
 };

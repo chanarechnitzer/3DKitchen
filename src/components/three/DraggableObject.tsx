@@ -1,6 +1,6 @@
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Vector3 } from 'three';
+import { Mesh } from 'three';
 import { useKitchen, KitchenItemType } from '../../store/KitchenContext';
 
 interface DraggableObjectProps {
@@ -24,37 +24,6 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
 }) => {
   const meshRef = useRef<Mesh>(null);
   const { customization } = useKitchen();
-  
-  // ✅ 1. מפתח דינמי מבוסס מימדים + rotation + type + placement status + timestamp
-  const dimensionsKey = `${dimensions.width.toFixed(3)}-${dimensions.depth.toFixed(3)}-${dimensions.height.toFixed(3)}-${rotation.toFixed(3)}-${type}-${isPlaced}-${Date.now()}`;
-  
-  console.log('🎨 DraggableObject render with key:', {
-    type,
-    dimensionsKey,
-    position,
-    isPlaced,
-    dimensions
-  });
-
-  // ✅ 2. Force re-render when dimensions change - עם cleanup מלא
-  useEffect(() => {
-    console.log('🔄 DraggableObject dimensions changed:', {
-      type,
-      width: dimensions.width,
-      depth: dimensions.depth,
-      height: dimensions.height,
-      dimensionsKey
-    });
-    
-    // Force mesh update if it exists
-    if (meshRef.current) {
-      // Dispose of old geometry to prevent memory leaks
-      if (meshRef.current.geometry) {
-        meshRef.current.geometry.dispose();
-      }
-      console.log('🗑️ Disposed old geometry for fresh render');
-    }
-  }, [dimensions.width, dimensions.depth, dimensions.height, type, isPlaced, rotation]);
 
   // Get colors based on customization
   const getCabinetColor = () => {
@@ -94,52 +63,36 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
     }
   });
 
-  // ✅ 3. useMemo עם תלויות מלאות כולל dimensionsKey - אבל ללא Date.now() כדי למנוע re-render אינסופי
   const component = useMemo(() => {
     const [x, y, z] = position;
-    // ✅ 4. יצירת אובייקט dimensions חדש עם spread operator
-    const freshDimensions = { ...dimensions };
-    const { width, depth, height } = freshDimensions;
-    
-    console.log('🎨 Creating fresh component geometry:', { 
-      type, 
-      width, 
-      height, 
-      depth, 
-      position,
-      dimensionsKey: `${width}-${depth}-${height}`,
-      timestamp: Date.now()
-    });
-
-    // ✅ 5. יצירת key ייחודי לכל mesh בלי Date.now() כדי למנוע re-render מיותר
-    const meshKey = `${type}-${width.toFixed(3)}-${depth.toFixed(3)}-${height.toFixed(3)}-${rotation.toFixed(3)}`;
+    const { width, depth, height } = dimensions;
 
     switch (type) {
       case KitchenItemType.SINK:
         return (
           <group position={[x, y, z]} rotation={[0, rotation, 0]}>
             {/* Base cabinet */}
-            <mesh position={[0, height / 2, 0]} castShadow receiveShadow key={`sink-base-${meshKey}`}>
+            <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, height, depth]} />
               <meshStandardMaterial color={getCabinetColor()} />
             </mesh>
             {/* Countertop */}
-            <mesh position={[0, height + 0.025, 0]} castShadow receiveShadow key={`sink-counter-${meshKey}`}>
+            <mesh position={[0, height + 0.025, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, 0.05, depth]} />
               <meshStandardMaterial color={getCountertopColor()} />
             </mesh>
             {/* Sink basin */}
-            <mesh position={[0, height + 0.05, 0]} castShadow key={`sink-basin-${meshKey}`}>
+            <mesh position={[0, height + 0.05, 0]} castShadow>
               <boxGeometry args={[width * 0.7, 0.15, depth * 0.7]} />
               <meshStandardMaterial color="#E2E8F0" />
             </mesh>
             {/* Faucet */}
-            <mesh position={[0, height + 0.2, -depth * 0.3]} castShadow key={`sink-faucet-${meshKey}`}>
+            <mesh position={[0, height + 0.2, -depth * 0.3]} castShadow>
               <cylinderGeometry args={[0.02, 0.02, 0.3, 8]} />
               <meshStandardMaterial color="#C0C0C0" />
             </mesh>
             {/* Faucet head */}
-            <mesh position={[0, height + 0.35, -depth * 0.3]} castShadow key={`sink-head-${meshKey}`}>
+            <mesh position={[0, height + 0.35, -depth * 0.3]} castShadow>
               <sphereGeometry args={[0.04, 8, 8]} />
               <meshStandardMaterial color="#C0C0C0" />
             </mesh>
@@ -150,12 +103,12 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
         return (
           <group position={[x, y, z]} rotation={[0, rotation, 0]}>
             {/* Base cabinet */}
-            <mesh position={[0, height / 2, 0]} castShadow receiveShadow key={`stove-base-${meshKey}`}>
+            <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, height, depth]} />
               <meshStandardMaterial color={getCabinetColor()} />
             </mesh>
             {/* Countertop */}
-            <mesh position={[0, height + 0.025, 0]} castShadow receiveShadow key={`stove-counter-${meshKey}`}>
+            <mesh position={[0, height + 0.025, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, 0.05, depth]} />
               <meshStandardMaterial color="#1a1a1a" />
             </mesh>
@@ -163,7 +116,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             {[-0.15, 0.15].map((xOffset, i) =>
               [-0.15, 0.15].map((zOffset, j) => (
                 <mesh
-                  key={`burner-${i}-${j}-${meshKey}`}
+                  key={`burner-${i}-${j}`}
                   position={[xOffset, height + 0.08, zOffset]}
                   castShadow
                 >
@@ -175,7 +128,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             {/* Control knobs */}
             {[-0.2, -0.067, 0.067, 0.2].map((xOffset, i) => (
               <mesh
-                key={`knob-${i}-${meshKey}`}
+                key={`knob-${i}`}
                 position={[xOffset, height + 0.05, depth * 0.4]}
                 castShadow
               >
@@ -190,32 +143,32 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
         return (
           <group position={[x, y, z]} rotation={[0, rotation, 0]}>
             {/* Built-in oven cavity */}
-            <mesh position={[0, height / 2, 0]} castShadow receiveShadow key={`oven-base-${meshKey}`}>
+            <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, height, depth]} />
               <meshStandardMaterial color={getCabinetColor()} />
             </mesh>
             {/* Oven insert */}
-            <mesh position={[0, height * 0.5, depth * 0.3]} castShadow key={`oven-insert-${meshKey}`}>
+            <mesh position={[0, height * 0.5, depth * 0.3]} castShadow>
               <boxGeometry args={[width * 0.85, height * 0.8, depth * 0.4]} />
               <meshStandardMaterial color="#1a1a1a" />
             </mesh>
             {/* Oven door */}
-            <mesh position={[0, height * 0.5, depth * 0.48]} castShadow key={`oven-door-${meshKey}`}>
+            <mesh position={[0, height * 0.5, depth * 0.48]} castShadow>
               <boxGeometry args={[width * 0.8, height * 0.7, 0.05]} />
               <meshStandardMaterial color="#2D3748" />
             </mesh>
             {/* Oven window */}
-            <mesh position={[0, height * 0.55, depth * 0.51]} castShadow key={`oven-window-${meshKey}`}>
+            <mesh position={[0, height * 0.55, depth * 0.51]} castShadow>
               <boxGeometry args={[width * 0.5, height * 0.4, 0.02]} />
               <meshStandardMaterial color="#333333" transparent opacity={0.8} />
             </mesh>
             {/* Door handle */}
-            <mesh position={[width * 0.25, height * 0.5, depth * 0.52]} castShadow key={`oven-handle-${meshKey}`}>
+            <mesh position={[width * 0.25, height * 0.5, depth * 0.52]} castShadow>
               <boxGeometry args={[0.15, 0.02, 0.02]} />
               <meshStandardMaterial color="#C0C0C0" />
             </mesh>
             {/* Control panel */}
-            <mesh position={[0, height * 0.15, depth * 0.48]} castShadow key={`oven-panel-${meshKey}`}>
+            <mesh position={[0, height * 0.15, depth * 0.48]} castShadow>
               <boxGeometry args={[width * 0.6, 0.08, 0.02]} />
               <meshStandardMaterial color="#1a1a1a" />
             </mesh>
@@ -226,7 +179,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
         return (
           <group position={[x, y, z]} rotation={[0, rotation, 0]}>
             {/* Main body - modern stainless steel look */}
-            <mesh position={[0, height / 2, 0]} castShadow receiveShadow key={`fridge-body-${meshKey}`}>
+            <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, height, depth]} />
               <meshStandardMaterial 
                 color="#E8E9EA" 
@@ -235,7 +188,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               />
             </mesh>
             {/* Freezer door (top) */}
-            <mesh position={[width * 0.47, height * 0.8, 0]} castShadow key={`fridge-freezer-${meshKey}`}>
+            <mesh position={[width * 0.47, height * 0.8, 0]} castShadow>
               <boxGeometry args={[0.06, height * 0.35, depth * 0.95]} />
               <meshStandardMaterial 
                 color="#D6D8DB" 
@@ -244,7 +197,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               />
             </mesh>
             {/* Main fridge door (bottom) */}
-            <mesh position={[width * 0.47, height * 0.4, 0]} castShadow key={`fridge-main-${meshKey}`}>
+            <mesh position={[width * 0.47, height * 0.4, 0]} castShadow>
               <boxGeometry args={[0.06, height * 0.6, depth * 0.95]} />
               <meshStandardMaterial 
                 color="#D6D8DB" 
@@ -253,7 +206,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               />
             </mesh>
             {/* Freezer handle */}
-            <mesh position={[width * 0.52, height * 0.9, depth * 0.2]} castShadow key={`fridge-handle1-${meshKey}`}>
+            <mesh position={[width * 0.52, height * 0.9, depth * 0.2]} castShadow>
               <boxGeometry args={[0.02, 0.2, 0.03]} />
               <meshStandardMaterial 
                 color="#8E9196" 
@@ -262,7 +215,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               />
             </mesh>
             {/* Main door handle */}
-            <mesh position={[width * 0.52, height * 0.5, depth * 0.2]} castShadow key={`fridge-handle2-${meshKey}`}>
+            <mesh position={[width * 0.52, height * 0.5, depth * 0.2]} castShadow>
               <boxGeometry args={[0.02, 0.3, 0.03]} />
               <meshStandardMaterial 
                 color="#8E9196" 
@@ -271,17 +224,17 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
               />
             </mesh>
             {/* Door seals */}
-            <mesh position={[width * 0.45, height * 0.625, 0]} castShadow key={`fridge-seal-${meshKey}`}>
+            <mesh position={[width * 0.45, height * 0.625, 0]} castShadow>
               <boxGeometry args={[0.02, 0.02, depth * 0.9]} />
               <meshStandardMaterial color="#4A4A4A" />
             </mesh>
             {/* Brand logo area */}
-            <mesh position={[0, height * 0.85, depth * 0.48]} castShadow key={`fridge-logo-${meshKey}`}>
+            <mesh position={[0, height * 0.85, depth * 0.48]} castShadow>
               <boxGeometry args={[width * 0.3, 0.08, 0.01]} />
               <meshStandardMaterial color="#C0C0C0" />
             </mesh>
             {/* Water/ice dispenser */}
-            <mesh position={[0, height * 0.7, depth * 0.48]} castShadow key={`fridge-dispenser-${meshKey}`}>
+            <mesh position={[0, height * 0.7, depth * 0.48]} castShadow>
               <boxGeometry args={[width * 0.2, 0.15, 0.02]} />
               <meshStandardMaterial color="#1a1a1a" />
             </mesh>
@@ -292,17 +245,17 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
         return (
           <group position={[x, y, z]} rotation={[0, rotation, 0]}>
             {/* Base cabinet */}
-            <mesh position={[0, height / 2, 0]} castShadow receiveShadow key={`counter-base-${meshKey}`}>
+            <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, height, depth]} />
               <meshStandardMaterial color={getCabinetColor()} />
             </mesh>
             {/* Countertop */}
-            <mesh position={[0, height + 0.025, 0]} castShadow receiveShadow key={`counter-top-${meshKey}`}>
+            <mesh position={[0, height + 0.025, 0]} castShadow receiveShadow>
               <boxGeometry args={[width, 0.05, depth]} />
               <meshStandardMaterial color={getCountertopColor()} />
             </mesh>
             {/* Cabinet doors */}
-            <mesh position={[0, height * 0.6, depth * 0.48]} castShadow key={`counter-doors-${meshKey}`}>
+            <mesh position={[0, height * 0.6, depth * 0.48]} castShadow>
               <boxGeometry args={[width * 0.9, height * 0.7, 0.05]} />
               <meshStandardMaterial color={getCabinetColor()} />
             </mesh>
@@ -310,24 +263,24 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
             {width > 0.8 ? (
               // Two handles for wide cabinets
               <>
-                <mesh position={[-width * 0.2, height * 0.6, depth * 0.52]} castShadow key={`counter-handle1-${meshKey}`}>
+                <mesh position={[-width * 0.2, height * 0.6, depth * 0.52]} castShadow>
                   <boxGeometry args={[0.08, 0.02, 0.02]} />
                   <meshStandardMaterial color="#6C757D" />
                 </mesh>
-                <mesh position={[width * 0.2, height * 0.6, depth * 0.52]} castShadow key={`counter-handle2-${meshKey}`}>
+                <mesh position={[width * 0.2, height * 0.6, depth * 0.52]} castShadow>
                   <boxGeometry args={[0.08, 0.02, 0.02]} />
                   <meshStandardMaterial color="#6C757D" />
                 </mesh>
               </>
             ) : (
               // Single handle for narrow cabinets
-              <mesh position={[width * 0.3, height * 0.6, depth * 0.52]} castShadow key={`counter-handle-${meshKey}`}>
+              <mesh position={[width * 0.3, height * 0.6, depth * 0.52]} castShadow>
                 <boxGeometry args={[0.08, 0.02, 0.02]} />
                 <meshStandardMaterial color="#6C757D" />
               </mesh>
             )}
             {/* Drawer handles */}
-            <mesh position={[width * 0.3, height * 0.15, depth * 0.52]} castShadow key={`counter-drawer-${meshKey}`}>
+            <mesh position={[width * 0.3, height * 0.15, depth * 0.52]} castShadow>
               <boxGeometry args={[0.08, 0.02, 0.02]} />
               <meshStandardMaterial color="#6C757D" />
             </mesh>
@@ -336,14 +289,13 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
 
       default:
         return (
-          <mesh ref={meshRef} position={[x, y, z]} rotation={[0, rotation, 0]} castShadow receiveShadow key={`default-${meshKey}`}>
+          <mesh ref={meshRef} position={[x, y, z]} rotation={[0, rotation, 0]} castShadow receiveShadow>
             <boxGeometry args={[width, height, depth]} />
             <meshStandardMaterial color="#cccccc" />
           </mesh>
         );
     }
   }, [
-    // ✅ 6. כל התלויות הנדרשות - ללא Date.now() כדי למנוע re-render אינסופי
     position[0], position[1], position[2], 
     dimensions.width, dimensions.depth, dimensions.height, 
     rotation, 
@@ -354,11 +306,11 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   ]);
 
   return (
-    <group ref={meshRef} key={dimensionsKey}>
+    <group ref={meshRef}>
       {component}
       {/* Highlight effect for unplaced items */}
       {!isPlaced && (
-        <mesh position={position} rotation={[0, rotation, 0]} key={`highlight-${dimensionsKey}`}>
+        <mesh position={position} rotation={[0, rotation, 0]}>
           <boxGeometry args={[dimensions.width + 0.1, dimensions.height + 0.1, dimensions.depth + 0.1]} />
           <meshStandardMaterial
             color="#e3a92b"
