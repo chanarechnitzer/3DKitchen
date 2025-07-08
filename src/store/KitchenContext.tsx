@@ -302,7 +302,7 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
           // ✅ CRITICAL: Create completely new object with new ID to force React re-render
           let updatedItem = { 
             ...item, 
-            id: `${item.id}-updated-${Date.now()}`, // ✅ Force new key
+            id: `${item.id.split('-updated')[0]}-updated-${Date.now()}`, // ✅ Force new key but keep base ID clean
             dimensions: { 
               ...item.dimensions, 
               width: newWidth 
@@ -386,8 +386,11 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
       
       // ✅ CRITICAL: Remove by original ID, not the potentially updated ID
-      const originalId = originalItem.id.replace('-updated', '');
-      setAvailableItems(prev => prev.filter(item => item.id !== itemId && item.id !== originalId));
+      const baseId = originalItem.id.split('-updated')[0];
+      setAvailableItems(prev => prev.filter(item => {
+        const itemBaseId = item.id.split('-updated')[0];
+        return itemBaseId !== baseId;
+      }));
       setPlacedItems(prev => [...prev, item]);
       
       console.log('✅ Item placed successfully with dimensions:', item.dimensions);
