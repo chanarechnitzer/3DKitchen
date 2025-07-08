@@ -631,8 +631,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         
         {placedItems.map(item => (
           <DraggableObject
-            key={`selected-${selectedItem.id}-${selectedItem.dimensions.width}`}
-            key={item.id}
+            key={`placed-${item.id}-${item.dimensions.width}-${item.dimensions.depth}-${item.dimensions.height}`}
             position={[item.position.x, 0, item.position.z]}
             type={item.type}
             isPlaced={true}
@@ -644,6 +643,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
         {selectedItem && (
           <>
             <DraggableObject
+              key={`selected-${selectedItem.id}-${selectedItem.dimensions.width}-${selectedItem.dimensions.depth}-${selectedItem.dimensions.height}`}
               position={[finalPosition.x, 0, finalPosition.z]}
               type={selectedItem.type}
               isPlaced={false}
