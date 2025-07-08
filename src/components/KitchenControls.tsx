@@ -186,7 +186,7 @@ const KitchenControls: React.FC = () => {
           }}
           defaultWidth={selectedItem.dimensions.width}
           placedItems={placedItems}
-          position={selectedItem ? { x: 0, z: 0 } : undefined}
+          position={undefined} // For new items, position will be determined during placement
           kitchenDimensions={kitchenDimensions}
         />
       )}

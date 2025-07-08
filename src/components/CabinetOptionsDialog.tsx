@@ -34,8 +34,12 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
   // ✅ FIXED: חישוב נכון של השטח הזמין
   const calculateFillWidth = () => {
     if (!position || !kitchenDimensions) {
+      console.log('❌ Missing position or kitchen dimensions');
       return defaultWidth;
     }
+    
+    console.log('🎯 Calculating fill width for position:', position);
+    console.log('🏠 Kitchen dimensions:', kitchenDimensions);
     
     // ✅ SIMPLE: חישוב גבולות המטבח
     const halfWidth = kitchenDimensions.width / 2;
@@ -51,28 +55,48 @@ const CabinetOptionsDialog: React.FC<CabinetOptionsDialogProps> = ({
     let closestLeft = leftBound;
     let closestRight = rightBound;
     
+    console.log('🔍 Checking', placedItems.length, 'placed items');
+    
     placedItems.forEach(item => {
       if (!item.position || !item.dimensions) return;
       
+      console.log('📦 Checking item:', item.name, 'at position:', item.position);
+      
       // ✅ SIMPLE: רק פריטים באותו שורה (Z דומה)
       const zDiff = Math.abs(item.position.z - position.z);
-      if (zDiff > 0.5) return; // לא באותו שורה
+      if (zDiff > 0.5) {
+        console.log('⏭️ Skipping', item.name, '- different row (zDiff:', zDiff, ')');
+        return; // לא באותו שורה
+      }
       
       // ✅ SIMPLE: דלג על הפריט הנוכחי
       const isSame = Math.abs(item.position.x - position.x) < 0.1;
-      if (isSame) return;
+      if (isSame) {
+        console.log('⏭️ Skipping', item.name, '- same position');
+        return;
+      }
       
       const itemLeft = item.position.x - item.dimensions.width / 2;
       const itemRight = item.position.x + item.dimensions.width / 2;
       
+      console.log('📏 Item bounds:', { itemLeft, itemRight, itemCenter: item.position.x });
+      
       // ✅ SIMPLE: אם הפריט משמאל למיקום הנוכחי
       if (itemRight < position.x) {
-        closestLeft = Math.max(closestLeft, itemRight + 0.02); // 2 ס"מ מרווח
+        const newLeft = itemRight + 0.02; // 2 ס"מ מרווח
+        if (newLeft > closestLeft) {
+          closestLeft = newLeft;
+          console.log('⬅️ Updated closest left to:', closestLeft, 'from item:', item.name);
+        }
       }
       
       // ✅ SIMPLE: אם הפריט מימין למיקום הנוכחי
       if (itemLeft > position.x) {
-        closestRight = Math.min(closestRight, itemLeft - 0.02); // 2 ס"מ מרווח
+        const newRight = itemLeft - 0.02; // 2 ס"מ מרווח
+        if (newRight < closestRight) {
+          closestRight = newRight;
+          console.log('➡️ Updated closest right to:', closestRight, 'from item:', item.name);
+        }
       }
     });
     

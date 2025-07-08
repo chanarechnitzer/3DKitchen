@@ -904,7 +904,7 @@ const KitchenScene: React.FC<KitchenSceneProps> = ({
           }}
           defaultWidth={selectedItem.dimensions.width}
           placedItems={placedItems}
-          position={pendingCabinetPlacement.position}
+          position={pendingCabinetPlacement ? pendingCabinetPlacement.position : { x: 0, z: 0 }}
           kitchenDimensions={kitchenDimensions}
         />
       )}
