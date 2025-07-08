@@ -299,16 +299,17 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
             console.log('📍 New position:', newPosition.x);
           }
           
-          // ✅ CRITICAL: Update both width and position if provided
+          // ✅ CRITICAL: Create completely new object with new ID to force React re-render
           let updatedItem = { 
             ...item, 
+            id: `${item.id}-updated-${Date.now()}`, // ✅ Force new key
             dimensions: { 
               ...item.dimensions, 
               width: newWidth 
             } 
           };
           
-          // ✅ CRITICAL: If new position is provided, use it
+          // ✅ If new position is provided, use it
           if (newPosition) {
             updatedItem.position = new Vector3(newPosition.x, item.position.y, newPosition.z);
             console.log('📍 Position updated to:', newPosition);
@@ -331,13 +332,10 @@ export const KitchenProvider: React.FC<{ children: ReactNode }> = ({ children })
     
     console.log('✅ Cabinet size updated successfully');
     
-    // ✅ CRITICAL: Force immediate re-render and validation
+    // ✅ Force immediate validation
     setTimeout(() => {
       console.log('🔄 Re-validating triangle after size change');
       validateTriangle();
-      
-      // Force React to re-render by updating a dummy state
-      setGameCompleted(prev => prev);
     }, 50);
   };
 

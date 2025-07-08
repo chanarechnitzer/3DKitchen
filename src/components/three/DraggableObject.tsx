@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3 } from 'three';
 import { useKitchen, KitchenItemType } from '../../store/KitchenContext';
@@ -25,15 +25,33 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
   const meshRef = useRef<Mesh>(null);
   const { customization } = useKitchen();
   
-  // ✅ 1. יצירת מפתח דינמי המבוסס על המימדים
-  const dimensionsKey = `${dimensions.width}-${dimensions.depth}-${dimensions.height}`;
+  // ✅ 1. מפתח דינמי מבוסס מימדים + rotation + type + placement status
+  const dimensionsKey = `${dimensions.width.toFixed(3)}-${dimensions.depth.toFixed(3)}-${dimensions.height.toFixed(3)}-${rotation.toFixed(3)}-${type}-${isPlaced}`;
   
-  console.log('🎨 DraggableObject render:', {
+  console.log('🎨 DraggableObject render with key:', {
     type,
     dimensionsKey,
     position,
-    isPlaced
+    isPlaced,
+    dimensions
   });
+
+  // ✅ 2. Force re-render when dimensions change
+  useEffect(() => {
+    console.log('🔄 DraggableObject dimensions changed:', {
+      type,
+      width: dimensions.width,
+      depth: dimensions.depth,
+      height: dimensions.height,
+      dimensionsKey
+    });
+    
+    // Force mesh update if it exists
+    if (meshRef.current) {
+      meshRef.current.geometry.dispose();
+      console.log('🗑️ Disposed old geometry for fresh render');
+    }
+  }, [dimensionsKey, dimensions.width, dimensions.depth, dimensions.height]);
 
   // Get colors based on customization
   const getCabinetColor = () => {
@@ -73,19 +91,21 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
     }
   });
 
-  // ✅ 3. עדכון useMemo עם תלויות נכונות כולל dimensionsKey
+  // ✅ 3. useMemo עם תלויות מלאות כולל dimensionsKey
   const component = useMemo(() => {
     const [x, y, z] = position;
-    // ✅ 2. יצירת אובייקט dimensions חדש עם spread
-    const { width, depth, height } = { ...dimensions };
+    // ✅ 4. יצירת אובייקט dimensions חדש עם spread operator
+    const freshDimensions = { ...dimensions };
+    const { width, depth, height } = freshDimensions;
     
-    console.log('🎨 Creating component geometry:', { 
+    console.log('🎨 Creating fresh component geometry:', { 
       type, 
       width, 
       height, 
       depth, 
       position,
-      dimensionsKey 
+      dimensionsKey,
+      timestamp: Date.now()
     });
 
     switch (type) {
@@ -93,7 +113,7 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
         return (
           <group position={[x, y, z]} rotation={[0, rotation, 0]}>
             {/* Base cabinet */}
-            {/* ✅ 4. המש מקבל מידות ישירות מ-props */}
+            {/* ✅ 5. mesh מקבל מידות ישירות מ-props עם key ייחודי */}
             <mesh position={[0, height / 2, 0]} castShadow receiveShadow key={`sink-base-${dimensionsKey}`}>
               <boxGeometry args={[width, height, depth]} />
               <meshStandardMaterial color={getCabinetColor()} />
@@ -318,18 +338,21 @@ const DraggableObject: React.FC<DraggableObjectProps> = ({
         );
     }
   }, [
-    // ✅ 3. כל התלויות הנדרשות כולל dimensionsKey
+    // ✅ 6. כל התלויות הנדרשות כולל dimensionsKey ומימדים נפרדים
     position[0], position[1], position[2], 
     dimensions.width, dimensions.depth, dimensions.height, 
     dimensionsKey,
     rotation, 
     type, 
+    isPlaced,
     getCabinetColor(), 
-    getCountertopColor()
+    getCountertopColor(),
+    customization.cabinets,
+    customization.countertops
   ]);
 
   return (
-    <group ref={meshRef}>
+    <group ref={meshRef} key={`group-${dimensionsKey}`}>
       {component}
       {/* Highlight effect for unplaced items */}
       {!isPlaced && (
