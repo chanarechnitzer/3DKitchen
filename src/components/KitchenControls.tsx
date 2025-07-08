@@ -388,7 +388,7 @@ const KitchenControls: React.FC = () => {
                 // ✅ CRITICAL: For fill option, also update position
                 if (fillPosition && currentItem) {
                   console.log('📍 Updating position for fill option');
-                  updateCabinetSize(selectedCabinetId, finalWidth, fillPosition);
+                  updateCabinetSizeAndPosition(selectedCabinetId, finalWidth, fillPosition);
                   setShowCabinetDialog(false);
                   setSelectedCabinetId(null);
                   return;
